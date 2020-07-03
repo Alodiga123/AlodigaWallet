@@ -133,7 +133,6 @@ C:\Users\yamea\git\AlodigaWallet\src\com\alodiga\wallet\rest\request\PermissionH
 C:\Users\yamea\git\AlodigaWallet\src\com\alodiga\wallet\genericEJB\WalletGenericEntity.java
 C:\Users\yamea\git\AlodigaWallet\src\com\alodiga\wallet\sources\model\BankOperation_.java
 C:\Users\yamea\git\AlodigaWallet\src\com\alodiga\wallet\rest\response\PermissionResponse.java
-C:\Users\yamea\git\AlodigaWallet\src\com\alodiga\wallet\sources\model\CardHasProduct_.java
 C:\Users\yamea\git\AlodigaWallet\src\com\alodiga\wallet\genericEJB\EntityManagerWallet.java
 C:\Users\yamea\git\AlodigaWallet\src\com\alodiga\wallet\model\PreferenceControl.java
 C:\Users\yamea\git\AlodigaWallet\src\com\alodiga\wallet\sources\model\TransactionType_.java
@@ -211,7 +210,6 @@ C:\Users\yamea\git\AlodigaWallet\src\com\alodiga\wallet\utils\XTrustProvider.jav
 C:\Users\yamea\git\AlodigaWallet\src\com\alodiga\wallet\model\Bank.java
 C:\Users\yamea\git\AlodigaWallet\src\com\alodiga\wallet\model\ProductIntegrationType.java
 C:\Users\yamea\git\AlodigaWallet\src\com\alodiga\wallet\respuestas\LanguageListResponse.java
-C:\Users\yamea\git\AlodigaWallet\src\com\alodiga\wallet\model\CardHasProduct.java
 C:\Users\yamea\git\AlodigaWallet\src\com\alodiga\wallet\sources\model\PaymentIntegrationType_.java
 C:\Users\yamea\git\AlodigaWallet\src\com\alodiga\wallet\respuestas\RechargeAfinitasResponses.java
 C:\Users\yamea\git\AlodigaWallet\src\com\alodiga\wallet\bean\APIOperations.java

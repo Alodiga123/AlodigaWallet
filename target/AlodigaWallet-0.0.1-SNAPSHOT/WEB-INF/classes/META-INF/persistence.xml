@@ -66,8 +66,15 @@
     <class>com.alodiga.wallet.model.ProfileData</class>
     <class>com.alodiga.wallet.model.User</class>
     <class>com.alodiga.wallet.model.UserHasProfileHasEnterprise</class>
-    <class>com.alodiga.wallet.model.CardHasProduct</class>
-     
+    <class>com.alodiga.wallet.model.Cumplimient</class>
+    <class>com.alodiga.wallet.model.CumplimientStatus</class>
+    <class>com.alodiga.wallet.model.Card</class>
+    <class>com.alodiga.wallet.model.Code</class>
+    <class>com.alodiga.wallet.model.TopUpCountry</class>
+    <class>com.alodiga.wallet.model.SmsProvider</class>
+    <class>com.alodiga.wallet.model.UserHasCard</class>
+    <class>com.alodiga.wallet.model.ValidationCollection</class>
+    
     <exclude-unlisted-classes>false</exclude-unlisted-classes>
     <properties>
       <property name="eclipselink.logging.level" value="ALL"/>

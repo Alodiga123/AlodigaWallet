@@ -3,7 +3,6 @@ com\alodiga\wallet\model\ExchangeRate.class
 com\alodiga\wallet\rest\converter\ConverterPreferenceValue.class
 com\alodiga\wallet\model\SmsProvider.class
 com\alodiga\wallet\sources\model\PaymentInfo_.class
-com\alodiga\wallet\sources\model\CardHasProduct_.class
 com\alodiga\wallet\sources\model\PreferenceField_.class
 com\alodiga\wallet\respuestas\Response.class
 com\alodiga\wallet\model\ProductIntegrationType.class
@@ -29,7 +28,6 @@ com\alodiga\wallet\bean\APIOperations.class
 com\alodiga\wallet\model\Enterprise.class
 com\alodiga\wallet\model\BankOperationMode.class
 com\alodiga\wallet\sources\model\PreferenceControl_.class
-com\alodiga\wallet\model\CardHasProduct.class
 com\alodiga\wallet\model\PromotionItem.class
 com\alodiga\wallet\respuestas\BankListResponse.class
 com\alodiga\wallet\sources\model\Product_.class
