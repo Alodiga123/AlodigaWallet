@@ -121,6 +121,16 @@
 			<version>1.0</version>
 		</dependency>
 		<dependency>
+			<groupId>com.alodiga</groupId>
+			<artifactId>BussinesPortalClient</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.alodiga</groupId>
+			<artifactId>MasivaSmsIntegration</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
 			<version>1.10</version>

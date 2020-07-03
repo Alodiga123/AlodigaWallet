@@ -90,6 +90,8 @@
   <classpathentry kind="var" path="M2_REPO/com/alodiga/TransferToTopUpIntegration/1.0/TransferToTopUpIntegration-1.0.jar"/>
   <classpathentry kind="var" path="M2_REPO/com/alodiga/ComplimientWsClient/1.0/ComplimientWsClient-1.0.jar"/>
   <classpathentry kind="var" path="M2_REPO/com/alodiga/RemittanceWsClient/1.0/RemittanceWsClient-1.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/alodiga/BussinesPortalClient/1.0/BussinesPortalClient-1.0.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/alodiga/MasivaSmsIntegration/1.0/MasivaSmsIntegration-1.0.jar"/>
   <classpathentry kind="var" path="M2_REPO/commons-codec/commons-codec/1.10/commons-codec-1.10.jar" sourcepath="M2_REPO/commons-codec/commons-codec/1.10/commons-codec-1.10-sources.jar"/>
   <classpathentry kind="var" path="M2_REPO/commons-dbutils/commons-dbutils/1.6/commons-dbutils-1.6.jar" sourcepath="M2_REPO/commons-dbutils/commons-dbutils/1.6/commons-dbutils-1.6-sources.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/apache/axis/axis/1.4/axis-1.4.jar" sourcepath="M2_REPO/org/apache/axis/axis/1.4/axis-1.4-sources.jar"/>

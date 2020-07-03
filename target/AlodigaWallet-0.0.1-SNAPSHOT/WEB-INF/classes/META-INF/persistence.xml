@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+  <persistence-unit name="AlodigaWalletPU" transaction-type="JTA">
+    <jta-data-source>jdbc/AlodigaWallet</jta-data-source>
+    <class>com.alodiga.wallet.model.Address</class>
+    <class>com.alodiga.wallet.model.BalanceHistory</class>
+    <class>com.alodiga.wallet.model.Bank</class>
+    <class>com.alodiga.wallet.model.BankOperation</class>
+    <class>com.alodiga.wallet.model.BankOperationMode</class>
+    <class>com.alodiga.wallet.model.BankOperationType</class>
+    <class>com.alodiga.wallet.model.Category</class>
+    <class>com.alodiga.wallet.model.CategoryData</class>
+    <class>com.alodiga.wallet.model.City</class>
+    <class>com.alodiga.wallet.model.Close</class>
+    <class>com.alodiga.wallet.model.Commission</class>
+    <class>com.alodiga.wallet.model.CommissionItem</class>
+    <class>com.alodiga.wallet.model.Country</class>
+    <class>com.alodiga.wallet.model.County</class>
+    <class>com.alodiga.wallet.model.CreditcardType</class>
+    <class>com.alodiga.wallet.model.Currency</class>
+    <class>com.alodiga.wallet.model.Enterprise</class>
+    <class>com.alodiga.wallet.model.ExchangeDetail</class>
+    <class>com.alodiga.wallet.model.ExchangeRate</class>
+    <class>com.alodiga.wallet.model.Key</class>
+    <class>com.alodiga.wallet.model.Language</class>
+    <class>com.alodiga.wallet.model.ParameterType</class>
+    <class>com.alodiga.wallet.model.PaymentInfo</class>
+    <class>com.alodiga.wallet.model.PaymentIntegrationType</class>
+    <class>com.alodiga.wallet.model.PaymentPatner</class>
+    <class>com.alodiga.wallet.model.PaymentType</class>
+    <class>com.alodiga.wallet.model.Period</class>
+    <class>com.alodiga.wallet.model.Preference</class>
+    <class>com.alodiga.wallet.model.PreferenceControl</class>
+    <class>com.alodiga.wallet.model.PreferenceField</class>
+    <class>com.alodiga.wallet.model.PreferenceType</class>
+    <class>com.alodiga.wallet.model.PreferenceValue</class>
+    <class>com.alodiga.wallet.model.Product</class>
+    <class>com.alodiga.wallet.model.ProductData</class>
+    <class>com.alodiga.wallet.model.ProductHasProvider</class>
+    <class>com.alodiga.wallet.model.ProductIntegrationType</class>
+    <class>com.alodiga.wallet.model.Promotion</class>
+    <class>com.alodiga.wallet.model.PromotionData</class>
+    <class>com.alodiga.wallet.model.PromotionItem</class>
+    <class>com.alodiga.wallet.model.PromotionNotification</class>
+    <class>com.alodiga.wallet.model.Provider</class>
+    <class>com.alodiga.wallet.model.Report</class>
+    <class>com.alodiga.wallet.model.ReportParameter</class>
+    <class>com.alodiga.wallet.model.ReportType</class>
+    <class>com.alodiga.wallet.model.Sms</class>
+    <class>com.alodiga.wallet.model.State</class>
+    <class>com.alodiga.wallet.model.Transaction</class>
+    <class>com.alodiga.wallet.model.TransactionSource</class>
+    <class>com.alodiga.wallet.model.TransactionType</class>
+    <class>com.alodiga.wallet.model.UserHasBank</class>
+    <class>com.alodiga.wallet.model.UserHasProduct</class>
+    <class>com.alodiga.wallet.model.BankHasProduct</class>
+    <class>com.alodiga.wallet.model.Audit</class>
+    <class>com.alodiga.wallet.model.AuditAction</class>
+    <class>com.alodiga.wallet.model.Event</class>
+    <class>com.alodiga.wallet.model.Permission</class>
+    <class>com.alodiga.wallet.model.PermissionData</class>
+    <class>com.alodiga.wallet.model.PermissionGroup</class>
+    <class>com.alodiga.wallet.model.PermissionGroupData</class>
+    <class>com.alodiga.wallet.model.PermissionHasProfile</class>
+    <class>com.alodiga.wallet.model.Profile</class>
+    <class>com.alodiga.wallet.model.ProfileData</class>
+    <class>com.alodiga.wallet.model.User</class>
+    <class>com.alodiga.wallet.model.UserHasProfileHasEnterprise</class>
+    <class>com.alodiga.wallet.model.CardHasProduct</class>
+     
+    <exclude-unlisted-classes>false</exclude-unlisted-classes>
+    <properties>
+      <property name="eclipselink.logging.level" value="ALL"/>
+      <property name="eclipselink.logging.parameters" value="true"/>
+      <property name="eclipselink.logging.exceptions" value="true"/>
+      <property name="eclipselink.logging.level.sql" value="ALL"/>
+      <property name="eclipselink.logging.file" value="jpa_output.log"/>
+      <property name="eclipselink.logging.logger" value="ServerLogger"/>
+    </properties>
+  </persistence-unit>
+</persistence>
