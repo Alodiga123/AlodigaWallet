@@ -420,15 +420,16 @@ public class APIAlodigaWallet {
 
     @WebMethod
     public RechargeAfinitasResponses saveRechargeAfinitas(
-            @WebParam(name = "emailUser") String emailUser,
+            @WebParam(name = "userId") Long userId,
             @WebParam(name = "amountRecharge") Float amountRecharge,
             @WebParam(name = "currency") String currency,
             @WebParam(name = "cardNumber") String cardNumber,
             @WebParam(name = "expirationYear") String expirationYear,
             @WebParam(name = "expirationMonth") String expirationMonth,
             @WebParam(name = "cvv") String cvv,
-            @WebParam(name = "cardHolderName") String cardHolderName) {
-        return operations.saveRechargeAfinitas(emailUser, amountRecharge, currency, cardNumber, expirationYear, expirationMonth, cvv, cardHolderName);
+            @WebParam(name = "cardHolderName") String cardHolderName,
+            @WebParam(name = "paymentInfoId") Long paymentInfoId) {
+        return operations.saveRechargeAfinitas(userId, amountRecharge, currency, cardNumber, expirationYear, expirationMonth, cvv, cardHolderName,paymentInfoId);
     }
 
     @WebMethod(operationName = "validateRechargeProduct")
@@ -540,5 +541,24 @@ public class APIAlodigaWallet {
             @WebParam(name = "userId") String userId) {
         return operations.getProductsRechargePaymentByUserId(Long.valueOf(userId));
     }
+    
+    
+    @WebMethod
+    public ProductListResponse generarCodigoMovilSMS(
+            @WebParam(name = "movil") String movil,
+            @WebParam(name = "codigo") String codigo) {
+        return operations.generarCodigoMovilSMS(movil, codigo);
+    }
+  
+    
+     @WebMethod
+    public void sendMail(
+            @WebParam(name = "subject") String subject,
+            @WebParam(name = "body") String body,
+            @WebParam(name = "to") String to,
+            @WebParam(name = "from") String from) {        
+       operations.sendMail(subject, body,to,from);
+    }
+    
     
 }

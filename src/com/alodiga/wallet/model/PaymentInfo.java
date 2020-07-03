@@ -89,7 +89,7 @@ public class PaymentInfo implements Serializable {
     private CreditcardType creditCardTypeId;
     @Lob
     @Column(name = "creditCardNumber")
-    private byte[] creditCardNumber;
+    private String creditCardNumber;
     @JoinColumn(name = "billingAddressId", referencedColumnName = "id")
     @ManyToOne(optional = false)
     private Address billingAddressId;
@@ -242,11 +242,11 @@ public class PaymentInfo implements Serializable {
         return "dto.PaymentInfo[ id=" + id + " ]";
     }
 
-    public byte[] getCreditCardNumber() {
+    public String getCreditCardNumber() {
         return creditCardNumber;
     }
 
-    public void setCreditCardNumber(byte[] creditCardNumber) {
+    public void setCreditCardNumber(String creditCardNumber) {
         this.creditCardNumber = creditCardNumber;
     }
 

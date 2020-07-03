@@ -2,6 +2,7 @@ package com.alodiga.wallet.respuestas;
 
 import java.io.IOException;
 import java.util.Date;
+import javax.persistence.Transient;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -25,6 +26,9 @@ public class Response {
     private String mensajeRespuesta;
     @XmlElement(name = "idTransaction")
     private String idTransaction;
+    
+    @Transient 
+    private Long idBussines;
 
     public Response(Date fechaHora, String codigoRespuesta,
             String mensajeRespuesta) {
@@ -74,6 +78,15 @@ public class Response {
         this.idTransaction = idTransaction;
     }
 
+    public Long getIdBussines() {
+        return idBussines;
+    }
+
+    public void setIdBussines(Long idBussines) {
+        this.idBussines = idBussines;
+    }
+
+    
     @Override
     public String toString() {
         return "Respuesta [fechaHora=" + fechaHora + ", codigoRespuesta="

@@ -146,6 +146,7 @@ public class Constants {
     public static final int SEND_TYPE_SMS_EXCHANGE_PRODUCT = 29;
     public static final int SEND_TYPE_SMS_TRASNFER_CARD_TO_CARD= 30;
     public static final int SEND_TYPE_SMS_TRASNFER_CARD_TO_CARD_RECIBER = 31;
+    public static final int SEND_TYPE_SMS_TEST = 32;
     
     
     //internat Access Api Operation

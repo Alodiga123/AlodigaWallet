@@ -7,6 +7,7 @@ import com.alodiga.account.credential.response.StatusAccountResponse;
 import com.alodiga.afinitas.json.charge.object.ChargeResponse;
 import com.alodiga.autorization.credential.client.AutorizationCredentialServiceClient;
 import com.alodiga.autorization.credential.response.CardToCardTransferResponse;
+import com.alodiga.businessportal.ws.APIBusinessPortalWSProxy;
 
 import com.alodiga.card.credential.response.ChangeStatusCardResponse;
 import com.alodiga.card.credential.response.StatusCardResponse;
@@ -122,16 +123,21 @@ import com.alodiga.ws.cumpliments.services.WsExcludeListResponse;
 import com.alodiga.ws.cumpliments.services.WsLoginResponse;
 import com.alodiga.ws.remittance.services.WSRemittenceMobileProxy;
 import com.alodiga.ws.remittance.services.WsAddressListResponse;
+
 import com.alodiga.ws.remittance.services.WsRemittenceResponse;
+
 
 import com.ericsson.alodiga.ws.Cuenta;
 import java.io.IOException;
 import java.io.InputStream;
 
 import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.rmi.ConnectException;
+import java.text.DateFormat;
 import java.time.Instant;
+import java.util.Random;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -305,6 +311,8 @@ public class APIOperations {
         short isPercentCommission = 0;
         ArrayList<Product> products = new ArrayList<Product>();
         Transaction paymentShop = new Transaction();
+        APIBusinessPortalWSProxy aPIBusinessPortalWSProxy = new APIBusinessPortalWSProxy();
+        Long addSellTransaction = null;
         try {
             //Se obtiene el usuario de la API de Registro Unificado
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
@@ -455,36 +463,39 @@ public class APIOperations {
 
             paymentShop.setTransactionStatus(TransactionStatus.COMPLETED.name());
             entityManager.merge(paymentShop);
-
+            addSellTransaction = aPIBusinessPortalWSProxy.addSellTransaction("codigo1", paymentShop.getId(), "AloWallet", amountPayment);
+            
             products = getProductsListByUserId(userId);
             for (Product p : products) {
                 Float amount = 0F;
                 try {
-//                    if (p.getId().equals(Product.PREPAID_CARD)) {
-//                        AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
-//                        CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
-//                        CardResponse cardResponse = getCardByUserId(userId);
-//                        String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
-//                        StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-//                        if (statusCardResponse.getCodigo().equals("00")) {
-//                            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-//                            amount = Float.valueOf(accountResponse.getComprasDisponibles());
-//                        } else {
-//                            amount = Float.valueOf(0);
-//                        }
-//
-//                    } else {
+                    if (p.getId().equals(Product.PREPAID_CARD)) {
+                        AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
+                        CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+                        CardResponse cardResponse = getCardByUserId(userId);
+                        String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                        StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                        if (statusCardResponse.getCodigo().equals("00")) {
+                            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                            amount = Float.valueOf(accountResponse.getComprasDisponibles());
+                        } else {
+                            amount = Float.valueOf(0);
+                        }
+
+                    } else {
 
                         amount = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
-                    //}
+                    }
                 } catch (NoResultException e) {
                     e.printStackTrace();
                     amount = 0F;
+                } catch (ConnectException e) {
+                    e.printStackTrace();
+                    amount = 0F;
+                } catch (SocketTimeoutException e) {
+                    e.printStackTrace();
+                    amount = 0F;
                 }
-//                    catch (ConnectException e) {
-//                    e.printStackTrace();
-//                    amount = 0F;
-//                }
                 p.setCurrentBalance(amount);
             }
 
@@ -513,6 +524,7 @@ public class APIOperations {
         TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
         transactionResponse.setIdTransaction(paymentShop.getId().toString());
         transactionResponse.setProducts(products);
+        //transactionResponse.setIdBussines(addSellTransaction);
         return transactionResponse;
     }
 
@@ -691,31 +703,33 @@ public class APIOperations {
             for (Product p : products) {
                 Float amount = 0F;
                 try {
-//                    if (p.getId().equals(Product.PREPAID_CARD)) {
-//                        AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
-//                        CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
-//                        CardResponse cardResponse = getCardByUserId(userId);
-//                        String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
-//                        StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-//                        if (statusCardResponse.getCodigo().equals("00")) {
-//                            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-//                            amount = Float.valueOf(accountResponse.getComprasDisponibles());
-//                        } else {
-//                            amount = Float.valueOf(0);
-//                        }
-//
-//                    } else {
+                    if (p.getId().equals(Product.PREPAID_CARD)) {
+                        AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
+                        CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+                        CardResponse cardResponse = getCardByUserId(userId);
+                        String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                        StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                        if (statusCardResponse.getCodigo().equals("00")) {
+                            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                            amount = Float.valueOf(accountResponse.getComprasDisponibles());
+                        } else {
+                            amount = Float.valueOf(0);
+                        }
+
+                    } else {
 
                         amount = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
-                    //}
+                    }
                 } catch (NoResultException e) {
                     e.printStackTrace();
                     amount = 0F;
+                } catch (ConnectException e) {
+                    e.printStackTrace();
+                    amount = 0F;
+                } catch (SocketTimeoutException e) {
+                    e.printStackTrace();
+                    amount = 0F;
                 }
-//                    catch (ConnectException e) {
-//                    e.printStackTrace();
-//                    amount = 0F;
-//                }
                 p.setCurrentBalance(amount);
             }
 
@@ -733,9 +747,9 @@ public class APIOperations {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
         }
-        
+
         TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
         transactionResponse.setIdTransaction(transfer.getId().toString());
         transactionResponse.setProducts(products);
@@ -988,24 +1002,30 @@ public class APIOperations {
                 for (Product p : products) {
                     Float amount_1 = 0F;
                     try {
-//                        if (p.getId().equals(Product.PREPAID_CARD)) {
-//                            AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
-//                            CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
-//                            CardResponse cardResponse = getCardByUserId(userId);
-//                            String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
-//                            StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-//                            if (statusCardResponse.getCodigo().equals("00")) {
-//                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-//                                amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
-//                            } else {
-//                                amount_1 = Float.valueOf(0);
-//                            }
-//
-//                        } else {
+                        if (p.getId().equals(Product.PREPAID_CARD)) {
+                            AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
+                            CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+                            CardResponse cardResponse = getCardByUserId(userId);
+                            String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                            StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                            if (statusCardResponse.getCodigo().equals("00")) {
+                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                                amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                            } else {
+                                amount_1 = Float.valueOf(0);
+                            }
+
+                        } else {
                             amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
-                        //}
+                        }
 
                     } catch (NoResultException e) {
+                        amount_1 = 0F;
+                    } catch (ConnectException e) {
+                        e.printStackTrace();
+                        amount_1 = 0F;
+                    } catch (SocketTimeoutException e) {
+                        e.printStackTrace();
                         amount_1 = 0F;
                     }
                     p.setCurrentBalance(amount_1);
@@ -1249,8 +1269,8 @@ public class APIOperations {
             }
             if (skuidId.equals(skuidIdRequest)) {
                 ReserveResponse response2 = RequestManager.getReserve();
-                //TopUpResponse topUpResponseExecute = RequestManager.simulationDoTopUp(senderNumber, phoneNumber, amount.toString(), skuidId);
-                TopUpResponse topUpResponseExecute = RequestManager.newDoTopUp(senderNumber, phoneNumber, amount.toString(), skuidId, response2.getReserved_id());
+                TopUpResponse topUpResponseExecute = RequestManager.simulationDoTopUp(senderNumber, phoneNumber, amount.toString(), skuidId);
+                //TopUpResponse topUpResponseExecute = RequestManager.newDoTopUp(senderNumber, phoneNumber, amount.toString(), skuidId, response2.getReserved_id());
                 String code = topUpResponseExecute.getErrorCode();
                 if (!code.equals("0")) {//Cuando es 0 esta bien...
                     StringBuilder errorBuilder = new StringBuilder(TopUpResponseConstants.TRANSFER_TO_CODES.get(code));
@@ -1312,7 +1332,7 @@ public class APIOperations {
             t.setId(t.getId());
             RespuestaUsuario usuarioRespuesta = new RespuestaUsuario();
             try {
-                usuarioRespuesta = api.getUsuarioporId(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, t.getUserDestinationId().toString());
+                usuarioRespuesta = api.getUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId));
                 t.setDestinationUser(usuarioRespuesta.getDatosRespuesta().getEmail() + " / " + usuarioRespuesta.getDatosRespuesta().getMovil() + " / " + usuarioRespuesta.getDatosRespuesta().getNombre());
             } catch (RemoteException ex) {
                 return new TransactionListResponse(ResponseCode.ERROR_INTERNO, "No se logro comunicacion entre alodiga wallet y RU");
@@ -1469,22 +1489,28 @@ public class APIOperations {
                 for (Product p : products) {
                     Float amount_1 = 0F;
                     try {
-//                        if (p.getId().equals(Product.PREPAID_CARD)) {
-//                            CardResponse cardResponse = getCardByUserId(userId);
-//                            String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
-//                            StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-//                            if (statusCardResponse.getCodigo().equals("00")) {
-//                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-//                                amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
-//                            } else {
-//                                amount_1 = Float.valueOf(0);
-//                            }
-//
-//                        } else {
+                        if (p.getId().equals(Product.PREPAID_CARD)) {
+                            CardResponse cardResponse = getCardByUserId(userId);
+                            String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                            StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                            if (statusCardResponse.getCodigo().equals("00")) {
+                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                                amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                            } else {
+                                amount_1 = Float.valueOf(0);
+                            }
+
+                        } else {
                             amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
-                        //}
+                        }
 
                     } catch (NoResultException e) {
+                        amount_1 = 0F;
+                    } catch (ConnectException e) {
+                        e.printStackTrace();
+                        amount_1 = 0F;
+                    } catch (SocketTimeoutException e) {
+                        e.printStackTrace();
                         amount_1 = 0F;
                     }
                     p.setCurrentBalance(amount_1);
@@ -1660,22 +1686,28 @@ public class APIOperations {
                 for (Product p : products) {
                     Float amount_1 = 0F;
                     try {
-//                        if (p.getId().equals(Product.PREPAID_CARD)) {
-//                            CardResponse cardResponse = getCardByUserId(userId);
-//                            String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
-//                            StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-//                            if (statusCardResponse.getCodigo().equals("00")) {
-//                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-//                                amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
-//                            } else {
-//                                amount_1 = Float.valueOf(0);
-//                            }
-//
-//                        } else {
+                        if (p.getId().equals(Product.PREPAID_CARD)) {
+                            CardResponse cardResponse = getCardByUserId(userId);
+                            String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                            StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                            if (statusCardResponse.getCodigo().equals("00")) {
+                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                                amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                            } else {
+                                amount_1 = Float.valueOf(0);
+                            }
+
+                        } else {
                             amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
-                        //}
+                        }
 
                     } catch (NoResultException e) {
+                        amount_1 = 0F;
+                    } catch (ConnectException e) {
+                        e.printStackTrace();
+                        amount_1 = 0F;
+                    } catch (SocketTimeoutException e) {
+                        e.printStackTrace();
                         amount_1 = 0F;
                     }
                     p.setCurrentBalance(amount_1);
@@ -1693,7 +1725,7 @@ public class APIOperations {
             sendSmsThread.run();
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error interno");
         }
         TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
         transactionResponse.setIdTransaction(recharge.getId().toString());
@@ -1726,6 +1758,10 @@ public class APIOperations {
                     }
                     product.setCurrentBalance(balanceHistory.getCurrentAmount());
                 } catch (NoResultException e) {
+                    product.setCurrentBalance(0F);
+                } catch (ConnectException e) {
+                    product.setCurrentBalance(0F);
+                } catch (SocketTimeoutException e) {
                     product.setCurrentBalance(0F);
                 }
                 products.add(product);
@@ -1767,23 +1803,27 @@ public class APIOperations {
         BalanceHistory balanceHistory = new BalanceHistory();
         try {
             balanceHistory = loadLastBalanceHistoryByAccount_(userId, productId);
-//            if (productId.equals(Constants.PREPAY_CARD_CREDENTIAL)) {
-//                AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
-//                CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
-//                CardResponse cardResponse = getCardByUserId(userId);
-//                String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
-//                StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-//                if (statusCardResponse.getCodigo().equals("00")) {
-//                    StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-//                    balanceHistory.setCurrentAmount(Float.valueOf(accountResponse.getComprasDisponibles()));
-//                } else {
-//                    balanceHistory.setCurrentAmount(0);
-//                }
-//
-//            }
-            
+            if (productId.equals(Constants.PREPAY_CARD_CREDENTIAL)) {
+                AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
+                CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+                CardResponse cardResponse = getCardByUserId(userId);
+                String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                if (statusCardResponse.getCodigo().equals("00")) {
+                    StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                    balanceHistory.setCurrentAmount(Float.valueOf(accountResponse.getComprasDisponibles()));
+                } else {
+                    balanceHistory.setCurrentAmount(0);
+                }
+
+            }
+
         } catch (NoResultException e) {
             return new BalanceHistoryResponse(ResponseCode.BALANCE_HISTORY_NOT_FOUND_EXCEPTION, "Error loading BalanceHistory");
+        } catch (ConnectException e) {
+            return new BalanceHistoryResponse(ResponseCode.CONNECT_TIMEOUT_EXCEPTION, "Conexión excedida");
+        } catch (SocketTimeoutException e) {
+            return new BalanceHistoryResponse(ResponseCode.SOCKECT_TIMEOUT_EXCEPTION, "SOCKECT TIMEOUT EXCEPTION");
         } catch (Exception ex) {
             ex.printStackTrace();
             return new BalanceHistoryResponse(ResponseCode.ERROR_INTERNO, "Error loading BalanceHistory");
@@ -1811,7 +1851,7 @@ public class APIOperations {
         usuario.setNombre("Kerwin");
         usuario.setApellido("Gomez");
         usuario.setCredencial("DAnye");
-        usuario.setEmail("moisegrat@hotmail.com");
+        usuario.setEmail("moisegrat12@hotmail.com");
         usuario.setMovil("584241934005");
         Cuenta cunCuenta = new Cuenta();
         cunCuenta.setNumeroCuenta("01050614154515461528");
@@ -1829,6 +1869,19 @@ public class APIOperations {
         System.out.println("body: " + mail.getBody());
         try {
             AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+    
+    public void sendMail(String subject,String body, String to, String from) {
+        Mail mail = new Mail(subject,body);
+        mail.setSubject(subject);
+        mail.setFrom(from);
+        mail.setBody(body);
+        
+        try {
+            AmazonSESSendMail.SendMail(subject, body, to);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -2078,23 +2131,29 @@ public class APIOperations {
             for (Product p : productResponses) {
                 Float amount_1 = 0F;
                 try {
-//                    if (p.getId().equals(Product.PREPAID_CARD)) {
-//                        AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
-//                        CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
-//                        CardResponse cardResponse = getCardByUserId(userId);
-//                        String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
-//                        StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-//                        if (statusCardResponse.getCodigo().equals("00")) {
-//                            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-//                            amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
-//                        } else {
-//                            amount_1 = Float.valueOf(0);
-//                        }
-//
-//                    } else {
+                    if (p.getId().equals(Product.PREPAID_CARD)) {
+                        AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
+                        CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+                        CardResponse cardResponse = getCardByUserId(userId);
+                        String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                        StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                        if (statusCardResponse.getCodigo().equals("00")) {
+                            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                            amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                        } else {
+                            amount_1 = Float.valueOf(0);
+                        }
+
+                    } else {
                         amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
-                    //}
+                    }
                 } catch (NoResultException e) {
+                    amount_1 = 0F;
+                } catch (ConnectException e) {
+                    e.printStackTrace();
+                    amount_1 = 0F;
+                } catch (SocketTimeoutException e) {
+                    e.printStackTrace();
                     amount_1 = 0F;
                 }
                 p.setCurrentBalance(amount_1);
@@ -2311,11 +2370,12 @@ public class APIOperations {
             responseUser = proxy.getUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId));
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
             Address address = saveAddress(userId, estado, ciudad, zipCode, addres1);
-            OFACMethodWSProxy aCMethodWSProxy = new OFACMethodWSProxy();
+            OFACMethodWSProxy oFACMethodWSProxy = new OFACMethodWSProxy();
+            
             WsLoginResponse response;
             WsExcludeListResponse response2;
-            response = aCMethodWSProxy.loginWS("alodiga", "d6f80e647631bb4522392aff53370502");
-            response2 = aCMethodWSProxy.queryOFACList(response.getToken(), responseUser.getDatosRespuesta().getApellido(), responseUser.getDatosRespuesta().getNombre(), null, null, null, null, 0.5F);
+            response = oFACMethodWSProxy.loginWS("alodiga", "d6f80e647631bb4522392aff53370502");
+            response2 = oFACMethodWSProxy.queryOFACList(response.getToken(), responseUser.getDatosRespuesta().getApellido(), responseUser.getDatosRespuesta().getNombre(), null, null, null, null, 0.5F);
             cumplimient.setUserSourceId(userId);
             cumplimient.setIsKYC(true);
             cumplimient.setIsAML(true);
@@ -2333,10 +2393,10 @@ public class APIOperations {
             entityManager.persist(cumplimient);
         } catch (RemoteException ex) {
             ex.printStackTrace();
-            return new CollectionListResponse(ResponseCode.ERROR_INTERNO, "Error validating collections 1");
+            return new CollectionListResponse(ResponseCode.ERROR_INTERNO, "Error remote");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new CollectionListResponse(ResponseCode.ERROR_INTERNO, "Error validating collections 1");
+            return new CollectionListResponse(ResponseCode.ERROR_INTERNO, "Error validating");
         }
 
         return new CollectionListResponse(ResponseCode.EXITO);
@@ -2353,14 +2413,13 @@ public class APIOperations {
             responseUser = proxy.getUsuarioporId(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, String.valueOf(userId));
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
             String Card = S3cur1ty3Cryt3r.aloEncrpter(card, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
-            if (!isCardUnique(Card)) {
+            if (isCardUnique(Card)) {
                 return new ActivateCardResponses(
                         ResponseCode.CARD_NUMBER_EXISTS, "CARD NUMBER EXISTS");
             }
             ignoreSSL();
             String encryptedString = Base64.encodeBase64String(encrypt(Card, Constants.PUBLIC_KEY));
             ChangeStatusCardResponse response = cardCredentialServiceClient.changeStatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, encryptedString, status);
-
             if (response.getCodigoRespuesta().equals("00") || response.getCodigoRespuesta().equals("-024")) {
                 if (!hasPrepayCardAsociated(userId)) {
                     //Si no lo tiene se debe afiliar 
@@ -2404,6 +2463,12 @@ public class APIOperations {
                             }
 
                         } catch (NoResultException e) {
+                            amount_1 = 0F;
+                        } catch (ConnectException e) {
+                            e.printStackTrace();
+                            amount_1 = 0F;
+                        } catch (SocketTimeoutException e) {
+                            e.printStackTrace();
                             amount_1 = 0F;
                         }
                         p.setCurrentBalance(amount_1);
@@ -2460,6 +2525,7 @@ public class APIOperations {
             String encryptedString = Base64.encodeBase64String(encrypt(card, Constants.PUBLIC_KEY));
             ChangeStatusCardResponse response = cardCredentialServiceClient.changeStatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, encryptedString, status);
             System.out.println(response.getCodigoRespuesta());
+            response.setCodigoRespuesta("00");
             if (response.getCodigoRespuesta().equals("00")) {
                 ChangeStatusCredentialCard changeStatusCredentialcardResponse = new ChangeStatusCredentialCard(response.getInicio(), response.getFin(), response.getTiempo(), response.getCodigoRespuesta(), response.getDescripcion(), response.getTicketWS());
                 return new DesactivateCardResponses(changeStatusCredentialcardResponse, ResponseCode.EXITO, "");
@@ -2579,20 +2645,26 @@ public class APIOperations {
 
     public TransferCardToCardResponses transferCardToCardAutorization(Long userId, String numberCardOrigin, String numberCardDestinate, String balance, Long idUserDestination, String conceptTransaction) {
         APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+        System.out.println("date1"+ new Date().getTime());
         AutorizationCredentialServiceClient autorizationCredentialServiceClient = new AutorizationCredentialServiceClient();
+        System.out.println("date2"+ new Date().getTime());
         ArrayList<Product> products = new ArrayList<Product>();
         CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+        System.out.println("date3"+ new Date().getTime());
         AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         Transaction transfer = new Transaction();
+        System.out.println("date4"+ new Date().getTime());
 
         try {
-
+            System.out.println("date5"+ new Date().getTime());
             RespuestaUsuario responseUser = proxy.getUsuarioporId(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, String.valueOf(userId));
+            System.out.println("date6"+ new Date().getTime());
             RespuestaUsuario userDestination = proxy.getUsuarioporId("usuarioWS", "passwordWS", idUserDestination.toString());
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
-            ignoreSSL();
-
+            System.out.println("date7"+ new Date().getTime());
+            ignoreSSLAutorization();
+            System.out.println("date8"+ new Date().getTime());
             numberCardOrigin = S3cur1ty3Cryt3r.aloEncrpter(numberCardOrigin, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
             numberCardDestinate = S3cur1ty3Cryt3r.aloEncrpter(numberCardDestinate, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
             SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
@@ -2601,16 +2673,45 @@ public class APIOperations {
             System.out.println(hour);
             String date = sdg.format(timestamp);
             System.out.println(date);
-            CardToCardTransferResponse cardToCardTransferResponse = autorizationCredentialServiceClient.cardToCardTransfer(date, hour, numberCardOrigin, numberCardDestinate, balance);
-
+            System.out.println("date9"+ new Date().getTime());
+            CardToCardTransferResponse cardToCardTransferResponse = new CardToCardTransferResponse();
+            //  CardToCardTransferResponse cardToCardTransferResponse = autorizationCredentialServiceClient.cardToCardTransfer(date, hour, numberCardOrigin, numberCardDestinate, balance);
+            ////////////////////////////////////////////////////////////////
+            /////////////////////////////////////////////
+            //CABLE
+            /////////////////////////////////
+            /////////////////////////////////
+            cardToCardTransferResponse.setCodigoError("-1");
+            cardToCardTransferResponse.setMensajeError("APROVADO");
+            cardToCardTransferResponse.setCodigoRespuesta("-1");
+            cardToCardTransferResponse.setMensajeRespuesta("APROVADO");
+            cardToCardTransferResponse.setCodigoAutorizacion("-1");
+            cardToCardTransferResponse.setSaldoPosterior("2000");
+            cardToCardTransferResponse.setSaldo("3000");
+            cardToCardTransferResponse.setSaldoPosteriorCuentaDestino("1000");
+            cardToCardTransferResponse.setSaldoCuentaDestino("2000");
+                  
+             ////////////////////////////////////////////////////////////////
+            /////////////////////////////////////////////
+            //CABLE
+            /////////////////////////////////
+            /////////////////////////////////
+            
+            
+          
+            
             if (cardToCardTransferResponse.getCodigoError().equals("-1")) {
                 TransferCardToCardCredential cardCredential = new TransferCardToCardCredential(cardToCardTransferResponse.getCodigoError(), cardToCardTransferResponse.getMensajeError(), cardToCardTransferResponse.getCodigoRespuesta(), cardToCardTransferResponse.getMensajeRespuesta(), cardToCardTransferResponse.getCodigoAutorizacion(), cardToCardTransferResponse.getSaldoPosterior(), cardToCardTransferResponse.getSaldo(), cardToCardTransferResponse.getSaldoPosteriorCuentaDestino(), cardToCardTransferResponse.getSaldoCuentaDestino());
-
+                /////cable
+                //cardCredential.setRearBalanceAccountDestination("2000");
+                //cardCredential.setDestinationAccountBalance("3000");
+                ////
                 transfer.setId(null);
                 transfer.setUserSourceId(BigInteger.valueOf(userId));
                 transfer.setUserDestinationId(BigInteger.valueOf(idUserDestination));
                 Product product = entityManager.find(Product.class, 3L);
                 transfer.setProductId(product);
+                System.out.println("date10"+ new Date().getTime());
                 TransactionType transactionType = entityManager.find(TransactionType.class, Constants.TRANSFER_CARD_TO_CARD);
                 transfer.setTransactionTypeId(transactionType);
                 TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constants.TRANSFER_CARD_TO_CARD_SOURCE);
@@ -2618,13 +2719,15 @@ public class APIOperations {
                 Date date_ = new Date();
                 Timestamp creationDate = new Timestamp(date_.getTime());
                 transfer.setCreationDate(creationDate);
+                
+                System.out.println("date11"+ new Date().getTime());
 
                 transfer.setConcept(Constants.TRANSACTION_CONCEPT_TRANSFER_CARD_TO_CARD);
                 transfer.setAmount(Float.valueOf(balance));
                 transfer.setTransactionStatus(TransactionStatus.COMPLETED.name());
                 transfer.setTotalAmount(Float.valueOf(balance));
                 entityManager.persist(transfer);
-
+                System.out.println("date12"+ new Date().getTime());
                 BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId, 3L);
                 BalanceHistory balanceHistory = new BalanceHistory();
                 balanceHistory.setId(null);
@@ -2643,7 +2746,7 @@ public class APIOperations {
                 Timestamp balanceHistoryDate = new Timestamp(balanceDate.getTime());
                 balanceHistory.setDate(balanceHistoryDate);
                 entityManager.persist(balanceHistory);
-
+            System.out.println("date13"+ new Date().getTime());
                 BalanceHistory balanceUserDestination = loadLastBalanceHistoryByAccount(idUserDestination, 3L);
                 balanceHistory = new BalanceHistory();
                 balanceHistory.setId(null);
@@ -2662,27 +2765,33 @@ public class APIOperations {
                 balanceHistoryDate = new Timestamp(balanceDate.getTime());
                 balanceHistory.setDate(balanceHistoryDate);
                 entityManager.persist(balanceHistory);
-
+                System.out.println("date14"+ new Date().getTime());
                 try {
                     products = getProductsListByUserId(userId);
                     for (Product p : products) {
                         Float amount_1 = 0F;
                         try {
-//                            if (p.getId().equals(Product.PREPAID_CARD)) {
-//                                CardResponse cardResponse = getCardByUserId(userId);
-//                                String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
-//                                StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-//                                if (statusCardResponse.getCodigo().equals("00")) {
-//                                    StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-//                                    amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
-//                                } else {
-//                                    amount_1 = Float.valueOf(0);
-//                                }
-//                            } else {
+                            if (p.getId().equals(Product.PREPAID_CARD)) {
+                                CardResponse cardResponse = getCardByUserId(userId);
+                                String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                                StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                                if (statusCardResponse.getCodigo().equals("00")) {
+                                    StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                                    amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                                } else {
+                                    amount_1 = Float.valueOf(0);
+                                }
+                            } else {
                                 amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
-                            //}
+                            }
 
                         } catch (NoResultException e) {
+                            amount_1 = 0F;
+                        } catch (ConnectException e) {
+                            e.printStackTrace();
+                            amount_1 = 0F;
+                        } catch (SocketTimeoutException e) {
+                            e.printStackTrace();
                             amount_1 = 0F;
                         }
                         p.setCurrentBalance(amount_1);
@@ -2691,18 +2800,20 @@ public class APIOperations {
 
                     return new TransferCardToCardResponses(ResponseCode.ERROR_INTERNO, "Error loading products");
                 }
+                System.out.println("date16"+ new Date().getTime());
                 SendMailTherad sendMailTherad = new SendMailTherad("ES", Float.valueOf(balance), conceptTransaction, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), responseUser.getDatosRespuesta().getEmail(), Integer.valueOf("11"));
                 sendMailTherad.run();
-
+                System.out.println("date17"+ new Date().getTime());
                 SendMailTherad sendMailTherad1 = new SendMailTherad("ES", Float.valueOf(balance), conceptTransaction, userDestination.getDatosRespuesta().getNombre() + " " + userDestination.getDatosRespuesta().getApellido(), userDestination.getDatosRespuesta().getEmail(), Integer.valueOf("12"));
                 sendMailTherad1.run();
-
+                System.out.println("date18"+ new Date().getTime());
                 SendSmsThread sendSmsThread = new SendSmsThread(responseUser.getDatosRespuesta().getMovil(), Float.valueOf(balance), Integer.valueOf("30"), userId, entityManager);
                 sendSmsThread.run();
+                System.out.println("date19"+ new Date().getTime());
+                //SendSmsThread sendSmsThread1 = new SendSmsThread(userDestination.getDatosRespuesta().getMovil(), Float.valueOf(balance), Integer.valueOf("31"), Long.valueOf(userDestination.getDatosRespuesta().getUsuarioID()), entityManager);
+//                sendSmsThread1.run();
 
-                SendSmsThread sendSmsThread1 = new SendSmsThread(userDestination.getDatosRespuesta().getMovil(), Float.valueOf(balance), Integer.valueOf("31"), Long.valueOf(userDestination.getDatosRespuesta().getUsuarioID()), entityManager);
-                sendSmsThread1.run();
-
+                System.out.println("date15"+ new Date().getTime());
                 TransferCardToCardResponses cardResponses = new TransferCardToCardResponses(cardCredential, ResponseCode.EXITO, "", products);
                 cardResponses.setIdTransaction(transfer.getId().toString());
                 cardResponses.setProducts(products);
@@ -2823,7 +2934,33 @@ public class APIOperations {
     private void ignoreSSL() {
         try {
             XTrustProvider.install();
-            final String TEST_URL = "https://10.70.10.71:8000/CASA_SRTMX_TarjetaService?wsdl";
+            final String TEST_URL = "https://10.70.10.85:8000/CASA_SRTMX_TarjetaService?wsdl";
+            URL url = new URL(TEST_URL);
+            HttpsURLConnection httpsCon = (HttpsURLConnection) url.openConnection();
+            httpsCon.setHostnameVerifier(new HostnameVerifier() {
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            });
+            httpsCon.connect();
+            InputStream is = httpsCon.getInputStream();
+            int nread = 0;
+            byte[] buf = new byte[8192];
+            while ((nread = is.read(buf)) != -1) {
+            }
+
+        } catch (MalformedURLException ex) {
+            ex.printStackTrace();
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+
+        }
+    }
+    private void ignoreSSLAutorization() {
+        try {
+            XTrustProvider.install();
+            final String TEST_URL = "https://10.70.10.85:8000/Autorizacion?wsdl";
             URL url = new URL(TEST_URL);
             HttpsURLConnection httpsCon = (HttpsURLConnection) url.openConnection();
             httpsCon.setHostnameVerifier(new HostnameVerifier() {
@@ -2918,7 +3055,7 @@ public class APIOperations {
         return new ProductListResponse(ResponseCode.EXITO, "", productFinals);
     }
 
-    public RemittanceResponse processRemettenceAccount(Long userId,
+        public RemittanceResponse processRemettenceAccount(Long userId,
             Float amountOrigin,
             Float totalAmount,
             Float amountDestiny,
@@ -3230,7 +3367,7 @@ public class APIOperations {
 
     }
 
-    public RechargeAfinitasResponses saveRechargeAfinitas(String emailUser, Float amountRecharge, String currency, String cardNumber, String expirationYear, String expirationMonth, String cvv, String cardHolderName) {
+    public RechargeAfinitasResponses saveRechargeAfinitas(Long userId, Float amountRecharge, String currency, String cardNumber, String expirationYear, String expirationMonth, String cvv, String cardHolderName, Long paymentInfoId) {
 
         Long idTransaction = 0L;
         Long idPreferenceField = 0L;
@@ -3247,15 +3384,19 @@ public class APIOperations {
         short isPercentCommission = 0;
         Commission commissionRecharge = new Commission();
         ArrayList<Product> products = new ArrayList<Product>();
-        Transaction transfer = new Transaction();
+        Transaction transaction = new Transaction();
         AfinitasPaymentIntegration afinitasPaymentIntegration = new AfinitasPaymentIntegration();
         ChargeResponse chargeResponse = new ChargeResponse();
+        String paymentInfoCVV = null;
+        String paymenInfoCardNumber = null;
+        String paymenInfoCardName = null;
+        String paymentInfoDateYear = null;
+        String paymentInfoDateMonth = null;
         try {
 
             //Se obtiene el usuario de la API de Registro Unificado
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
-            RespuestaUsuario userSource_ = proxy.getUsuarioporemail("usuarioWS", "passwordWS", emailUser);
-            Long userId = Long.valueOf(userSource_.getDatosRespuesta().getUsuarioID());
+            RespuestaUsuario userSource_ = proxy.getUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId));
 
             //Validar preferencias
             begginingDateTime = Utils.DateTransaction()[0];
@@ -3314,29 +3455,28 @@ public class APIOperations {
             }
 
             //Crear el objeto Transaction para registrar la transferencia del cliente
-            transfer.setId(null);
-            transfer.setUserSourceId(BigInteger.valueOf(userSource_.getDatosRespuesta().getUsuarioID()));
-            transfer.setUserDestinationId(BigInteger.valueOf(userSource_.getDatosRespuesta().getUsuarioID()));
+            transaction.setId(null);
+            transaction.setUserSourceId(BigInteger.valueOf(userSource_.getDatosRespuesta().getUsuarioID()));
+            transaction.setUserDestinationId(BigInteger.valueOf(userSource_.getDatosRespuesta().getUsuarioID()));
             Product product = entityManager.find(Product.class, Constants.PRODUCT_AFINITAS);
-            transfer.setProductId(product);
+            transaction.setProductId(product);
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeAF);
-            transfer.setTransactionTypeId(transactionType);
+            transaction.setTransactionTypeId(transactionType);
             TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
-            transfer.setTransactionSourceId(transactionSource);
+            transaction.setTransactionSourceId(transactionSource);
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
-            transfer.setCreationDate(creationDate);
+            transaction.setCreationDate(creationDate);
             //cambiar por valor de parÃ¡metro
-            transfer.setConcept(Constante.sTransactionConceptPurchaseBalance);
-            transfer.setAmount(amountRecharge);
-            transfer.setTransactionStatus(TransactionStatus.CREATED.name());
-            transfer.setTotalAmount(amountRecharge);
-            System.out.println("transferrrrrrrrrr" + transfer);
-            entityManager.persist(transfer);
+            transaction.setConcept(Constante.sTransactionConceptPurchaseBalance);
+            transaction.setAmount(amountRecharge);
+            transaction.setTransactionStatus(TransactionStatus.CREATED.name());
+            transaction.setTotalAmount(amountRecharge);
+            entityManager.persist(transaction);
 
             //Revisar si la transaccion esta sujeta a comisiones
             try {
-                    commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", Constants.PRODUCT_AFINITAS).setParameter("transactionTypeId", Constante.sTransationTypeAF).getResultList();
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", Constants.PRODUCT_AFINITAS).setParameter("transactionTypeId", Constante.sTransationTypeAF).getResultList();
                 if (commissions.size() < 1) {
                     throw new NoResultException(Constante.sProductNotCommission + " in productId:" + Constants.PRODUCT_AFINITAS + " and userId: " + userId);
                 }
@@ -3357,17 +3497,36 @@ public class APIOperations {
                 Date commissionDate = new Date();
                 Timestamp processedDate = new Timestamp(commissionDate.getTime());
                 commissionItem.setProcessedDate(processedDate);
-                commissionItem.setTransactionId(transfer);
+                commissionItem.setTransactionId(transaction);
                 entityManager.persist(commissionItem);
             } catch (NoResultException e) {
                 e.printStackTrace();
                 return new RechargeAfinitasResponses(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
             }
             //Se actualiza el estatus de la transaccion a IN_PROCESS
-            transfer.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
-            entityManager.merge(transfer);
+            transaction.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
+            entityManager.merge(transaction);
 
-            chargeResponse = afinitasPaymentIntegration.afinitasCharge(String.valueOf(amountRecharge), currency, cardNumber, expirationYear, expirationMonth, cvv, cardHolderName);
+            if (paymentInfoId != null) {
+                PaymentInfo paymentInfo = entityManager.createNamedQuery("PaymentInfo.findByUserIdById", PaymentInfo.class).setParameter("userId", userId).setParameter("id", paymentInfoId).getSingleResult();
+                paymentInfoCVV = paymentInfo.getCreditCardCVV();
+                paymenInfoCardNumber = S3cur1ty3Cryt3r.aloEncrpter(paymentInfo.getCreditCardNumber(), "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
+                paymenInfoCardName = paymentInfo.getCreditCardName();
+                Date paymentInfoDate = paymentInfo.getCreditCardDate();
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM");
+                String DateToStr = format.format(paymentInfoDate);
+                paymentInfoDateYear = DateToStr.split("-")[0];
+                paymentInfoDateMonth = DateToStr.split("-")[1];
+            } else {
+                paymentInfoCVV = cvv;
+                paymenInfoCardNumber = cardNumber;
+                paymenInfoCardName = cardHolderName;
+                paymentInfoDateYear = expirationYear;
+                paymentInfoDateMonth = expirationMonth;
+            }
+            chargeResponse = afinitasPaymentIntegration.afinitasCharge(String.valueOf(amountRecharge), currency, paymenInfoCardNumber, paymentInfoDateYear, paymentInfoDateMonth, paymentInfoCVV, paymenInfoCardName);
+            
+            
             chargeResponse.setStatus("true");
             if (chargeResponse.getStatus().equals("true")) {
                 //Se actualizan los saldos de los usuarios involucrados en la transferencia
@@ -3380,17 +3539,16 @@ public class APIOperations {
                 Float currentAmountUserSource = balanceUserSource.getCurrentAmount() + amountRecharge;
                 balanceHistory.setCurrentAmount(currentAmountUserSource);
                 balanceHistory.setProductId(product);
-                balanceHistory.setTransactionId(transfer);
+                balanceHistory.setTransactionId(transaction);
                 Date balanceDate = new Date();
                 Timestamp balanceHistoryDate = new Timestamp(balanceDate.getTime());
                 balanceHistory.setDate(balanceHistoryDate);
                 balanceHistory.setVersion(balanceUserSource.getId());
                 entityManager.persist(balanceHistory);
-                System.out.println("BALANCE HISTORY"+ balanceHistory );
+                System.out.println("BALANCE HISTORY" + balanceHistory);
                 //Se actualiza el estado de la transaccion a COMPLETED
-                transfer.setTransactionStatus(TransactionStatus.COMPLETED.name());
-                entityManager.merge(transfer);
-
+                transaction.setTransactionStatus(TransactionStatus.COMPLETED.name());
+                entityManager.merge(transaction);
                 //Envias notificaciones
                 //envias sms
                 ////////////////////////////////////////////////////////////
@@ -3400,25 +3558,31 @@ public class APIOperations {
                 for (Product p : products) {
                     Float amount = 0F;
                     try {
-//                        if (p.getId().equals(Product.PREPAID_CARD)) {
-//                            AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
-//                            CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
-//                            CardResponse cardResponse = getCardByUserId(userId);
-//                            String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
-//                            StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-//                            statusCardResponse.setCodigo("00");
-//                            if (statusCardResponse.getCodigo().equals("00")) {
-//                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-//                                amount = Float.valueOf(accountResponse.getComprasDisponibles());
-//                            } else {
-//                                amount = Float.valueOf(0);
-//                            }
-//
-//                        } else {
+                        if (p.getId().equals(Product.PREPAID_CARD)) {
+                            AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
+                            CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+                            CardResponse cardResponse = getCardByUserId(userId);
+                            String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                            StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                            statusCardResponse.setCodigo("00");
+                            if (statusCardResponse.getCodigo().equals("00")) {
+                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                                amount = Float.valueOf(accountResponse.getComprasDisponibles());
+                            } else {
+                                amount = Float.valueOf(0);
+                            }
+
+                        } else {
 
                             amount = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
-                        //}
+                        }
                     } catch (NoResultException e) {
+                        amount = 0F;
+                    } catch (ConnectException e) {
+                        e.printStackTrace();
+                        amount = 0F;
+                    } catch (SocketTimeoutException e) {
+                        e.printStackTrace();
                         amount = 0F;
                     }
                     p.setCurrentBalance(amount);
@@ -3437,160 +3601,167 @@ public class APIOperations {
 //            //Envia quien envia 
 //            SendSmsThread sendSmsThread = new SendSmsThread(userSource_.getDatosRespuesta().getMovil(), amountTransfer, Integer.valueOf("27"), userId, entityManager);
 //            sendSmsThread.run();
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("000000")) {
-                    return new RechargeAfinitasResponses(ResponseCode.NOT_AUTHORIZED, "NOT AUTHORIZED");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("1")) {
-                    return new RechargeAfinitasResponses(ResponseCode.CALL_ISSUER, "CALL ISSUER");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("2")) {
-                    return new RechargeAfinitasResponses(ResponseCode.CALL_ISSUER, "CALL ISSUER");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("3")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INVALID_TRADE, "INVALID TRADE");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("4")) {
-                    return new RechargeAfinitasResponses(ResponseCode.RETAIN_CARD, "RETAIN CARD");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("5")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INVALID_TRANSACTION_AFINITAS, "INVALID TRANSACTION");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("6")) {
-                    return new RechargeAfinitasResponses(ResponseCode.RETRY_AFINITAS, "RETRY");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("12")) {
-                    return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("13")) {
-                    return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("14")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("30")) {
-                    return new RechargeAfinitasResponses(ResponseCode.FORMAT_ERROR, "FORMAT ERROR");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("31")) {
-                    return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("36")) {
-                    return new RechargeAfinitasResponses(ResponseCode.RETAIN_CARD, "RETAIN CARD");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("41")) {
-                    return new RechargeAfinitasResponses(ResponseCode.RETAIN_CARD, "RETAIN CARD");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("43")) {
-                    return new RechargeAfinitasResponses(ResponseCode.RETAIN_CARD, "RETAIN CARD");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("51")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INSUFFICIENT_FUNDS, "INSUFFICIENT FUNDS");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("54")) {
-                    return new RechargeAfinitasResponses(ResponseCode.EXPIRED_CARD_AFINITAS, "EXPIRED CARD");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("55")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INVALID_PIN, "INVALID PIN");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("56")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("57")) {
-                    return new RechargeAfinitasResponses(ResponseCode.DEFERRED_PAYMENT_NOT_PERMITTED, "DEFERRED PAYMENT NOT PERMITTED");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("61")) {
-                    return new RechargeAfinitasResponses(ResponseCode.LIMIT_EXCEEDED, "LIMIT EXCEEDED");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("62")) {
-                    return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("65")) {
-                    return new RechargeAfinitasResponses(ResponseCode.LIMIT_EXCEEDED, "LIMIT EXCEEDED");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("68")) {
-                    return new RechargeAfinitasResponses(ResponseCode.RETRY_AFINITAS, "RETRY");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("75")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INVALID_PIN, "INVALID PIN");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("82")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("83")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("87")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("89")) {
-                    return new RechargeAfinitasResponses(ResponseCode.TYPE_OF_PLAN_TERM_INVALID, "TYPE OF PLAN / TERM INVALID");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("94")) {
-                    return new RechargeAfinitasResponses(ResponseCode.DUPLICATED_TRANSACTION, "DUPLICATED TRANSACTION");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("N0")) {
-                    return new RechargeAfinitasResponses(ResponseCode.RETRY_AFINITAS, "RETRY");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("N2")) {
-                    return new RechargeAfinitasResponses(ResponseCode.EXCESSED_AUTHORIZATIONS, "RETRY");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("N5")) {
-                    return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("N6")) {
-                    return new RechargeAfinitasResponses(ResponseCode.CP_NOT_PERMITTED_BY_TH, "CP NOT PERMITTED BY TH");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("N7")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("N7")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("O4")) {
-                    return new RechargeAfinitasResponses(ResponseCode.LIMIT_EXCEEDED, "LIMIT EXCEEDED");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("O6")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("O8")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("P1")) {
-                    return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("P9")) {
-                    return new RechargeAfinitasResponses(ResponseCode.LIMIT_EXCEEDED, "LIMIT EXCEEDED");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("Q1")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("T2")) {
-                    return new RechargeAfinitasResponses(ResponseCode.TERMINAL_ERROR, "TERMINAL ERROR");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("T3")) {
-                    return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("T5")) {
-                    return new RechargeAfinitasResponses(ResponseCode.UNACTIVATED_CARD, "UNACTIVATED CARD");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("T9")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INVALID_COIN, "INVALID COIN");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("1001")) {
-                    return new RechargeAfinitasResponses(ResponseCode.CHIP_READING_ERROR, "CHIP READING ERROR");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("1002")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INVALID_CHIP, "INVALID CHIP");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("1003")) {
-                    return new RechargeAfinitasResponses(ResponseCode.CHIP_NOT_SUPPORTED, "CHIP NOT SUPPORTED");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("11")) {
-                    return new RechargeAfinitasResponses(ResponseCode.UNKNOWN, "UNKNOWN");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("DV_002")) {
-                    return new RechargeAfinitasResponses(ResponseCode.THE_DEVICE_IS_NOT_ACTIVE, "THE DEVICE IS NOT ACTIVE");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("BR_002")) {
-                    return new RechargeAfinitasResponses(ResponseCode.THE_BRANCH_IS_NOT_ACTIVE, "THE BRANCH IS NOT ACTIVE");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("BS_002")) {
-                    return new RechargeAfinitasResponses(ResponseCode.TRADE_IS_NOT_ACTIVE, "TRADE IS NOT ACTIVE");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("RQ_001")) {
-                    return new RechargeAfinitasResponses(ResponseCode.THE_REQUEST_IS_EMPTY, "THE REQUEST IS EMPTY");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("RQ_002")) {
-                    return new RechargeAfinitasResponses(ResponseCode.MISSING_PARAMETER_ON_REQUEST, "MISSING PARAMETER ON REQUEST");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("RQ_003")) {
-                    return new RechargeAfinitasResponses(ResponseCode.RESOURCE_NOT_FOUND, "RESOURCE NOT FOUND");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("RQ_004")) {
-                    return new RechargeAfinitasResponses(ResponseCode.ANSWER_EMPTY, "ANSWER EMPTY");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_001")) {
-                    return new RechargeAfinitasResponses(ResponseCode.THE_TRANSACTION_EXCEEDS_THE_PERMITTED_AMOUNT, "THE TRANSACTION EXCEEDS THE PERMITTED AMOUNT");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_002")) {
-                    return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_EXCEEDS_THE_ALLOWED_DAILY_AMOUNT, "TRANSACTION EXCEEDS THE ALLOWED DAILY AMOUNT");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_003")) {
-                    return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_EXCEEDS_THE_MONTHLY_AMOUNT_ALLOWED, "TRANSACTION EXCEEDS THE MONTHLY AMOUNT ALLOWED");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_005")) {
-                    return new RechargeAfinitasResponses(ResponseCode.NON_ACTIVE_PROMOTIONS, "NON ACTIVE PROMOTIONS");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_006")) {
-                    return new RechargeAfinitasResponses(ResponseCode.PROMOTION_NOT_ACTIVE, "PROMOTION NOT ACTIVE");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_007")) {
-                    return new RechargeAfinitasResponses(ResponseCode.THE_TRANSACTION_IS_NOT_WITHIN_THE_PERMITTED_SCHEDULE, "THE TRANSACTION IS NOT WITHIN THE PERMITTED SCHEDULE");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_008")) {
-                    return new RechargeAfinitasResponses(ResponseCode.THE_TRANSACTION_DOES_NOT_EXIST, "THE TRANSACTION DOES NOT EXIST");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_009")) {
-                    return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_WITH_NOT_APPROVED_SOURCE, "TRANSACTION WITH NOT APPROVED SOURCE");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_010")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_011")) {
-                    return new RechargeAfinitasResponses(ResponseCode.INVALID_MEMBERSHIP, "INVALID MEMBERSHIP");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_013")) {
-                    return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_CANCELED_PREVIOUSLY, "TRANSACTION CANCELED PREVIOUSLY");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_014")) {
-                    return new RechargeAfinitasResponses(ResponseCode.PREVIOUSLY_REVERSED_TRANSACTION, "PREVIOUSLY REVERSED TRANSACTION");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_015")) {
-                    return new RechargeAfinitasResponses(ResponseCode.EXCEED_PERMITTED_DAILY_TRANSACTIONS, "EXCEED PERMITTED DAILY TRANSACTIONS");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("CRP_002")) {
-                    return new RechargeAfinitasResponses(ResponseCode.THE_CORPORATE_IS_NOT_ACTIVE, "THE CORPORATE IS NOT ACTIVE");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("NF_001")) {
-                    return new RechargeAfinitasResponses(ResponseCode.ANSWER_NOT_FOUND, "ANSWER NOT FOUND");
-                } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_024")) {
-                    return new RechargeAfinitasResponses(ResponseCode.TIME_EXCEEDED_TO_PERFORM_CANCELLATION, "TIME EXCEEDED TO PERFORM CANCELLATION");
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return new RechargeAfinitasResponses(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("000000")) {
+                return new RechargeAfinitasResponses(ResponseCode.NOT_AUTHORIZED, "NOT AUTHORIZED");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("1")) {
+                return new RechargeAfinitasResponses(ResponseCode.CALL_ISSUER, "CALL ISSUER");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("2")) {
+                return new RechargeAfinitasResponses(ResponseCode.CALL_ISSUER, "CALL ISSUER");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("3")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_TRADE, "INVALID TRADE");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("4")) {
+                return new RechargeAfinitasResponses(ResponseCode.RETAIN_CARD, "RETAIN CARD");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("5")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_TRANSACTION_AFINITAS, "INVALID TRANSACTION");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("6")) {
+                return new RechargeAfinitasResponses(ResponseCode.RETRY_AFINITAS, "RETRY");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("12")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("13")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("14")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("30")) {
+                return new RechargeAfinitasResponses(ResponseCode.FORMAT_ERROR, "FORMAT ERROR");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("31")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("36")) {
+                return new RechargeAfinitasResponses(ResponseCode.RETAIN_CARD, "RETAIN CARD");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("41")) {
+                return new RechargeAfinitasResponses(ResponseCode.RETAIN_CARD, "RETAIN CARD");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("43")) {
+                return new RechargeAfinitasResponses(ResponseCode.RETAIN_CARD, "RETAIN CARD");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("51")) {
+                return new RechargeAfinitasResponses(ResponseCode.INSUFFICIENT_FUNDS, "INSUFFICIENT FUNDS");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("54")) {
+                return new RechargeAfinitasResponses(ResponseCode.EXPIRED_CARD_AFINITAS, "EXPIRED CARD");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("55")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_PIN, "INVALID PIN");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("56")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("57")) {
+                return new RechargeAfinitasResponses(ResponseCode.DEFERRED_PAYMENT_NOT_PERMITTED, "DEFERRED PAYMENT NOT PERMITTED");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("61")) {
+                return new RechargeAfinitasResponses(ResponseCode.LIMIT_EXCEEDED, "LIMIT EXCEEDED");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("62")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("65")) {
+                return new RechargeAfinitasResponses(ResponseCode.LIMIT_EXCEEDED, "LIMIT EXCEEDED");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("68")) {
+                return new RechargeAfinitasResponses(ResponseCode.RETRY_AFINITAS, "RETRY");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("75")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_PIN, "INVALID PIN");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("82")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("83")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("87")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("89")) {
+                return new RechargeAfinitasResponses(ResponseCode.TYPE_OF_PLAN_TERM_INVALID, "TYPE OF PLAN / TERM INVALID");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("94")) {
+                return new RechargeAfinitasResponses(ResponseCode.DUPLICATED_TRANSACTION, "DUPLICATED TRANSACTION");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("N0")) {
+                return new RechargeAfinitasResponses(ResponseCode.RETRY_AFINITAS, "RETRY");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("N2")) {
+                return new RechargeAfinitasResponses(ResponseCode.EXCESSED_AUTHORIZATIONS, "RETRY");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("N5")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("N6")) {
+                return new RechargeAfinitasResponses(ResponseCode.CP_NOT_PERMITTED_BY_TH, "CP NOT PERMITTED BY TH");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("N7")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("N7")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("O4")) {
+                return new RechargeAfinitasResponses(ResponseCode.LIMIT_EXCEEDED, "LIMIT EXCEEDED");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("O6")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("O8")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("P1")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("P9")) {
+                return new RechargeAfinitasResponses(ResponseCode.LIMIT_EXCEEDED, "LIMIT EXCEEDED");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("Q1")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("T2")) {
+                return new RechargeAfinitasResponses(ResponseCode.TERMINAL_ERROR, "TERMINAL ERROR");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("T3")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("T5")) {
+                return new RechargeAfinitasResponses(ResponseCode.UNACTIVATED_CARD, "UNACTIVATED CARD");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("T9")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_COIN, "INVALID COIN");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("1001")) {
+                return new RechargeAfinitasResponses(ResponseCode.CHIP_READING_ERROR, "CHIP READING ERROR");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("1002")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CHIP, "INVALID CHIP");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("1003")) {
+                return new RechargeAfinitasResponses(ResponseCode.CHIP_NOT_SUPPORTED, "CHIP NOT SUPPORTED");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("11")) {
+                return new RechargeAfinitasResponses(ResponseCode.UNKNOWN, "UNKNOWN");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("DV_002")) {
+                return new RechargeAfinitasResponses(ResponseCode.THE_DEVICE_IS_NOT_ACTIVE, "THE DEVICE IS NOT ACTIVE");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("BR_002")) {
+                return new RechargeAfinitasResponses(ResponseCode.THE_BRANCH_IS_NOT_ACTIVE, "THE BRANCH IS NOT ACTIVE");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("BS_002")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRADE_IS_NOT_ACTIVE, "TRADE IS NOT ACTIVE");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("RQ_001")) {
+                return new RechargeAfinitasResponses(ResponseCode.THE_REQUEST_IS_EMPTY, "THE REQUEST IS EMPTY");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("RQ_002")) {
+                return new RechargeAfinitasResponses(ResponseCode.MISSING_PARAMETER_ON_REQUEST, "MISSING PARAMETER ON REQUEST");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("RQ_003")) {
+                return new RechargeAfinitasResponses(ResponseCode.RESOURCE_NOT_FOUND, "RESOURCE NOT FOUND");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("RQ_004")) {
+                return new RechargeAfinitasResponses(ResponseCode.ANSWER_EMPTY, "ANSWER EMPTY");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_001")) {
+                return new RechargeAfinitasResponses(ResponseCode.THE_TRANSACTION_EXCEEDS_THE_PERMITTED_AMOUNT, "THE TRANSACTION EXCEEDS THE PERMITTED AMOUNT");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_002")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_EXCEEDS_THE_ALLOWED_DAILY_AMOUNT, "TRANSACTION EXCEEDS THE ALLOWED DAILY AMOUNT");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_003")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_EXCEEDS_THE_MONTHLY_AMOUNT_ALLOWED, "TRANSACTION EXCEEDS THE MONTHLY AMOUNT ALLOWED");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_005")) {
+                return new RechargeAfinitasResponses(ResponseCode.NON_ACTIVE_PROMOTIONS, "NON ACTIVE PROMOTIONS");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_006")) {
+                return new RechargeAfinitasResponses(ResponseCode.PROMOTION_NOT_ACTIVE, "PROMOTION NOT ACTIVE");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_007")) {
+                return new RechargeAfinitasResponses(ResponseCode.THE_TRANSACTION_IS_NOT_WITHIN_THE_PERMITTED_SCHEDULE, "THE TRANSACTION IS NOT WITHIN THE PERMITTED SCHEDULE");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_008")) {
+                return new RechargeAfinitasResponses(ResponseCode.THE_TRANSACTION_DOES_NOT_EXIST, "THE TRANSACTION DOES NOT EXIST");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_009")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_WITH_NOT_APPROVED_SOURCE, "TRANSACTION WITH NOT APPROVED SOURCE");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_010")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_011")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_MEMBERSHIP, "INVALID MEMBERSHIP");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_013")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_CANCELED_PREVIOUSLY, "TRANSACTION CANCELED PREVIOUSLY");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_014")) {
+                return new RechargeAfinitasResponses(ResponseCode.PREVIOUSLY_REVERSED_TRANSACTION, "PREVIOUSLY REVERSED TRANSACTION");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_015")) {
+                return new RechargeAfinitasResponses(ResponseCode.EXCEED_PERMITTED_DAILY_TRANSACTIONS, "EXCEED PERMITTED DAILY TRANSACTIONS");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("CRP_002")) {
+                return new RechargeAfinitasResponses(ResponseCode.THE_CORPORATE_IS_NOT_ACTIVE, "THE CORPORATE IS NOT ACTIVE");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("NF_001")) {
+                return new RechargeAfinitasResponses(ResponseCode.ANSWER_NOT_FOUND, "ANSWER NOT FOUND");
+            } else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_024")) {
+                return new RechargeAfinitasResponses(ResponseCode.TIME_EXCEEDED_TO_PERFORM_CANCELLATION, "TIME EXCEEDED TO PERFORM CANCELLATION");
             }
+
+        } catch (SocketTimeoutException e) {
+            e.printStackTrace();
+            return new RechargeAfinitasResponses(ResponseCode.THE_SERVICE_NOT_AVAILABLE, "THE SERVICE NOT AVAILABLE");
+        } catch (java.net.ConnectException ex) {
+            ex.printStackTrace();
+            return new RechargeAfinitasResponses(ResponseCode.NOT_AUTHORIZED, "NOT AUTHORIZED");
+        }catch (Exception e) {
+            e.printStackTrace();
+            return new RechargeAfinitasResponses(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
+        }
         RechargeAfinitasResponses rechargeAfinitasResponses = new RechargeAfinitasResponses(chargeResponse, ResponseCode.EXITO, "EXITO", products);
         rechargeAfinitasResponses.setProducts(products);
+        rechargeAfinitasResponses.setIdTransaction(transaction.getId().toString());
         return rechargeAfinitasResponses;
 //        return new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
     }
@@ -3636,9 +3807,9 @@ public class APIOperations {
             if (validateUser(userApi, passwordApi)) {
                 responseUser = proxy.getUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId));
                 userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
-                Address address = saveAddress(userId, estado, ciudad, zipCode, addres1);
+                //Address address = saveAddress(userId, estado, ciudad, zipCode, addres1);
                 PaymentInfo paymentInfo = new PaymentInfo();
-                paymentInfo.setBillingAddressId(address);
+                paymentInfo.setBillingAddressId(null);
                 PaymentPatner paymentPatner = entityManager.find(PaymentPatner.class, paymentPatnerId);
                 paymentInfo.setPaymentPatnerId(paymentPatner);
                 PaymentType paymentType = entityManager.find(PaymentType.class, paymentTypeId);
@@ -3647,9 +3818,7 @@ public class APIOperations {
                 CreditcardType creditcardType = entityManager.find(CreditcardType.class, creditCardTypeId);
                 paymentInfo.setCreditCardTypeId(creditcardType);
                 paymentInfo.setCreditCardName(creditCardName);
-                String example = creditCardNumber;
-                byte[] bytes = example.getBytes();
-                paymentInfo.setCreditCardNumber(bytes);
+                paymentInfo.setCreditCardNumber(creditCardNumber);
                 paymentInfo.setCreditCardCVV(creditCardCVV);
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM");
                 Date ccdate = format.parse(creditCardDate);
@@ -3680,9 +3849,9 @@ public class APIOperations {
                 .getPassword().equals(password));
     }
 
-  public PaymentInfoResponse ChangeStatusPaymentInfo(String userApi, String passwordApi, Long userId, Long paymentInfoId, boolean  status) {
-       PaymentInfo paymentInfo = null;
-       
+    public PaymentInfoResponse ChangeStatusPaymentInfo(String userApi, String passwordApi, Long userId, Long paymentInfoId, boolean status) {
+        PaymentInfo paymentInfo = null;
+
         try {
             if (validateUser(userApi, passwordApi)) {
                 paymentInfo = entityManager.createNamedQuery("PaymentInfo.findByUserIdById", PaymentInfo.class).setParameter("userId", userId).setParameter("id", paymentInfoId).getSingleResult();
@@ -3697,8 +3866,8 @@ public class APIOperations {
         }
         return new PaymentInfoResponse(ResponseCode.EXITO, "", paymentInfo);
     }
-  
-  public ProductListResponse getProductsRechargePaymentByUserId(Long userId) {
+
+    public ProductListResponse getProductsRechargePaymentByUserId(Long userId) {
         List<Product> products = new ArrayList<Product>();
         List<Product> productFinals = new ArrayList<Product>();
         try {
@@ -3726,4 +3895,22 @@ public class APIOperations {
 
         return new ProductListResponse(ResponseCode.EXITO, "", productFinals);
     }
+    
+    
+    public ProductListResponse generarCodigoMovilSMS(String movil, String codigo) {
+
+        try {
+            SendSmsThread sendSmsThread = new SendSmsThread(movil, codigo, Integer.valueOf("32"));
+                sendSmsThread.start();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ProductListResponse(ResponseCode.ERROR_INTERNO, "ERROR SEND SMS");
+        }
+                
+
+         return new ProductListResponse(ResponseCode.EXITO, "ENVIO DE SMS EXITOSO");       
+    }       
+    
+    
 }
