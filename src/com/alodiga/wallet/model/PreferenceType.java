@@ -6,6 +6,7 @@
 package com.alodiga.wallet.model;
 
 import java.io.Serializable;
+import com.alodiga.wallet.genericEJB.AbstractWalletEntity;
 import java.util.Collection;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
@@ -32,7 +33,7 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "PreferenceType.findAll", query = "SELECT p FROM PreferenceType p"),
     @NamedQuery(name = "PreferenceType.findById", query = "SELECT p FROM PreferenceType p WHERE p.id = :id"),
     @NamedQuery(name = "PreferenceType.findByType", query = "SELECT p FROM PreferenceType p WHERE p.type = :type")})
-public class PreferenceType implements Serializable {
+public class PreferenceType extends AbstractWalletEntity implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -100,5 +101,10 @@ public class PreferenceType implements Serializable {
     public String toString() {
         return "dto.PreferenceType[ id=" + id + " ]";
     }
+
+	@Override
+	public Object getPk() {
+		return getId();
+	}
     
 }

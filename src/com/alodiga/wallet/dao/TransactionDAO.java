@@ -1,12 +1,12 @@
 package com.alodiga.wallet.dao;
 
 import com.alodiga.wallet.model.BalanceHistory;
-import com.alodiga.wallet.model.BalanceHistory_;
 import com.alodiga.wallet.model.Commission;
-import com.alodiga.wallet.model.Commission_;
 import com.alodiga.wallet.model.Product;
 import com.alodiga.wallet.model.Transaction;
 import com.alodiga.wallet.model.TransactionType;
+import com.alodiga.wallet.sources.model.BalanceHistory_;
+import com.alodiga.wallet.sources.model.Commission_;
 import com.alodiga.wallet.utils.Constante;
 import java.sql.Timestamp;
 import java.util.Date;

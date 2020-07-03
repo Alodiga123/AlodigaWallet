@@ -22,6 +22,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.alodiga.wallet.genericEJB.AbstractWalletEntity;
+
 /**
  *
  * @author usuario
@@ -36,7 +38,7 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "PreferenceValue.findByValue", query = "SELECT p FROM PreferenceValue p WHERE p.value = :value"),
     @NamedQuery(name = "PreferenceValue.findByBeginningDate", query = "SELECT p FROM PreferenceValue p WHERE p.beginningDate = :beginningDate"),
     @NamedQuery(name = "PreferenceValue.findByEndingDate", query = "SELECT p FROM PreferenceValue p WHERE p.endingDate = :endingDate")})
-public class PreferenceValue implements Serializable {
+public class PreferenceValue extends AbstractWalletEntity implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -145,5 +147,10 @@ public class PreferenceValue implements Serializable {
     public String toString() {
         return "dto.PreferenceValue[ id=" + id + " ]";
     }
+
+	@Override
+	public Object getPk() {
+		return getId();
+	}
     
 }

@@ -46,6 +46,7 @@ public class Enterprise implements Serializable {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "enterpriseId")
     private Collection<Bank> bankCollection;
     private static final long serialVersionUID = 1L;
+    public static final Long ALODIGA = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)

@@ -221,4 +221,15 @@ public class Constants {
     public static final Long PAYMENT_PATNER = 2L;
     public static final Long PAYMENT_TYPE = 2L;
     
+    public static final int USA_CODE = 1;
+    
+    public static final String PROPERTIES_PACKAGE = "com.alodiga.wallet.utils.";
+    public static final String ERROR_FILE_NAME = PROPERTIES_PACKAGE + "system_error";
+    public static final String MESSAGE_FILE_NAME = PROPERTIES_PACKAGE + "system_message";
+    public static final String ERR_GENERAL_EXCEPTION = "E000";
+    public static final String ERR_NULL_PARAMETER = "E001";
+    public static final String ERR_INCORRECT_PARAMETER = "E002";
+    public static final String ERR_EMPTY_LIST_EXCEPTION = "E003";
+    public static final String ERR_REGISTER_NOT_FOUND_EXCEPTION = "E004";
+    
 }
