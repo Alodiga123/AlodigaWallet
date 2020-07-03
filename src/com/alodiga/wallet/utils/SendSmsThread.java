@@ -7,6 +7,7 @@ import com.alodiga.massiva.sms.SendSmsMassiva;
 import com.alodiga.twilio.sms.services.TwilioSmsSenderProxy;
 import com.alodiga.wallet.model.Sms;
 import java.math.BigInteger;
+import java.net.ConnectException;
 
 import java.rmi.RemoteException;
 import java.sql.Timestamp;
@@ -45,10 +46,11 @@ public class SendSmsThread extends Thread {
         this.sendSmsType = sendSmsType;
     }
 
-    public SendSmsThread(String movil, String codigo, Integer sendSmsType) {
+    public SendSmsThread(String movil, String codigo, Integer sendSmsType,EntityManager entityManager) {
         this.movil = movil;
         this.codigo = codigo;
         this.sendSmsType = sendSmsType;
+        this.entityManager = entityManager;
     }
 
     public SendSmsThread(String movil, String codigo_, Long languageId) {
@@ -173,7 +175,12 @@ public class SendSmsThread extends Thread {
             if (movil.substring(0, 1).equals("1")) {
                 //lo envia por USA
                 TwilioSmsSenderProxy proxy = new TwilioSmsSenderProxy();
-                proxy.sendTwilioSMS(movil, message);
+                try {
+                    proxy.sendTwilioSMS(movil, message);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                
             } else if (movil.substring(0, 2).equals("58")) {
                 //Venezuela  integras con Massiva
 //                APIOperations aPIOperations = new APIOperations();
@@ -200,6 +207,8 @@ public class SendSmsThread extends Thread {
                     //sms.setAdditional(response);
                     entityManager.flush();
                     entityManager.persist(sms);
+                    
+                
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

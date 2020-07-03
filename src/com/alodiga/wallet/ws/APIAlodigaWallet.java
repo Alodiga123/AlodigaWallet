@@ -560,5 +560,10 @@ public class APIAlodigaWallet {
        operations.sendMail(subject, body,to,from);
     }
     
-    
+    @WebMethod
+    public void sendSMS(
+            @WebParam(name = "movil") String movil,
+            @WebParam(name = "message") String message) {
+       operations.sendSMS(movil, message);
+    }
 }

@@ -49,8 +49,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "Product.findByIsExchangeProduct", query = "SELECT p FROM Product p WHERE p.isExchangeProduct = :isExchangeProduct")})
 public class Product implements Serializable {
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
-    private Collection<CardHasProduct> cardHasProductCollection;
+    
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
     private Collection<BankOperation> bankOperationCollection;
@@ -403,15 +402,6 @@ public class Product implements Serializable {
         this.bankOperationCollection = bankOperationCollection;
     }
 
-    @XmlTransient
-    @JsonIgnore
-    public Collection<CardHasProduct> getCardHasProductCollection() {
-        return cardHasProductCollection;
-    }
-
-    public void setCardHasProductCollection(Collection<CardHasProduct> cardHasProductCollection) {
-        this.cardHasProductCollection = cardHasProductCollection;
-    }
-
+    
 }
 

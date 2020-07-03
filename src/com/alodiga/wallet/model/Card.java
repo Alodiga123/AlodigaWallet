@@ -55,8 +55,8 @@ public class Card implements Serializable {
     private String nameCard;
     @Column(name = "userDestinationId")
     private BigInteger userDestinationId;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "cardId")
-    private Collection<CardHasProduct> cardHasProductCollection;
+
+
     
 
     public Card() {
@@ -109,15 +109,7 @@ public class Card implements Serializable {
 
     
     
-    @XmlTransient
-    @JsonIgnore
-    public Collection<CardHasProduct> getCardHasProductCollection() {
-        return cardHasProductCollection;
-    }
-
-    public void setCardHasProductCollection(Collection<CardHasProduct> cardHasProductCollection) {
-        this.cardHasProductCollection = cardHasProductCollection;
-    }
+    
 
    
 

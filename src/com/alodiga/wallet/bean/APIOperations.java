@@ -11,10 +11,12 @@ import com.alodiga.businessportal.ws.APIBusinessPortalWSProxy;
 
 import com.alodiga.card.credential.response.ChangeStatusCardResponse;
 import com.alodiga.card.credential.response.StatusCardResponse;
+import com.alodiga.massiva.sms.SendSmsMassiva;
 import com.alodiga.transferto.integration.connection.RequestManager;
 import com.alodiga.transferto.integration.model.MSIDN_INFOResponse;
 import com.alodiga.transferto.integration.model.ReserveResponse;
 import com.alodiga.transferto.integration.model.TopUpResponse;
+import com.alodiga.twilio.sms.services.TwilioSmsSenderProxy;
 import com.alodiga.wallet.model.Address;
 import com.alodiga.wallet.model.Bank;
 import com.alodiga.wallet.model.BankOperation;
@@ -125,7 +127,6 @@ import com.alodiga.ws.remittance.services.WSRemittenceMobileProxy;
 import com.alodiga.ws.remittance.services.WsAddressListResponse;
 
 import com.alodiga.ws.remittance.services.WsRemittenceResponse;
-
 
 import com.ericsson.alodiga.ws.Cuenta;
 import java.io.IOException;
@@ -464,7 +465,7 @@ public class APIOperations {
             paymentShop.setTransactionStatus(TransactionStatus.COMPLETED.name());
             entityManager.merge(paymentShop);
             addSellTransaction = aPIBusinessPortalWSProxy.addSellTransaction("codigo1", paymentShop.getId(), "AloWallet", amountPayment);
-            
+
             products = getProductsListByUserId(userId);
             for (Product p : products) {
                 Float amount = 0F;
@@ -1524,6 +1525,9 @@ public class APIOperations {
 
             SendSmsThread sendSmsThread = new SendSmsThread(responseUser.getDatosRespuesta().getMovil(), Integer.valueOf("23"), amountWithdrawal, userId, entityManager);
             sendSmsThread.run();
+        } catch (ConnectException e) {
+            e.printStackTrace();
+            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
         } catch (Exception e) {
             e.printStackTrace();
             return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
@@ -1873,13 +1877,13 @@ public class APIOperations {
             ex.printStackTrace();
         }
     }
-    
-    public void sendMail(String subject,String body, String to, String from) {
-        Mail mail = new Mail(subject,body);
+
+    public void sendMail(String subject, String body, String to, String from) {
+        Mail mail = new Mail(subject, body);
         mail.setSubject(subject);
         mail.setFrom(from);
         mail.setBody(body);
-        
+
         try {
             AmazonSESSendMail.SendMail(subject, body, to);
         } catch (Exception ex) {
@@ -2371,7 +2375,7 @@ public class APIOperations {
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
             Address address = saveAddress(userId, estado, ciudad, zipCode, addres1);
             OFACMethodWSProxy oFACMethodWSProxy = new OFACMethodWSProxy();
-            
+
             WsLoginResponse response;
             WsExcludeListResponse response2;
             response = oFACMethodWSProxy.loginWS("alodiga", "d6f80e647631bb4522392aff53370502");
@@ -2645,26 +2649,26 @@ public class APIOperations {
 
     public TransferCardToCardResponses transferCardToCardAutorization(Long userId, String numberCardOrigin, String numberCardDestinate, String balance, Long idUserDestination, String conceptTransaction) {
         APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
-        System.out.println("date1"+ new Date().getTime());
+        System.out.println("date1" + new Date().getTime());
         AutorizationCredentialServiceClient autorizationCredentialServiceClient = new AutorizationCredentialServiceClient();
-        System.out.println("date2"+ new Date().getTime());
+        System.out.println("date2" + new Date().getTime());
         ArrayList<Product> products = new ArrayList<Product>();
         CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
-        System.out.println("date3"+ new Date().getTime());
+        System.out.println("date3" + new Date().getTime());
         AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         Transaction transfer = new Transaction();
-        System.out.println("date4"+ new Date().getTime());
+        System.out.println("date4" + new Date().getTime());
 
         try {
-            System.out.println("date5"+ new Date().getTime());
+            System.out.println("date5" + new Date().getTime());
             RespuestaUsuario responseUser = proxy.getUsuarioporId(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, String.valueOf(userId));
-            System.out.println("date6"+ new Date().getTime());
+            System.out.println("date6" + new Date().getTime());
             RespuestaUsuario userDestination = proxy.getUsuarioporId("usuarioWS", "passwordWS", idUserDestination.toString());
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
-            System.out.println("date7"+ new Date().getTime());
+            System.out.println("date7" + new Date().getTime());
             ignoreSSLAutorization();
-            System.out.println("date8"+ new Date().getTime());
+            System.out.println("date8" + new Date().getTime());
             numberCardOrigin = S3cur1ty3Cryt3r.aloEncrpter(numberCardOrigin, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
             numberCardDestinate = S3cur1ty3Cryt3r.aloEncrpter(numberCardDestinate, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
             SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
@@ -2673,7 +2677,7 @@ public class APIOperations {
             System.out.println(hour);
             String date = sdg.format(timestamp);
             System.out.println(date);
-            System.out.println("date9"+ new Date().getTime());
+            System.out.println("date9" + new Date().getTime());
             CardToCardTransferResponse cardToCardTransferResponse = new CardToCardTransferResponse();
             //  CardToCardTransferResponse cardToCardTransferResponse = autorizationCredentialServiceClient.cardToCardTransfer(date, hour, numberCardOrigin, numberCardDestinate, balance);
             ////////////////////////////////////////////////////////////////
@@ -2690,16 +2694,12 @@ public class APIOperations {
             cardToCardTransferResponse.setSaldo("3000");
             cardToCardTransferResponse.setSaldoPosteriorCuentaDestino("1000");
             cardToCardTransferResponse.setSaldoCuentaDestino("2000");
-                  
-             ////////////////////////////////////////////////////////////////
+
+            ////////////////////////////////////////////////////////////////
             /////////////////////////////////////////////
             //CABLE
             /////////////////////////////////
             /////////////////////////////////
-            
-            
-          
-            
             if (cardToCardTransferResponse.getCodigoError().equals("-1")) {
                 TransferCardToCardCredential cardCredential = new TransferCardToCardCredential(cardToCardTransferResponse.getCodigoError(), cardToCardTransferResponse.getMensajeError(), cardToCardTransferResponse.getCodigoRespuesta(), cardToCardTransferResponse.getMensajeRespuesta(), cardToCardTransferResponse.getCodigoAutorizacion(), cardToCardTransferResponse.getSaldoPosterior(), cardToCardTransferResponse.getSaldo(), cardToCardTransferResponse.getSaldoPosteriorCuentaDestino(), cardToCardTransferResponse.getSaldoCuentaDestino());
                 /////cable
@@ -2711,7 +2711,7 @@ public class APIOperations {
                 transfer.setUserDestinationId(BigInteger.valueOf(idUserDestination));
                 Product product = entityManager.find(Product.class, 3L);
                 transfer.setProductId(product);
-                System.out.println("date10"+ new Date().getTime());
+                System.out.println("date10" + new Date().getTime());
                 TransactionType transactionType = entityManager.find(TransactionType.class, Constants.TRANSFER_CARD_TO_CARD);
                 transfer.setTransactionTypeId(transactionType);
                 TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constants.TRANSFER_CARD_TO_CARD_SOURCE);
@@ -2719,15 +2719,15 @@ public class APIOperations {
                 Date date_ = new Date();
                 Timestamp creationDate = new Timestamp(date_.getTime());
                 transfer.setCreationDate(creationDate);
-                
-                System.out.println("date11"+ new Date().getTime());
+
+                System.out.println("date11" + new Date().getTime());
 
                 transfer.setConcept(Constants.TRANSACTION_CONCEPT_TRANSFER_CARD_TO_CARD);
                 transfer.setAmount(Float.valueOf(balance));
                 transfer.setTransactionStatus(TransactionStatus.COMPLETED.name());
                 transfer.setTotalAmount(Float.valueOf(balance));
                 entityManager.persist(transfer);
-                System.out.println("date12"+ new Date().getTime());
+                System.out.println("date12" + new Date().getTime());
                 BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId, 3L);
                 BalanceHistory balanceHistory = new BalanceHistory();
                 balanceHistory.setId(null);
@@ -2746,7 +2746,7 @@ public class APIOperations {
                 Timestamp balanceHistoryDate = new Timestamp(balanceDate.getTime());
                 balanceHistory.setDate(balanceHistoryDate);
                 entityManager.persist(balanceHistory);
-            System.out.println("date13"+ new Date().getTime());
+                System.out.println("date13" + new Date().getTime());
                 BalanceHistory balanceUserDestination = loadLastBalanceHistoryByAccount(idUserDestination, 3L);
                 balanceHistory = new BalanceHistory();
                 balanceHistory.setId(null);
@@ -2765,7 +2765,7 @@ public class APIOperations {
                 balanceHistoryDate = new Timestamp(balanceDate.getTime());
                 balanceHistory.setDate(balanceHistoryDate);
                 entityManager.persist(balanceHistory);
-                System.out.println("date14"+ new Date().getTime());
+                System.out.println("date14" + new Date().getTime());
                 try {
                     products = getProductsListByUserId(userId);
                     for (Product p : products) {
@@ -2800,20 +2800,20 @@ public class APIOperations {
 
                     return new TransferCardToCardResponses(ResponseCode.ERROR_INTERNO, "Error loading products");
                 }
-                System.out.println("date16"+ new Date().getTime());
+                System.out.println("date16" + new Date().getTime());
                 SendMailTherad sendMailTherad = new SendMailTherad("ES", Float.valueOf(balance), conceptTransaction, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), responseUser.getDatosRespuesta().getEmail(), Integer.valueOf("11"));
                 sendMailTherad.run();
-                System.out.println("date17"+ new Date().getTime());
+                System.out.println("date17" + new Date().getTime());
                 SendMailTherad sendMailTherad1 = new SendMailTherad("ES", Float.valueOf(balance), conceptTransaction, userDestination.getDatosRespuesta().getNombre() + " " + userDestination.getDatosRespuesta().getApellido(), userDestination.getDatosRespuesta().getEmail(), Integer.valueOf("12"));
                 sendMailTherad1.run();
-                System.out.println("date18"+ new Date().getTime());
+                System.out.println("date18" + new Date().getTime());
                 SendSmsThread sendSmsThread = new SendSmsThread(responseUser.getDatosRespuesta().getMovil(), Float.valueOf(balance), Integer.valueOf("30"), userId, entityManager);
                 sendSmsThread.run();
-                System.out.println("date19"+ new Date().getTime());
+                System.out.println("date19" + new Date().getTime());
                 //SendSmsThread sendSmsThread1 = new SendSmsThread(userDestination.getDatosRespuesta().getMovil(), Float.valueOf(balance), Integer.valueOf("31"), Long.valueOf(userDestination.getDatosRespuesta().getUsuarioID()), entityManager);
 //                sendSmsThread1.run();
 
-                System.out.println("date15"+ new Date().getTime());
+                System.out.println("date15" + new Date().getTime());
                 TransferCardToCardResponses cardResponses = new TransferCardToCardResponses(cardCredential, ResponseCode.EXITO, "", products);
                 cardResponses.setIdTransaction(transfer.getId().toString());
                 cardResponses.setProducts(products);
@@ -2957,6 +2957,7 @@ public class APIOperations {
 
         }
     }
+
     private void ignoreSSLAutorization() {
         try {
             XTrustProvider.install();
@@ -3055,7 +3056,7 @@ public class APIOperations {
         return new ProductListResponse(ResponseCode.EXITO, "", productFinals);
     }
 
-        public RemittanceResponse processRemettenceAccount(Long userId,
+    public RemittanceResponse processRemettenceAccount(Long userId,
             Float amountOrigin,
             Float totalAmount,
             Float amountDestiny,
@@ -3525,8 +3526,7 @@ public class APIOperations {
                 paymentInfoDateMonth = expirationMonth;
             }
             chargeResponse = afinitasPaymentIntegration.afinitasCharge(String.valueOf(amountRecharge), currency, paymenInfoCardNumber, paymentInfoDateYear, paymentInfoDateMonth, paymentInfoCVV, paymenInfoCardName);
-            
-            
+
             chargeResponse.setStatus("true");
             if (chargeResponse.getStatus().equals("true")) {
                 //Se actualizan los saldos de los usuarios involucrados en la transferencia
@@ -3755,7 +3755,7 @@ public class APIOperations {
         } catch (java.net.ConnectException ex) {
             ex.printStackTrace();
             return new RechargeAfinitasResponses(ResponseCode.NOT_AUTHORIZED, "NOT AUTHORIZED");
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return new RechargeAfinitasResponses(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
         }
@@ -3895,22 +3895,52 @@ public class APIOperations {
 
         return new ProductListResponse(ResponseCode.EXITO, "", productFinals);
     }
-    
-    
+
     public ProductListResponse generarCodigoMovilSMS(String movil, String codigo) {
 
         try {
-            SendSmsThread sendSmsThread = new SendSmsThread(movil, codigo, Integer.valueOf("32"));
-                sendSmsThread.start();
-            
+            SendSmsThread sendSmsThread = new SendSmsThread(movil, codigo, Integer.valueOf("32"), entityManager);
+            sendSmsThread.start();
+
         } catch (Exception e) {
             e.printStackTrace();
             return new ProductListResponse(ResponseCode.ERROR_INTERNO, "ERROR SEND SMS");
         }
-                
 
-         return new ProductListResponse(ResponseCode.EXITO, "ENVIO DE SMS EXITOSO");       
-    }       
-    
-    
+        return new ProductListResponse(ResponseCode.EXITO, "ENVIO DE SMS EXITOSO");
+    }
+
+    public void sendSMS(String movil, String message) {
+
+        try {
+            //Solo aplica para dos o tres pasises si se desea hacer dinamicamente se debe agregar un plan de numeraciòn
+            String countryCode = movil.substring(0, 2);
+            if (movil.substring(0, 1).equals("1")) {
+                //lo envia por USA
+                TwilioSmsSenderProxy proxy = new TwilioSmsSenderProxy();
+                try {
+                    proxy.sendTwilioSMS(movil, message);
+                } catch (ConnectException e) {
+                    e.printStackTrace();
+                }
+
+            } else if (movil.substring(0, 2).equals("58")) {
+                //Venezuela  integras con Massiva
+                SendSmsMassiva sendSmsMassiva = new SendSmsMassiva();
+                try {
+                    String response = sendSmsMassiva.sendSmsMassiva(message, movil);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else if (movil.substring(0, 2).equals("52")) {
+                //lo envia por TWILIO A MEXICO
+                TwilioSmsSenderProxy proxy = new TwilioSmsSenderProxy();
+                proxy.sendTwilioSMS(movil, message);
+            }
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+        }
+
+    }
+
 }
