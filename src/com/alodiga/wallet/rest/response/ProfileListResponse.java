@@ -7,7 +7,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
-import com.alodiga.wallet.model.Profile;
+import com.alodiga.wallet.common.model.Profile;
 import com.alodiga.wallet.respuestas.Response;
 import com.alodiga.wallet.respuestas.ResponseCode;
 

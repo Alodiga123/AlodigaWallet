@@ -1,7 +1,7 @@
 package com.alodiga.wallet.rest.converter;
 
-import com.alodiga.wallet.model.Language;
-import com.alodiga.wallet.model.Profile;
+import com.alodiga.wallet.common.model.Language;
+import com.alodiga.wallet.common.model.Profile;
 import com.alodiga.wallet.rest.request.PermissionHasProfileRequest;
 import com.alodiga.wallet.rest.request.ProfileDataRequest;
 import com.alodiga.wallet.rest.request.ProfileRequest;

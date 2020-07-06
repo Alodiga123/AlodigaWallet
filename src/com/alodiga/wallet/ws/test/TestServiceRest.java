@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.alodiga.wallet.model.PermissionData;
-import com.alodiga.wallet.model.PreferenceType;
+import com.alodiga.wallet.common.model.PermissionData;
+import com.alodiga.wallet.common.model.PreferenceType;
 import com.alodiga.wallet.respuestas.Response;
 import com.alodiga.wallet.rest.request.EnterpriseRequest;
 import com.alodiga.wallet.rest.request.PermissionDataRequest;

@@ -1,12 +1,13 @@
 package com.alodiga.wallet.respuestas;
 
-import com.alodiga.wallet.model.BalanceHistory;
 import java.io.Serializable;
 import java.util.Date;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import com.alodiga.wallet.common.model.BalanceHistory;
 
 
 @XmlRootElement(name = "BalanceHistoryResponse")

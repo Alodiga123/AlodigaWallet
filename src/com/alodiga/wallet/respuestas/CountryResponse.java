@@ -1,12 +1,13 @@
 package com.alodiga.wallet.respuestas;
 
-import com.alodiga.wallet.model.Country;
 import java.io.Serializable;
 import java.util.Date;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import com.alodiga.wallet.common.model.Country;
 
 
 @XmlRootElement(name = "CountryResponse")

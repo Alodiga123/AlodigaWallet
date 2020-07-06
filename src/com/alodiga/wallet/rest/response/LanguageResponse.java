@@ -5,7 +5,8 @@ import java.util.Date;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import com.alodiga.wallet.model.Language;
+
+import com.alodiga.wallet.common.model.Language;
 import com.alodiga.wallet.respuestas.Response;
 import com.alodiga.wallet.respuestas.ResponseCode;
 

@@ -1,9 +1,10 @@
 package com.alodiga.wallet.respuestas;
 
 import com.alodiga.afinitas.json.charge.object.ChargeResponse;
-import com.alodiga.wallet.model.Card;
-import com.alodiga.wallet.model.Country;
-import com.alodiga.wallet.model.Product;
+import com.alodiga.wallet.common.model.Card;
+import com.alodiga.wallet.common.model.Country;
+import com.alodiga.wallet.common.model.Product;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;

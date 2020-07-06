@@ -8,10 +8,9 @@ import javax.jws.WebService;
 import org.apache.log4j.Logger;
 import com.alodiga.wallet.bean.APIOperations;
 import com.alodiga.wallet.bean.APIRechargeOperations;
-import com.alodiga.wallet.model.Address;
-import com.alodiga.wallet.model.Country;
-import com.alodiga.wallet.model.PaymentInfo;
-
+import com.alodiga.wallet.common.model.Address;
+import com.alodiga.wallet.common.model.Country;
+import com.alodiga.wallet.common.model.PaymentInfo;
 import com.alodiga.wallet.respuestas.ActivateCardResponses;
 import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
 import com.alodiga.wallet.respuestas.BankListResponse;

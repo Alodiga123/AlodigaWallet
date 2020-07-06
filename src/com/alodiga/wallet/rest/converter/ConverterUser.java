@@ -4,7 +4,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.alodiga.wallet.model.User;
+import com.alodiga.wallet.common.model.User;
 import com.alodiga.wallet.rest.request.UserRequest;
 
 

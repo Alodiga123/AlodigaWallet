@@ -1,6 +1,6 @@
 package com.alodiga.wallet.rest.converter;
 
-import com.alodiga.wallet.model.PreferenceType;
+import com.alodiga.wallet.common.model.PreferenceType;
 import com.alodiga.wallet.rest.request.PreferenceTypeRequest;
 
 

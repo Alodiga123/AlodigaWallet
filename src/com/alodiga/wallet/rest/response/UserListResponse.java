@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import lombok.Data;
 
-import com.alodiga.wallet.model.User;
+import com.alodiga.wallet.common.model.User;
 import com.alodiga.wallet.respuestas.Response;
 import com.alodiga.wallet.respuestas.ResponseCode;
 import com.alodiga.wallet.rest.converter.ConverterUser;

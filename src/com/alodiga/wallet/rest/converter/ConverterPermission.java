@@ -1,8 +1,8 @@
 package com.alodiga.wallet.rest.converter;
 
-import com.alodiga.wallet.model.Language;
-import com.alodiga.wallet.model.Permission;
-import com.alodiga.wallet.model.PermissionGroup;
+import com.alodiga.wallet.common.model.Language;
+import com.alodiga.wallet.common.model.Permission;
+import com.alodiga.wallet.common.model.PermissionGroup;
 import com.alodiga.wallet.rest.request.PermissionDataRequest;
 import com.alodiga.wallet.rest.request.PermissionRequest;
 
