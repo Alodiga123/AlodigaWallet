@@ -77,10 +77,12 @@
     
     <exclude-unlisted-classes>false</exclude-unlisted-classes>
     <properties>
-      <property name="eclipselink.logging.timestamp" value="true"/>
-      <property name="toplink.cache.type.default" value="Full"/>
-      <property name="toplink.cache.size.default" value="5000"/>
-      <property name="toplink.cache.shared.Secret" value="false"/>
+      <property name="eclipselink.logging.level" value="ALL"/>
+      <property name="eclipselink.logging.parameters" value="true"/>
+      <property name="eclipselink.logging.exceptions" value="true"/>
+      <property name="eclipselink.logging.level.sql" value="ALL"/>
+      <property name="eclipselink.logging.file" value="jpa_output.log"/>
+      <property name="eclipselink.logging.logger" value="ServerLogger"/>
     </properties>
   </persistence-unit>
 </persistence>
