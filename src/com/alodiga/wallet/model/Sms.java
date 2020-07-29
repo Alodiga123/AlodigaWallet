@@ -45,7 +45,7 @@ public class Sms implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
     @Column(name = "id")
-    private Integer id;
+    private Long id;
     @Column(name = "userId")
     private BigInteger userId;
     @Column(name = "integratorName")
@@ -69,21 +69,21 @@ public class Sms implements Serializable {
     public Sms() {
     }
 
-    public Sms(Integer id) {
+    public Sms(Long id) {
         this.id = id;
     }
 
-    public Sms(Integer id, Date creationDate, String status) {
+    public Sms(Long id, Date creationDate, String status) {
         this.id = id;
         this.creationDate = creationDate;
         this.status = status;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

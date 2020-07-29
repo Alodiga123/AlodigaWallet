@@ -35,18 +35,25 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = "payment_info")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "PaymentInfo.findAll", query = "SELECT p FROM PaymentInfo p"),
-    @NamedQuery(name = "PaymentInfo.findById", query = "SELECT p FROM PaymentInfo p WHERE p.id = :id"),
-    @NamedQuery(name = "PaymentInfo.findByUserId", query = "SELECT p FROM PaymentInfo p WHERE p.userId = :userId"),
-    @NamedQuery(name = "PaymentInfo.findByCreditCardName", query = "SELECT p FROM PaymentInfo p WHERE p.creditCardName = :creditCardName"),
-    @NamedQuery(name = "PaymentInfo.findByCreditCardCVV", query = "SELECT p FROM PaymentInfo p WHERE p.creditCardCVV = :creditCardCVV"),
-    @NamedQuery(name = "PaymentInfo.findByCreditCardDate", query = "SELECT p FROM PaymentInfo p WHERE p.creditCardDate = :creditCardDate"),
-    @NamedQuery(name = "PaymentInfo.findByBeginningDate", query = "SELECT p FROM PaymentInfo p WHERE p.beginningDate = :beginningDate"),
-    @NamedQuery(name = "PaymentInfo.findByEndingDate", query = "SELECT p FROM PaymentInfo p WHERE p.endingDate = :endingDate")})
+    @NamedQuery(name = "PaymentInfo.findAll", query = "SELECT p FROM PaymentInfo p")
+    ,
+    @NamedQuery(name = "PaymentInfo.findById", query = "SELECT p FROM PaymentInfo p WHERE p.id = :id")
+    ,
+    @NamedQuery(name = "PaymentInfo.findByUserId", query = "SELECT p FROM PaymentInfo p WHERE p.userId = :userId AND p.enabled = 1")
+    ,
+    @NamedQuery(name = "PaymentInfo.findByCreditCardName", query = "SELECT p FROM PaymentInfo p WHERE p.creditCardName = :creditCardName")
+    ,
+    @NamedQuery(name = "PaymentInfo.findByCreditCardCVV", query = "SELECT p FROM PaymentInfo p WHERE p.creditCardCVV = :creditCardCVV")
+    ,
+    @NamedQuery(name = "PaymentInfo.findByCreditCardDate", query = "SELECT p FROM PaymentInfo p WHERE p.creditCardDate = :creditCardDate")
+    ,
+    @NamedQuery(name = "PaymentInfo.findByBeginningDate", query = "SELECT p FROM PaymentInfo p WHERE p.beginningDate = :beginningDate")
+    ,
+    @NamedQuery(name = "PaymentInfo.findByEndingDate", query = "SELECT p FROM PaymentInfo p WHERE p.endingDate = :endingDate")
+    ,
+@NamedQuery(name = "PaymentInfo.findByUserIdById", query = "SELECT p FROM PaymentInfo p WHERE p.userId = :userId AND p.id = :id")})
 public class PaymentInfo implements Serializable {
-    @Lob
-    @Column(name = "creditCardNumber")
-    private byte[] creditCardNumber;
+
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -77,12 +84,19 @@ public class PaymentInfo implements Serializable {
     @ManyToOne(optional = false)
     private PaymentPatner paymentPatnerId;
     @JoinColumn(name = "creditCardTypeId", referencedColumnName = "id")
+
     @ManyToOne
     private CreditcardType creditCardTypeId;
+    @Lob
+    @Column(name = "creditCardNumber")
+    private String creditCardNumber;
     @JoinColumn(name = "billingAddressId", referencedColumnName = "id")
     @ManyToOne(optional = false)
     private Address billingAddressId;
     @OneToMany(mappedBy = "paymentInfoId")
+    @Basic(optional = false)
+    @Column(name = "enabled")
+    private boolean enabled;
     private Collection<Transaction> transactionCollection;
 
     public PaymentInfo() {
@@ -121,7 +135,6 @@ public class PaymentInfo implements Serializable {
     public void setCreditCardName(String creditCardName) {
         this.creditCardName = creditCardName;
     }
-
 
     public String getCreditCardCVV() {
         return creditCardCVV;
@@ -187,6 +200,14 @@ public class PaymentInfo implements Serializable {
         this.billingAddressId = billingAddressId;
     }
 
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
     @XmlTransient
     public Collection<Transaction> getTransactionCollection() {
         return transactionCollection;
@@ -221,12 +242,12 @@ public class PaymentInfo implements Serializable {
         return "dto.PaymentInfo[ id=" + id + " ]";
     }
 
-    public byte[] getCreditCardNumber() {
+    public String getCreditCardNumber() {
         return creditCardNumber;
     }
 
-    public void setCreditCardNumber(byte[] creditCardNumber) {
+    public void setCreditCardNumber(String creditCardNumber) {
         this.creditCardNumber = creditCardNumber;
     }
-    
+
 }

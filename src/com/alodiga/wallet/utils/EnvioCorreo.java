@@ -42,26 +42,26 @@ public class EnvioCorreo {
 			Properties props = new Properties();
 			// *** TEST ONLY ***//
 			
-			  props.put("mail.smtp.auth", "true");
-			  props.put("mail.smtp.starttls.enable", "true");
-			  props.put("mail.smtp.host", "smtp.gmail.com");
-			  props.put("mail.smtp.port", "587"); final String username =
-			  "customer@alodiga.com"; final String password = "iximche#2013!";
-			  Session session = Session.getInstance(props, new
-			  javax.mail.Authenticator() { protected PasswordAuthentication
-			  getPasswordAuthentication() { return new
-			  PasswordAuthentication(username, password); } });
-			 
+//			  props.put("mail.smtp.auth", "true");
+//			  props.put("mail.smtp.starttls.enable", "true");
+//			  props.put("mail.smtp.host", "smtp.gmail.com");
+//			  props.put("mail.smtp.port", "587"); final String username =
+//			  "customer@alodiga.com"; final String password = "iximche#2013!";
+//			  Session session = Session.getInstance(props, new
+//			  javax.mail.Authenticator() { protected PasswordAuthentication
+//			  getPasswordAuthentication() { return new
+//			  PasswordAuthentication(username, password); } });
+//			 
 			// *** TEST ONLY ***//
 			// TODO comentar lo de arriba y descomentar lo de abajo para enviar
 			// desde mail gmail.
 			// *** CODIGO PARA PRODUCCION ***//
 			// TODO colocar valores
-//			String SMTP_HOST_NAME = Utils.obtienePropiedad("mail.smtp.host");
-//			String SMTP_DEBUG = Utils.obtienePropiedad("mail.debug");
-//			props.put("mail.smtp.host", SMTP_HOST_NAME);
-//			props.put("mail.debug", SMTP_DEBUG);
-//			Session session = Session.getInstance(props);
+			String SMTP_HOST_NAME = Utils.obtienePropiedad("mail.smtp.host");
+			String SMTP_DEBUG = Utils.obtienePropiedad("mail.debug");
+			props.put("mail.smtp.host", SMTP_HOST_NAME);
+			props.put("mail.debug", SMTP_DEBUG);
+			Session session = Session.getInstance(props);
 			// *** CODIGO PARA PRODUCCION ***//
 
 			Message message = new MimeMessage(session);

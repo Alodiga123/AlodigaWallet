@@ -43,8 +43,9 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "Commission.findByProductTransactionType", query = "SELECT c FROM Commission c WHERE c.productId.id = :productId AND c.transactionTypeId.id = :transactionTypeId AND c.endingDate is null"),
     @NamedQuery(name = "Commission.findByValue", query = "SELECT c FROM Commission c WHERE c.value = :value")})
 public class Commission implements Serializable {
+
     @OneToMany(mappedBy = "commisionId")
-    private Collection<Withdrawal> withdrawalCollection;
+    private Collection<BankOperation> bankOperationCollection;
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -179,12 +180,12 @@ public class Commission implements Serializable {
 
     @XmlTransient
     @JsonIgnore
-    public Collection<Withdrawal> getWithdrawalCollection() {
-        return withdrawalCollection;
+    public Collection<BankOperation> getBankOperationCollection() {
+        return bankOperationCollection;
     }
 
-    public void setWithdrawalCollection(Collection<Withdrawal> withdrawalCollection) {
-        this.withdrawalCollection = withdrawalCollection;
+    public void setBankOperationCollection(Collection<BankOperation> bankOperationCollection) {
+        this.bankOperationCollection = bankOperationCollection;
     }
     
 }

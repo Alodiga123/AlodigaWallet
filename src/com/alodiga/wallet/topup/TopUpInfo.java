@@ -13,12 +13,13 @@ public class TopUpInfo  implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private Boolean isOpenRange;
     private String country;
     private String coutryId;
     private String opertador;
     private String operatorid;
     private String destinationCurrency;
-    private Boolean isOpenRange;
+    
     private Float commissionPercent;
     private Timestamp creationDate;
     private Float denomination;
@@ -36,6 +37,14 @@ public class TopUpInfo  implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+    
+    public Boolean getIsOpenRange() {
+        return isOpenRange;
+    }
+
+    public void setIsOpenRange(Boolean isOpenRange) {
+        this.isOpenRange = isOpenRange;
     }
 
     public String getCountry() {
@@ -78,13 +87,7 @@ public class TopUpInfo  implements Serializable {
         this.destinationCurrency = destinationCurrency;
     }
 
-    public Boolean getIsOpenRange() {
-        return isOpenRange;
-    }
-
-    public void setIsOpenRange(Boolean isOpenRange) {
-        this.isOpenRange = isOpenRange;
-    }
+    
 
     public Float getCommissionPercent() {
         return commissionPercent;

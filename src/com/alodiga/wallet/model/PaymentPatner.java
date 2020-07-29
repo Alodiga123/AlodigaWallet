@@ -43,6 +43,8 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "PaymentPatner.findByEnabled", query = "SELECT p FROM PaymentPatner p WHERE p.enabled = :enabled")})
 public class PaymentPatner implements Serializable {
     private static final long serialVersionUID = 1L;
+    
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
@@ -158,6 +160,8 @@ public class PaymentPatner implements Serializable {
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
+    
+    
 
     @XmlTransient
     public Collection<PaymentInfo> getPaymentInfoCollection() {

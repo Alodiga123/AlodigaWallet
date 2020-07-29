@@ -31,7 +31,8 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "CreditcardType.findAll", query = "SELECT c FROM CreditcardType c"),
     @NamedQuery(name = "CreditcardType.findById", query = "SELECT c FROM CreditcardType c WHERE c.id = :id"),
     @NamedQuery(name = "CreditcardType.findByName", query = "SELECT c FROM CreditcardType c WHERE c.name = :name"),
-    @NamedQuery(name = "CreditcardType.findByEnabled", query = "SELECT c FROM CreditcardType c WHERE c.enabled = :enabled")})
+    @NamedQuery(name = "CreditcardType.findByEnabled", query = "SELECT c FROM CreditcardType c WHERE c.enabled = :enabled"),
+    @NamedQuery(name = "CreditcardType.findByEnabledTrue", query = "SELECT c FROM CreditcardType c WHERE c.enabled = 1")})
 public class CreditcardType implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
@@ -45,6 +46,9 @@ public class CreditcardType implements Serializable {
     @Basic(optional = false)
     @Column(name = "enabled")
     private boolean enabled;
+    @Basic(optional = false)
+    @Column(name = "lengh")
+    private String lengh;
     @OneToMany(mappedBy = "creditCardTypeId")
     private Collection<PaymentInfo> paymentInfoCollection;
 
@@ -55,10 +59,11 @@ public class CreditcardType implements Serializable {
         this.id = id;
     }
 
-    public CreditcardType(Long id, String name, boolean enabled) {
+    public CreditcardType(Long id, String name, boolean enabled, String lengh) {
         this.id = id;
         this.name = name;
         this.enabled = enabled;
+        this.lengh = lengh;
     }
 
     public Long getId() {
@@ -85,6 +90,15 @@ public class CreditcardType implements Serializable {
         this.enabled = enabled;
     }
 
+    public String getLengh() {
+        return lengh;
+    }
+
+    public void setLengh(String lengh) {
+        this.lengh = lengh;
+    }
+
+    
     @XmlTransient
     public Collection<PaymentInfo> getPaymentInfoCollection() {
         return paymentInfoCollection;

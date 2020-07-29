@@ -73,6 +73,15 @@ public class CommissionItem implements Serializable {
         this.isResidual = isResidual;
     }
 
+    public CommissionItem(float amount, Date processedDate, Transaction transactionId, Commission commissionId) {
+        this.amount = amount;
+        this.processedDate = processedDate;
+        this.transactionId = transactionId;
+        this.commissionId = commissionId;
+    }
+    
+    
+
     public Long getId() {
         return id;
     }

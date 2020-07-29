@@ -30,7 +30,8 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "UserHasProduct.findAll", query = "SELECT u FROM UserHasProduct u"),
     @NamedQuery(name = "UserHasProduct.findById", query = "SELECT u FROM UserHasProduct u WHERE u.id = :id"),
     @NamedQuery(name = "UserHasProduct.findByProductId", query = "SELECT u FROM UserHasProduct u WHERE u.productId = :productId"),
-    @NamedQuery(name = "UserHasProduct.findByUserSourceId", query = "SELECT u FROM UserHasProduct u WHERE u.userSourceId = :userSourceId")})
+    @NamedQuery(name = "UserHasProduct.findByUserSourceIdAllProduct", query = "SELECT u FROM UserHasProduct u WHERE u.userSourceId = :userSourceId"),
+    @NamedQuery(name = "UserHasProduct.findByUserSourceId", query = "SELECT u FROM UserHasProduct u WHERE u.userSourceId = :userSourceId AND u.productId = 3")})
 public class UserHasProduct implements Serializable {
     
     

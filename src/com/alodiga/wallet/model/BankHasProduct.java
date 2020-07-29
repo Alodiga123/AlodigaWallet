@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "BankHasProduct.findAll", query = "SELECT b FROM BankHasProduct b")
     , @NamedQuery(name = "BankHasProduct.findById", query = "SELECT b FROM BankHasProduct b WHERE b.id = :id")
     , @NamedQuery(name = "BankHasProduct.findByProductId", query = "SELECT b FROM BankHasProduct b WHERE b.productId = :productId")
+    , @NamedQuery(name = "BankHasProduct.findByProductIdAndBankId", query = "SELECT b FROM BankHasProduct b WHERE b.productId = :productId AND b.bankId = :bankId")
     , @NamedQuery(name = "BankHasProduct.findByBankId", query = "SELECT b FROM BankHasProduct b WHERE b.bankId = :bankId")})
 public class BankHasProduct implements Serializable {
 

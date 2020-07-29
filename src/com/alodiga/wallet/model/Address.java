@@ -22,6 +22,9 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import org.codehaus.jackson.annotate.JsonIgnore;
+
+//test Githubs
 
 /**
  *
@@ -39,6 +42,12 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "Address.findByCountyName", query = "SELECT a FROM Address a WHERE a.countyName = :countyName"),
     @NamedQuery(name = "Address.findByCityName", query = "SELECT a FROM Address a WHERE a.cityName = :cityName")})
 public class Address implements Serializable {
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "addressId")
+    private Collection<Cumplimient> cumplimientCollection;
+    
+
+    
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -197,6 +206,16 @@ public class Address implements Serializable {
     @Override
     public String toString() {
         return "dto.Address[ id=" + id + " ]";
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<Cumplimient> getCumplimientCollection() {
+        return cumplimientCollection;
+    }
+
+    public void setCumplimientCollection(Collection<Cumplimient> cumplimientCollection) {
+        this.cumplimientCollection = cumplimientCollection;
     }
     
 }

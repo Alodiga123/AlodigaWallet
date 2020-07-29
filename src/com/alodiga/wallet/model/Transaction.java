@@ -25,6 +25,7 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -39,7 +40,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 @NamedQueries({
     @NamedQuery(name = "Transaction.findAll", query = "SELECT t FROM Transaction t"),
     @NamedQuery(name = "Transaction.findById", query = "SELECT t FROM Transaction t WHERE t.id = :id"),
-    @NamedQuery(name = "Transaction.findByUserSourceId", query = "SELECT t FROM Transaction t WHERE t.userSourceId = :userSourceId"),
+    @NamedQuery(name = "Transaction.findByUserSourceId", query = "SELECT t FROM Transaction t WHERE t.userSourceId = :userSourceId OR t.userDestinationId = :userDestinationId ORDER BY t.id DESC"),
     @NamedQuery(name = "Transaction.findByUserDestinationId", query = "SELECT t FROM Transaction t WHERE t.userDestinationId = :userDestinationId"),
     @NamedQuery(name = "Transaction.findByCreationDate", query = "SELECT t FROM Transaction t WHERE t.creationDate = :creationDate"),
     @NamedQuery(name = "Transaction.findByAmount", query = "SELECT t FROM Transaction t WHERE t.amount = :amount"),
@@ -54,8 +55,20 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "Transaction.findByAdditional", query = "SELECT t FROM Transaction t WHERE t.additional = :additional"),
     @NamedQuery(name = "Transaction.findByAdditional2", query = "SELECT t FROM Transaction t WHERE t.additional2 = :additional2")})
 public class Transaction implements Serializable {
-    @OneToMany(mappedBy = "transactionId")
-    private Collection<Withdrawal> withdrawalCollection;
+
+    // @Max(value=?)  @Min(value=?)//if you know range of your decimal fields consider using these annotations to enforce field validation
+    @Column(name = "totalTax")
+    private Float totalTax;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "totalAmount")
+    private float totalAmount;
+    @Column(name = "promotionAmount")
+    private Float promotionAmount;
+    @Column(name = "totalAlopointsUsed")
+    private Float totalAlopointsUsed;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "transactionId")
+    private Collection<BankOperation> bankOperationCollection;
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -79,18 +92,6 @@ public class Transaction implements Serializable {
     @Basic(optional = false)
     @Column(name = "transactionStatus")
     private String transactionStatus;
-    @Basic(optional = false)
-    @Column(name = "totalTax")
-    private float totalTax;
-    // @Max(value=?)  @Min(value=?)//if you know range of your decimal fields consider using these annotations to enforce field validation
-    @Column(name = "totalAmount")
-    private Float totalAmount;
-    @Basic(optional = false)
-    @Column(name = "promotionAmount")
-    private float promotionAmount;
-    @Basic(optional = false)
-    @Column(name = "totalAlopointsUsed")
-    private float totalAlopointsUsed;
     @Column(name = "topUpDescription")
     private String topUpDescription;
     @Column(name = "billPaymentDescription")
@@ -207,37 +208,6 @@ public class Transaction implements Serializable {
         this.transactionStatus = transactionStatus;
     }
 
-    public float getTotalTax() {
-        return totalTax;
-    }
-
-    public void setTotalTax(float totalTax) {
-        this.totalTax = totalTax;
-    }
-
-    public Float getTotalAmount() {
-        return totalAmount;
-    }
-
-    public void setTotalAmount(Float totalAmount) {
-        this.totalAmount = totalAmount;
-    }
-
-    public float getPromotionAmount() {
-        return promotionAmount;
-    }
-
-    public void setPromotionAmount(float promotionAmount) {
-        this.promotionAmount = promotionAmount;
-    }
-
-    public float getTotalAlopointsUsed() {
-        return totalAlopointsUsed;
-    }
-
-    public void setTotalAlopointsUsed(float totalAlopointsUsed) {
-        this.totalAlopointsUsed = totalAlopointsUsed;
-    }
 
     public String getTopUpDescription() {
         return topUpDescription;
@@ -369,18 +339,7 @@ public class Transaction implements Serializable {
     @Override
     public String toString() {
         return "dto.Transaction[ id=" + id + " ]";
-    }
-
-    @XmlTransient
-    @JsonIgnore
-    public Collection<Withdrawal> getWithdrawalCollection() {
-        return withdrawalCollection;
-    }
-
-    public void setWithdrawalCollection(Collection<Withdrawal> withdrawalCollection) {
-        this.withdrawalCollection = withdrawalCollection;
-    }
-    
+    }    
     
     //Only response APP
 
@@ -406,6 +365,48 @@ public class Transaction implements Serializable {
 
     public void setTransactionType(String transactionType) {
         this.transactionType = transactionType;
+    }
+
+    public Float getTotalTax() {
+        return totalTax;
+    }
+
+    public void setTotalTax(Float totalTax) {
+        this.totalTax = totalTax;
+    }
+
+    public float getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(float totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public Float getPromotionAmount() {
+        return promotionAmount;
+    }
+
+    public void setPromotionAmount(Float promotionAmount) {
+        this.promotionAmount = promotionAmount;
+    }
+
+    public Float getTotalAlopointsUsed() {
+        return totalAlopointsUsed;
+    }
+
+    public void setTotalAlopointsUsed(Float totalAlopointsUsed) {
+        this.totalAlopointsUsed = totalAlopointsUsed;
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<BankOperation> getBankOperationCollection() {
+        return bankOperationCollection;
+    }
+
+    public void setBankOperationCollection(Collection<BankOperation> bankOperationCollection) {
+        this.bankOperationCollection = bankOperationCollection;
     }
     
     

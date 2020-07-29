@@ -39,6 +39,12 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "Country.findByAlternativeName2", query = "SELECT c FROM Country c WHERE c.alternativeName2 = :alternativeName2"),
     @NamedQuery(name = "Country.findByAlternativeName3", query = "SELECT c FROM Country c WHERE c.alternativeName3 = :alternativeName3")})
 public class Country implements Serializable {
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "countryId")
+    private Collection<ValidationCollection> validationCollectionCollection;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "countryId")
+    private Collection<SmsProvider> smsProviderCollection;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "countryId")
     private Collection<Bank> bankCollection;
     private static final long serialVersionUID = 1L;
@@ -195,6 +201,26 @@ public class Country implements Serializable {
 
     public void setBankCollection(Collection<Bank> bankCollection) {
         this.bankCollection = bankCollection;
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<SmsProvider> getSmsProviderCollection() {
+        return smsProviderCollection;
+    }
+
+    public void setSmsProviderCollection(Collection<SmsProvider> smsProviderCollection) {
+        this.smsProviderCollection = smsProviderCollection;
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<ValidationCollection> getValidationCollectionCollection() {
+        return validationCollectionCollection;
+    }
+
+    public void setValidationCollectionCollection(Collection<ValidationCollection> validationCollectionCollection) {
+        this.validationCollectionCollection = validationCollectionCollection;
     }
     
 }

@@ -16,6 +16,7 @@ public class CountryResponse extends Response implements Serializable {
 	private static final long serialVersionUID = -5826822375335798732L;
 
 	public Country response;
+        
 
 	public CountryResponse() {
 		super();
@@ -35,5 +36,7 @@ public class CountryResponse extends Response implements Serializable {
 		super(new Date(), codigo.getCodigo(), mensajeRespuesta);
 		this.response = countryId;
 	}
+        
+
 
 }

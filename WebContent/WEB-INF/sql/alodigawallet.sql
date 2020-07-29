@@ -1510,3 +1510,37 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2019-09-12  9:42:22
+
+//Yamelis 10-10-2019
+INSERT INTO `alodigawallet`.`transaction_type` (`id`, `value`) VALUES ('7', 'TOP_UP_RECHARGE');
+
+//Yamelis 12-10-2019
+INSERT INTO `alodigawallet`.`product` (`id`, `enterpriseId`, `categoryId`, `productIntegrationTypeId`, `name`, `taxInclude`, `enabled`, `referenceCode`, `ratesUrl`, `accessNumberUrl`, `isFree`, `isAlocashProduct`, `symbol`) VALUES ('7', '1', '1', '1', 'Top Up', '0', '1', '1001', 'htttp://www.alodiga.com', '584241934005', '0', '1','TP');
+
+//Yamelis 14-10-2019
+INSERT INTO `alodigawallet`.`commission` (`id`, `productId`, `transactionTypeId`, `beginningDate`, `isPercentCommision`, `value`) VALUES ('14', '7', '7', '2019-10-14 10:00:00', '1', '2.5');
+
+//Moises 30-10-2019
+ALTER TABLE `alodigaWallet`.`product` 
+ADD COLUMN `isPayTopUp` TINYINT(1) NOT NULL AFTER `symbol`;
+
+//Moises 30-10-2019
+ALTER TABLE `alodigaWallet`.`product` 
+ADD COLUMN `isExchangeProduct` TINYINT(1) NOT NULL AFTER `isPayTopUp`;
+
+//Moises 30-10-2019
+CREATE TABLE IF NOT EXISTS `alodigaWallet`.`sms_provider` (
+  `id` bigint(10) NOT NULL AUTO_INCREMENT,
+  `name` tinyint(1) NOT NULL,
+  `description` varchar(45) DEFAULT NULL,
+  `addres` varchar(45) NOT NULL,
+  `port` varchar(45) NOT NULL,
+  `wsdl` varchar(45) DEFAULT NULL,
+  `integrationType` varchar(45) DEFAULT NULL,
+  `countryId` bigint(10) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_sms_provider_countryId_idx` (`countryId`),
+  CONSTRAINT `fk_sms_provider_countryId` FOREIGN KEY (`countryId`) REFERENCES `country` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+

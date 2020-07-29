@@ -41,7 +41,6 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 
 public class ExchangeDetail implements Serializable {
 
-    private Collection<Withdrawal> withdrawalCollection;
     private static final long serialVersionUID = 1L;   
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -120,16 +119,6 @@ public class ExchangeDetail implements Serializable {
     @Override
     public String toString() {
         return "com.alodiga.wallet.model.ExchangeDetail[ id=" + id + " ]";
-    }
-    
-    @XmlTransient
-    @JsonIgnore
-    public Collection<Withdrawal> getWithdrawalCollection() {
-        return withdrawalCollection;
-    }
-
-    public void setWithdrawalCollection(Collection<Withdrawal> withdrawalCollection) {
-        this.withdrawalCollection = withdrawalCollection;
     }
     
 }
