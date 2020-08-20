@@ -1,5 +1,7 @@
 package com.alodiga.wallet.ws;
 
+
+
 import com.alodiga.wallet.bean.APICardOperations;
 import javax.ejb.EJB;
 import javax.jws.WebMethod;
@@ -8,10 +10,8 @@ import javax.jws.WebService;
 import org.apache.log4j.Logger;
 import com.alodiga.wallet.bean.APIOperations;
 import com.alodiga.wallet.bean.APIRechargeOperations;
-import com.alodiga.wallet.model.Address;
-import com.alodiga.wallet.model.Country;
-import com.alodiga.wallet.model.PaymentInfo;
-
+import com.alodiga.wallet.common.model.Address;
+import com.alodiga.wallet.common.model.Country;
 import com.alodiga.wallet.respuestas.ActivateCardResponses;
 import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
 import com.alodiga.wallet.respuestas.BankListResponse;
@@ -19,18 +19,22 @@ import com.alodiga.wallet.respuestas.CardListResponse;
 import com.alodiga.wallet.respuestas.CardResponse;
 import com.alodiga.wallet.respuestas.CheckStatusAccountResponses;
 import com.alodiga.wallet.respuestas.CheckStatusCardResponses;
+import com.alodiga.wallet.respuestas.CityListResponse;
 import com.alodiga.wallet.respuestas.CollectionListResponse;
+import com.alodiga.wallet.respuestas.CollectionRequestListResponse;
+import com.alodiga.wallet.respuestas.CollectionTypeListResponse;
 import com.alodiga.wallet.respuestas.CountryListResponse;
 import com.alodiga.wallet.respuestas.CreditCardListResponse;
 import com.alodiga.wallet.respuestas.CumplimientResponse;
 import com.alodiga.wallet.respuestas.DesactivateCardResponses;
+import com.alodiga.wallet.respuestas.DocumentsPersonTypeListResponse;
 import com.alodiga.wallet.respuestas.ExchangeTokenPlaidResponses;
 import com.alodiga.wallet.respuestas.LanguageListResponse;
 import com.alodiga.wallet.respuestas.PaymentInfoListResponse;
 import com.alodiga.wallet.respuestas.PaymentInfoResponse;
+import com.alodiga.wallet.respuestas.PersonTypeListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.ProductResponse;
-import com.alodiga.wallet.respuestas.PublicTokenPlaidResponses;
 import com.alodiga.wallet.respuestas.RechargeAfinitasResponses;
 import com.alodiga.wallet.respuestas.RechargeValidationResponse;
 import com.alodiga.wallet.respuestas.RemittanceResponse;
@@ -39,6 +43,7 @@ import com.alodiga.wallet.respuestas.RetriveBalancePlaidResponses;
 import com.alodiga.wallet.respuestas.RetriveIdentityPlaidResponses;
 import com.alodiga.wallet.respuestas.RetriveIncomePlaidResponses;
 import com.alodiga.wallet.respuestas.RetriveTransactionPlaidResponses;
+import com.alodiga.wallet.respuestas.StateListResponse;
 import com.alodiga.wallet.respuestas.TopUpCountryListResponse;
 import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
 import com.alodiga.wallet.respuestas.UserHasProductResponse;
@@ -60,6 +65,7 @@ public class APIAlodigaWallet {
 
     @EJB
     private APICardOperations cardOperations;
+
 
     @WebMethod
     public ProductResponse saveProduct(
@@ -436,7 +442,7 @@ public class APIAlodigaWallet {
             @WebParam(name = "cvv") String cvv,
             @WebParam(name = "cardHolderName") String cardHolderName,
             @WebParam(name = "paymentInfoId") Long paymentInfoId) {
-        return operations.saveRechargeAfinitas(userId, amountRecharge, currency, cardNumber, expirationYear, expirationMonth, cvv, cardHolderName,paymentInfoId);
+        return operations.saveRechargeAfinitas(userId, amountRecharge, currency, cardNumber, expirationYear, expirationMonth, cvv, cardHolderName, paymentInfoId);
     }
 
     @WebMethod(operationName = "validateRechargeProduct")
@@ -548,68 +554,65 @@ public class APIAlodigaWallet {
             @WebParam(name = "userId") String userId) {
         return operations.getProductsRechargePaymentByUserId(Long.valueOf(userId));
     }
-    
-    
+
     @WebMethod
     public ProductListResponse generarCodigoMovilSMS(
             @WebParam(name = "movil") String movil,
             @WebParam(name = "codigo") String codigo) {
         return operations.generarCodigoMovilSMS(movil, codigo);
     }
-  
-    
-     @WebMethod
+
+    @WebMethod
     public void sendMail(
             @WebParam(name = "subject") String subject,
             @WebParam(name = "body") String body,
             @WebParam(name = "to") String to,
-            @WebParam(name = "from") String from) {        
-       operations.sendMail(subject, body,to,from);
+            @WebParam(name = "from") String from) {
+        operations.sendMail(subject, body, to, from);
     }
-    
+
     @WebMethod
     public void sendSMS(
             @WebParam(name = "movil") String movil,
             @WebParam(name = "message") String message) {
-       operations.sendSMS(movil, message);
+        operations.sendSMS(movil, message);
     }
-    
+
     @WebMethod
     public ExchangeTokenPlaidResponses publicTokenPlaid(
             @WebParam(name = "methods") String methods) {
-       return operations.publicTokenPlaid(methods);
-        
+        return operations.publicTokenPlaid(methods);
+
     }
-    
+
     @WebMethod
     public RetriveAuthPlaidResponses retriveAuthPlaid() {
-       return operations.retriveAuthPlaid();
-        
+        return operations.retriveAuthPlaid();
+
     }
-    
+
     @WebMethod
     public RetriveTransactionPlaidResponses retriveTransactionPlaid() {
-       return operations.retriveTransactionPlaid();
-        
+        return operations.retriveTransactionPlaid();
+
     }
-     
+
     @WebMethod
     public RetriveBalancePlaidResponses retriveBalancePlaid() {
-       return operations.retriveBalancePlaid();
-        
+        return operations.retriveBalancePlaid();
+
     }
-    
+
     @WebMethod
     public RetriveIdentityPlaidResponses retriveIdentityPlaid() {
-       return operations.retriveIdentityPlaid();
-        
+        return operations.retriveIdentityPlaid();
+
     }
-    
+
     @WebMethod
     public RetriveIncomePlaidResponses retriveIncomePlaid() {
-       return operations.retriveIncomePlaid();
-        
-    }
-    
-    
+        return operations.retriveIncomePlaid();
+
+    }    
+
 }

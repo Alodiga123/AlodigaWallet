@@ -1,7 +1,7 @@
 package com.alodiga.wallet.respuestas;
 
-import com.alodiga.wallet.model.Country;
-import com.alodiga.wallet.model.TopUpCountry;
+
+import com.alodiga.wallet.common.model.TopUpCountry;
 import java.util.Date;
 import java.util.List;
 

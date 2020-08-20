@@ -1,6 +1,6 @@
 package com.alodiga.wallet.respuestas;
 
-import com.alodiga.wallet.model.BalanceHistory;
+import com.alodiga.wallet.common.model.BalanceHistory;
 import java.io.Serializable;
 import java.util.Date;
 

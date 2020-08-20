@@ -1,13 +1,13 @@
 package com.alodiga.wallet.dao;
 
-import com.alodiga.wallet.model.BalanceHistory;
-import com.alodiga.wallet.model.BalanceHistory_;
-import com.alodiga.wallet.model.Commission;
-import com.alodiga.wallet.model.Commission_;
-import com.alodiga.wallet.model.Product;
-import com.alodiga.wallet.model.Transaction;
-import com.alodiga.wallet.model.TransactionType;
-import com.alodiga.wallet.utils.Constante;
+import com.alodiga.wallet.common.model.BalanceHistory;
+import com.alodiga.wallet.common.model.BalanceHistory_;
+import com.alodiga.wallet.common.model.Commission;
+import com.alodiga.wallet.common.model.Commission_;
+import com.alodiga.wallet.common.model.Product;
+import com.alodiga.wallet.common.model.Transaction;
+import com.alodiga.wallet.common.model.TransactionType;
+import com.alodiga.wallet.common.utils.Constante;
 import java.sql.Timestamp;
 import java.util.Date;
 import javax.persistence.EntityManager;
@@ -31,10 +31,9 @@ public abstract class TransactionDAO {
             Root<Commission> from = cq.from(Commission.class);
             cq.select(from);
             cq.where(cb.and(
-                    cb.and(
-                            cb.equal(from.get(Commission_.productId), product),
-                            cb.equal(from.get(Commission_.transactionTypeId), transactionType))),
-                    cb.isNull(from.get(Commission_.endingDate)));
+                    cb.and(cb.equal(from.get("Commission_.productId"), product),
+                            cb.equal(from.get("Commission_.transactionTypeId"), transactionType))),
+                    cb.isNull(from.get("Commission_.endingDate")));
 
             return entityManager.createQuery(cq).getSingleResult();
         } catch (Exception e) {
@@ -51,9 +50,9 @@ public abstract class TransactionDAO {
             Root<BalanceHistory> from = cq.from(BalanceHistory.class);
             cq.select(from);
             cq.where(cb.and(
-                    cb.equal(from.get(BalanceHistory_.userId), userId),
-                    cb.equal(from.get(BalanceHistory_.productId), product)));
-            cq.orderBy(cb.desc(from.get(BalanceHistory_.id)));
+                    cb.equal(from.get("BalanceHistory_.userId"), userId),
+                    cb.equal(from.get("BalanceHistory_.productId"), product)));
+            cq.orderBy(cb.desc(from.get("BalanceHistory_.id")));
 
             Query query = entityManager.createQuery(cq);
             query.setMaxResults(1).setHint("toplink.refresh", "true");

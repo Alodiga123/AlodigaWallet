@@ -1,7 +1,7 @@
 package com.alodiga.wallet.respuestas;
 
-import com.alodiga.wallet.model.Card;
-import com.alodiga.wallet.model.Product;
+import com.alodiga.wallet.common.model.Card;
+
 import java.util.Date;
 import java.util.List;
 

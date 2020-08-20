@@ -161,7 +161,15 @@ public enum ResponseCode {
     
     
     //MENSAJE METODO DE PAGO
-    NOT_ASSOCIATED_PAYMENT_INFO("220");
+    NOT_ASSOCIATED_PAYMENT_INFO("220"),
+    
+    //Mensajes de portalWeb
+    NOT_PERSON_TYPE("300"),
+    NOT_DOCUMENTS_PERSON_TYPE("301"),
+    NOT_COLLECTION_TYPE("302"),
+    NOT_COLLECTION_REQUEST("303");
+    
+    
     
     
     

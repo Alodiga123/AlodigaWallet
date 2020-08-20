@@ -1,7 +1,6 @@
 package com.alodiga.wallet.respuestas;
 
-import com.alodiga.wallet.model.Card;
-import com.alodiga.wallet.model.Country;
+
 import java.io.Serializable;
 import java.util.Date;
 

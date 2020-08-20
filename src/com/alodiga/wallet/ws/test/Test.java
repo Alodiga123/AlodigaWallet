@@ -5,18 +5,13 @@
  */
 package com.alodiga.wallet.ws.test;
 
-import com.alodiga.wallet.model.BalanceHistory;
-import com.alodiga.wallet.model.BankOperation;
-import com.alodiga.wallet.model.Transaction;
-import com.alodiga.wallet.utils.AmazonSESSendMail;
-import com.alodiga.wallet.utils.Mail;
-import com.alodiga.wallet.utils.SendMailTherad;
-import com.alodiga.wallet.utils.Utils;
+import com.alodiga.wallet.common.model.BalanceHistory;
+import com.alodiga.wallet.common.model.BankOperation;
+import com.alodiga.wallet.common.model.Transaction;
+import com.alodiga.wallet.common.utils.Mail;
+import com.alodiga.wallet.common.utils.Utils;
 import com.ericsson.alodiga.ws.Cuenta;
 import com.ericsson.alodiga.ws.Usuario;
-
-
-
 /**
  *
  * @author ltoro
