@@ -1554,7 +1554,7 @@ public class APIOperations {
             usuario.setEmail(emailUser);
             try {
                 System.out.println("" + manualWithdrawal.getId());
-                TransactionApproveRequestResponse transactionApproveRequestResponse = saveTransactionApproveRequest(userId, product.getId(), manualWithdrawal.getId(), bankId, documentTypeId, originApplicationId);
+                //TransactionApproveRequestResponse transactionApproveRequestResponse = saveTransactionApproveRequest(userId, product.getId(), manualWithdrawal.getId(), bankId, documentTypeId, originApplicationId);
             } catch (Exception e) {
                 e.printStackTrace();
                 return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error saving transaction Aprrove Request");
@@ -1770,7 +1770,7 @@ public class APIOperations {
             entityManager.merge(recharge);
             try {
                 System.out.println("" + recharge.getId());
-                TransactionApproveRequestResponse transactionApproveRequestResponse = saveTransactionApproveRequest(userId, product.getId(), recharge.getId(), bankId, documentTypeId, originApplicationId);
+//                TransactionApproveRequestResponse transactionApproveRequestResponse = saveTransactionApproveRequest(userId, product.getId(), recharge.getId(), bankId, documentTypeId, originApplicationId);
             } catch (Exception e) {
                 e.printStackTrace();
                 return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error saving transaction Aprrove Request");
@@ -4244,46 +4244,6 @@ public class APIOperations {
         return secuence;
     }
 
-    public TransactionApproveRequestResponse saveTransactionApproveRequest(Long unifiedRegistryUserId, Long productId, Long transactionId, Long bankOperationId, Long documentTypeId, Long originApplicationId) {
-        Date curDate = new Date();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
-        String statusTransactionApproveCode = StatusTransactionApproveRequestE.PENDIEN.getStatusTransactionApproveRequestCode();
-        System.out.println("statusTransactionApproveCode" + statusTransactionApproveCode);
-        try {
-            TransactionApproveRequest approveRequest = new TransactionApproveRequest();
-            approveRequest.setUnifiedRegistryUserId(unifiedRegistryUserId);
-            approveRequest.setCreateDate(new Timestamp(new Date().getTime()));
-            StatusTransactionApproveRequest statusTransactionApproveRequest = (StatusTransactionApproveRequest) entityManager.createNamedQuery(QueryConstants.STATUS_TRANSACTION_APPROVE_REQUEST_BY_CODE, StatusTransactionApproveRequest.class).setParameter("code", statusTransactionApproveCode).getSingleResult();
-            approveRequest.setStatusTransactionApproveRequestId(statusTransactionApproveRequest);
-            Sequences sequences = getSequencesByDocumentTypeByOriginApplication(documentTypeId, originApplicationId);
-            String numberSequence = generateNumberSequence(sequences);
-            approveRequest.setRequestNumber(numberSequence);
-            String DateToStr = format.format(curDate);
-            Date fechaDate = null;
-            fechaDate = format.parse(DateToStr);
-            System.out.println("fecha" + fechaDate);
-            approveRequest.setRequestDate(fechaDate);            
-            Product product = entityManager.find(Product.class, productId);
-            approveRequest.setProductId(product);
-            Transaction transaction = entityManager.find(Transaction.class, transactionId);
-            approveRequest.setTransactionId(transaction);            
-            BankOperation bankOperation = entityManager.find(BankOperation.class, bankOperationId);
-            approveRequest.setBankOperationId(bankOperation);            
-            approveRequest.setIndApproveRequest(null);
-            approveRequest.setApprovedRequestDate(null);
-            approveRequest.setUserApprovedRequestId(null);
-            entityManager.persist(approveRequest);
-            return new TransactionApproveRequestResponse(ResponseCode.EXITO, "", null);
-        } catch (NoResultException e) {
-            e.printStackTrace();
-            return new TransactionApproveRequestResponse(ResponseCode.ERROR_INTERNO, "Error");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new TransactionApproveRequestResponse(ResponseCode.ERROR_INTERNO, "Error");
-        }
-
-    }
-
     public AccountBankResponse saveAccountBank(Long unifiedRegistryId, String accountNumber, Long bankId, Integer accountTypeBankId) {
 
         String statusAccountBankCode = StatusAccountBankE.ACTIVA.getStatusAccountCode();
@@ -4305,6 +4265,40 @@ public class APIOperations {
             return new AccountBankResponse(ResponseCode.ERROR_INTERNO, "Error");
         }
 
+    }
+
+    public TransactionApproveRequestResponse saveTransactionApproveRequest(Long unifiedRegistryUserId, Long productId, Long transactionId, Long bankOperationId, Long documentTypeId, Long originApplicationId, Integer StatusId) {
+        Date curDate = new Date();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
+        try {
+            String statusTransactionApproveRequestE = StatusTransactionApproveRequestE.PENDIEN.getStatusTransactionApproveRequestCode();
+            TransactionApproveRequest transactionApproveRequest = new TransactionApproveRequest();
+            transactionApproveRequest.setId(null);
+            transactionApproveRequest.setUnifiedRegistryUserId(unifiedRegistryUserId);
+            transactionApproveRequest.setCreateDate(new Timestamp(new Date().getTime()));
+            transactionApproveRequest.setUpdateDate(null);
+            Sequences sequences = getSequencesByDocumentTypeByOriginApplication(documentTypeId, originApplicationId);
+            String generateNumberSequence = generateNumberSequence(sequences);
+            transactionApproveRequest.setRequestNumber(generateNumberSequence);
+            String DateToStr = format.format(curDate);
+            Date fechaDate = null;
+            fechaDate = format.parse(DateToStr);
+            transactionApproveRequest.setRequestDate(fechaDate);
+            Product product = entityManager.find(Product.class, productId);
+            transactionApproveRequest.setProductId(product);
+            Transaction transaction = entityManager.find(Transaction.class, transactionId);
+            transactionApproveRequest.setTransactionId(transaction);
+            BankOperation bankOperation = entityManager.find(BankOperation.class, bankOperationId);
+            transactionApproveRequest.setBankOperationId(bankOperation);
+            StatusTransactionApproveRequest statusTransactionApproveRequest = entityManager.find(StatusTransactionApproveRequest.class, StatusId);
+            transactionApproveRequest.setStatusTransactionApproveRequestId(statusTransactionApproveRequest);
+            entityManager.flush();
+            entityManager.persist(transactionApproveRequest);
+            return new TransactionApproveRequestResponse(ResponseCode.EXITO, "", transactionApproveRequest);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new TransactionApproveRequestResponse(ResponseCode.ERROR_INTERNO, "Error");
+        }
     }
 
     public AccountBankListResponse getAccountBankByUser(Long unifiedRegistryId) {
