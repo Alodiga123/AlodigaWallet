@@ -12,44 +12,49 @@ import com.alodiga.wallet.bean.APIOperations;
 import com.alodiga.wallet.bean.APIRechargeOperations;
 import com.alodiga.wallet.common.model.Address;
 import com.alodiga.wallet.common.model.Country;
-import com.alodiga.wallet.respuestas.ActivateCardResponses;
-import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
-import com.alodiga.wallet.respuestas.BankListResponse;
-import com.alodiga.wallet.respuestas.CardListResponse;
-import com.alodiga.wallet.respuestas.CardResponse;
-import com.alodiga.wallet.respuestas.CheckStatusAccountResponses;
-import com.alodiga.wallet.respuestas.CheckStatusCardResponses;
-import com.alodiga.wallet.respuestas.CityListResponse;
-import com.alodiga.wallet.respuestas.CollectionListResponse;
-import com.alodiga.wallet.respuestas.CollectionRequestListResponse;
-import com.alodiga.wallet.respuestas.CollectionTypeListResponse;
-import com.alodiga.wallet.respuestas.CountryListResponse;
-import com.alodiga.wallet.respuestas.CreditCardListResponse;
-import com.alodiga.wallet.respuestas.CumplimientResponse;
-import com.alodiga.wallet.respuestas.DesactivateCardResponses;
-import com.alodiga.wallet.respuestas.DocumentsPersonTypeListResponse;
-import com.alodiga.wallet.respuestas.ExchangeTokenPlaidResponses;
-import com.alodiga.wallet.respuestas.LanguageListResponse;
-import com.alodiga.wallet.respuestas.PaymentInfoListResponse;
-import com.alodiga.wallet.respuestas.PaymentInfoResponse;
-import com.alodiga.wallet.respuestas.PersonTypeListResponse;
-import com.alodiga.wallet.respuestas.ProductListResponse;
-import com.alodiga.wallet.respuestas.ProductResponse;
-import com.alodiga.wallet.respuestas.RechargeAfinitasResponses;
-import com.alodiga.wallet.respuestas.RechargeValidationResponse;
-import com.alodiga.wallet.respuestas.RemittanceResponse;
-import com.alodiga.wallet.respuestas.RetriveAuthPlaidResponses;
-import com.alodiga.wallet.respuestas.RetriveBalancePlaidResponses;
-import com.alodiga.wallet.respuestas.RetriveIdentityPlaidResponses;
-import com.alodiga.wallet.respuestas.RetriveIncomePlaidResponses;
-import com.alodiga.wallet.respuestas.RetriveTransactionPlaidResponses;
-import com.alodiga.wallet.respuestas.StateListResponse;
-import com.alodiga.wallet.respuestas.TopUpCountryListResponse;
-import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
-import com.alodiga.wallet.respuestas.UserHasProductResponse;
-import com.alodiga.wallet.respuestas.TransactionListResponse;
-import com.alodiga.wallet.respuestas.TransactionResponse;
-import com.alodiga.wallet.respuestas.TransferCardToCardResponses;
+import com.alodiga.wallet.common.model.StatusTransactionApproveRequest;
+import com.alodiga.wallet.responses.AccountBankResponse;
+import com.alodiga.wallet.responses.ActivateCardResponses;
+import com.alodiga.wallet.responses.BalanceHistoryResponse;
+import com.alodiga.wallet.responses.BankListResponse;
+import com.alodiga.wallet.responses.CardListResponse;
+import com.alodiga.wallet.responses.CardResponse;
+import com.alodiga.wallet.responses.CheckStatusAccountResponses;
+import com.alodiga.wallet.responses.CheckStatusCardResponses;
+import com.alodiga.wallet.responses.CityListResponse;
+import com.alodiga.wallet.responses.CollectionListResponse;
+import com.alodiga.wallet.responses.CollectionRequestListResponse;
+import com.alodiga.wallet.responses.CollectionTypeListResponse;
+import com.alodiga.wallet.responses.CountryListResponse;
+import com.alodiga.wallet.responses.CreditCardListResponse;
+import com.alodiga.wallet.responses.CumplimientResponse;
+import com.alodiga.wallet.responses.DesactivateCardResponses;
+import com.alodiga.wallet.responses.DocumentsPersonTypeListResponse;
+import com.alodiga.wallet.responses.ExchangeTokenPlaidResponses;
+import com.alodiga.wallet.responses.LanguageListResponse;
+import com.alodiga.wallet.responses.PaymentInfoListResponse;
+import com.alodiga.wallet.responses.PaymentInfoResponse;
+import com.alodiga.wallet.responses.PersonTypeListResponse;
+import com.alodiga.wallet.responses.ProductListResponse;
+import com.alodiga.wallet.responses.ProductResponse;
+import com.alodiga.wallet.responses.RechargeAfinitasResponses;
+import com.alodiga.wallet.responses.RechargeValidationResponse;
+import com.alodiga.wallet.responses.RemittanceResponse;
+import com.alodiga.wallet.responses.RetriveAuthPlaidResponses;
+import com.alodiga.wallet.responses.RetriveBalancePlaidResponses;
+import com.alodiga.wallet.responses.RetriveIdentityPlaidResponses;
+import com.alodiga.wallet.responses.RetriveIncomePlaidResponses;
+import com.alodiga.wallet.responses.RetriveTransactionPlaidResponses;
+import com.alodiga.wallet.responses.StateListResponse;
+import com.alodiga.wallet.responses.StatusTransactionAproveListResponse;
+import com.alodiga.wallet.responses.TopUpCountryListResponse;
+import com.alodiga.wallet.responses.TopUpInfoListResponse;
+import com.alodiga.wallet.responses.TransactionApproveRequestResponse;
+import com.alodiga.wallet.responses.UserHasProductResponse;
+import com.alodiga.wallet.responses.TransactionListResponse;
+import com.alodiga.wallet.responses.TransactionResponse;
+import com.alodiga.wallet.responses.TransferCardToCardResponses;
+import java.text.ParseException;
 
 @WebService
 public class APIAlodigaWallet {
@@ -190,8 +195,10 @@ public class APIAlodigaWallet {
             @WebParam(name = "accountBank") String accountBank,
             @WebParam(name = "amountWithdrawal") Float amountWithdrawal,
             @WebParam(name = "productId") Long productId,
-            @WebParam(name = "conceptTransaction") String conceptTransaction) {
-        return operations.manualWithdrawals(bankId, emailUser, accountBank, amountWithdrawal, productId, conceptTransaction);
+            @WebParam(name = "conceptTransaction") String conceptTransaction,
+            @WebParam(name = "documentTypeId") Long documentTypeId,
+            @WebParam(name = "originApplicationId") Long originApplicationId) {
+        return operations.manualWithdrawals(bankId, emailUser, accountBank, amountWithdrawal, productId, conceptTransaction,documentTypeId,originApplicationId);
     }
 
     @WebMethod
@@ -201,8 +208,10 @@ public class APIAlodigaWallet {
             @WebParam(name = "referenceNumberOperation") String referenceNumberOperation,
             @WebParam(name = "amountRecharge") Float amountRecharge,
             @WebParam(name = "productId") Long productId,
-            @WebParam(name = "conceptTransaction") String conceptTransaction) {
-        return operations.manualRecharge(bankId, emailUser, referenceNumberOperation, amountRecharge, productId, conceptTransaction);
+            @WebParam(name = "conceptTransaction") String conceptTransaction,
+            @WebParam(name = "documentTypeId") Long documentTypeId,
+            @WebParam(name = "originApplicationId") Long originApplicationId) {
+        return operations.manualRecharge(bankId, emailUser, referenceNumberOperation, amountRecharge, productId, conceptTransaction,documentTypeId,originApplicationId);
     }
 
     @WebMethod
@@ -613,6 +622,41 @@ public class APIAlodigaWallet {
     public RetriveIncomePlaidResponses retriveIncomePlaid() {
         return operations.retriveIncomePlaid();
 
-    }    
+    }  
+    
+    @WebMethod
+    public StatusTransactionApproveRequest getStatusTransactionAprove(
+    @WebParam(name = "status") String status) {
+        return operations.getStatusTransactionAprove(status);
 
+    }
+ 
+    
+    @WebMethod
+    public AccountBankResponse saveAccountBank(
+    @WebParam(name = "unifiedRegistryId") Long unifiedRegistryId,
+            @WebParam(name = "accountNumber") String accountNumber,
+            @WebParam(name = "bankId") Long bankId,
+            @WebParam(name = "accountTypeBankId") Integer accountTypeBankId) {
+        return operations.saveAccountBank(unifiedRegistryId,accountNumber,bankId,accountTypeBankId);
+
+    }
+    
+    @WebMethod
+    public TransactionApproveRequestResponse saveTransactionApproveRequest(
+    @WebParam(name = "unifiedRegistryId") Long unifiedRegistryId,
+            @WebParam(name = "productId") Long productId,
+            @WebParam(name = "transactionId") Long transactionId,
+            @WebParam(name = "bankOperationId") Long bankOperationId,
+            @WebParam(name = "documentTypeId") Long documentTypeId,
+            @WebParam(name = "originApplicationId") Long originApplicationId){
+        return operations.saveTransactionApproveRequest(unifiedRegistryId,productId,transactionId,bankOperationId,documentTypeId,originApplicationId);
+
+    }
+    
+    
+    
+    
+    
+    
 }

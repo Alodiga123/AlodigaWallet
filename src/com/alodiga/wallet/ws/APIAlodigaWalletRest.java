@@ -9,7 +9,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.alodiga.wallet.bean.APIOperations;
-import com.alodiga.wallet.respuestas.Response;
+import com.alodiga.wallet.responses.Response;
 
 @Path("/alodigaWallet")
 public class APIAlodigaWalletRest {

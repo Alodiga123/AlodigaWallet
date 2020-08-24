@@ -24,6 +24,10 @@ import com.alodiga.transferto.integration.model.MSIDN_INFOResponse;
 import com.alodiga.transferto.integration.model.ReserveResponse;
 import com.alodiga.transferto.integration.model.TopUpResponse;
 import com.alodiga.twilio.sms.services.TwilioSmsSenderProxy;
+import com.alodiga.wallet.common.enumeraciones.StatusAccountBankE;
+import com.alodiga.wallet.common.enumeraciones.StatusTransactionApproveRequestE;
+import com.alodiga.wallet.common.model.AccountBank;
+import com.alodiga.wallet.common.model.AccountTypeBank;
 import com.alodiga.wallet.common.model.Product;
 import com.alodiga.wallet.common.model.Address;
 import com.alodiga.wallet.common.model.Bank;
@@ -58,22 +62,27 @@ import com.alodiga.wallet.common.model.ExchangeDetail;
 import com.alodiga.wallet.common.model.PaymentInfo;
 import com.alodiga.wallet.common.model.PaymentPatner;
 import com.alodiga.wallet.common.model.PaymentType;
+import com.alodiga.wallet.common.model.Sequences;
+import com.alodiga.wallet.common.model.StatusAccountBank;
+import com.alodiga.wallet.common.model.StatusTransactionApproveRequest;
 import com.alodiga.wallet.common.model.TopUpCountry;
+import com.alodiga.wallet.common.model.TransactionApproveRequest;
 import com.alodiga.wallet.common.model.UserHasCard;
 import com.alodiga.wallet.common.model.UserWS;
 import com.alodiga.wallet.common.model.ValidationCollection;
 import com.alodiga.wallet.response.generic.BankGeneric;
-import com.alodiga.wallet.respuestas.ActivateCardResponses;
-import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
-import com.alodiga.wallet.respuestas.BankListResponse;
-import com.alodiga.wallet.respuestas.CardListResponse;
-import com.alodiga.wallet.respuestas.CardResponse;
-import com.alodiga.wallet.respuestas.ChangeStatusCredentialCard;
-import com.alodiga.wallet.respuestas.CheckStatusAccountResponses;
-import com.alodiga.wallet.respuestas.CheckStatusCardResponses;
-import com.alodiga.wallet.respuestas.CheckStatusCredentialAccount;
-import com.alodiga.wallet.respuestas.CheckStatusCredentialCard;
-import com.alodiga.wallet.respuestas.CollectionListResponse;
+import com.alodiga.wallet.responses.ActivateCardResponses;
+import com.alodiga.wallet.responses.BalanceHistoryResponse;
+import com.alodiga.wallet.responses.BankListResponse;
+import com.alodiga.wallet.responses.CardListResponse;
+import com.alodiga.wallet.responses.CardResponse;
+import com.alodiga.wallet.responses.ChangeStatusCredentialCard;
+import com.alodiga.wallet.responses.CheckStatusAccountResponses;
+import com.alodiga.wallet.responses.CheckStatusCardResponses;
+import com.alodiga.wallet.responses.CheckStatusCredentialAccount;
+import com.alodiga.wallet.responses.CheckStatusCredentialCard;
+import com.alodiga.wallet.responses.CollectionListResponse;
+import com.alodiga.wallet.responses.AccountBankResponse;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -88,39 +97,40 @@ import javax.persistence.Query;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import org.apache.log4j.Logger;
-import com.alodiga.wallet.respuestas.ResponseCode;
-import com.alodiga.wallet.respuestas.ProductResponse;
-import com.alodiga.wallet.respuestas.UserHasProductResponse;
-import com.alodiga.wallet.respuestas.CountryListResponse;
-import com.alodiga.wallet.respuestas.CountryResponse;
-import com.alodiga.wallet.respuestas.CreditCardListResponse;
-import com.alodiga.wallet.respuestas.CumplimientResponse;
-import com.alodiga.wallet.respuestas.DesactivateCardResponses;
-import com.alodiga.wallet.respuestas.ExchangeTokenPlaidResponses;
-import com.alodiga.wallet.respuestas.LanguageListResponse;
-import com.alodiga.wallet.respuestas.PaymentInfoListResponse;
-import com.alodiga.wallet.respuestas.PaymentInfoResponse;
-import com.alodiga.wallet.respuestas.ProductListResponse;
-import com.alodiga.wallet.respuestas.PublicTokenPlaidResponses;
-import com.alodiga.wallet.respuestas.RechargeAfinitasResponses;
-import com.alodiga.wallet.respuestas.RemittanceResponse;
-import com.alodiga.wallet.respuestas.RetriveAuthPlaidResponses;
-import com.alodiga.wallet.respuestas.RetriveBalancePlaidResponses;
-import com.alodiga.wallet.respuestas.RetriveIdentityPlaidResponses;
-import com.alodiga.wallet.respuestas.RetriveIncomePlaidResponses;
-import com.alodiga.wallet.respuestas.RetriveTransactionPlaidResponses;
-import com.alodiga.wallet.respuestas.TopUpCountryListResponse;
-import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
-import com.alodiga.wallet.respuestas.TransactionListResponse;
-import com.alodiga.wallet.respuestas.TransactionResponse;
-import com.alodiga.wallet.respuestas.TransferCardToCardCredential;
-import com.alodiga.wallet.respuestas.TransferCardToCardResponses;
+import com.alodiga.wallet.responses.ResponseCode;
+import com.alodiga.wallet.responses.ProductResponse;
+import com.alodiga.wallet.responses.UserHasProductResponse;
+import com.alodiga.wallet.responses.CountryListResponse;
+import com.alodiga.wallet.responses.CountryResponse;
+import com.alodiga.wallet.responses.CreditCardListResponse;
+import com.alodiga.wallet.responses.CumplimientResponse;
+import com.alodiga.wallet.responses.DesactivateCardResponses;
+import com.alodiga.wallet.responses.ExchangeTokenPlaidResponses;
+import com.alodiga.wallet.responses.LanguageListResponse;
+import com.alodiga.wallet.responses.PaymentInfoListResponse;
+import com.alodiga.wallet.responses.PaymentInfoResponse;
+import com.alodiga.wallet.responses.ProductListResponse;
+import com.alodiga.wallet.responses.PublicTokenPlaidResponses;
+import com.alodiga.wallet.responses.RechargeAfinitasResponses;
+import com.alodiga.wallet.responses.RemittanceResponse;
+import com.alodiga.wallet.responses.RetriveAuthPlaidResponses;
+import com.alodiga.wallet.responses.RetriveBalancePlaidResponses;
+import com.alodiga.wallet.responses.RetriveIdentityPlaidResponses;
+import com.alodiga.wallet.responses.RetriveIncomePlaidResponses;
+import com.alodiga.wallet.responses.RetriveTransactionPlaidResponses;
+import com.alodiga.wallet.responses.TopUpCountryListResponse;
+import com.alodiga.wallet.responses.TopUpInfoListResponse;
+import com.alodiga.wallet.responses.TransactionListResponse;
+import com.alodiga.wallet.responses.TransactionResponse;
+import com.alodiga.wallet.responses.TransferCardToCardCredential;
+import com.alodiga.wallet.responses.TransferCardToCardResponses;
 import com.alodiga.wallet.topup.TopUpInfo;
 import com.alodiga.wallet.common.utils.AmazonSESSendMail;
 import com.alodiga.wallet.common.utils.Constante;
 import com.alodiga.wallet.common.utils.Constants;
 import static com.alodiga.wallet.common.utils.EncriptedRsa.encrypt;
 import com.alodiga.wallet.common.utils.Mail;
+import com.alodiga.wallet.common.utils.QueryConstants;
 import com.alodiga.wallet.common.utils.S3cur1ty3Cryt3r;
 import com.alodiga.wallet.common.utils.SendMailTherad;
 import com.alodiga.wallet.common.utils.SendSmsThread;
@@ -131,6 +141,9 @@ import com.ericsson.alodiga.ws.RespuestaUsuario;
 import java.sql.Timestamp;
 import com.alodiga.wallet.common.utils.Utils;
 import com.alodiga.wallet.common.utils.XTrustProvider;
+import com.alodiga.wallet.responses.AccountBankListResponse;
+import com.alodiga.wallet.responses.TransactionApproveRequestResponse;
+
 import com.alodiga.ws.cumpliments.services.OFACMethodWSProxy;
 import com.alodiga.ws.cumpliments.services.WsExcludeListResponse;
 import com.alodiga.ws.cumpliments.services.WsLoginResponse;
@@ -147,11 +160,13 @@ import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.rmi.ConnectException;
-
+import java.text.ParseException;
+import java.util.Calendar;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
+import javax.validation.ConstraintViolationException;
 import org.apache.commons.codec.binary.Base64;
 import plaidclientintegration.PlaidClientIntegration;
 
@@ -399,11 +414,21 @@ public class APIOperations {
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
             paymentShop.setCreationDate(creationDate);
-
             paymentShop.setConcept(Constante.sTransactionConceptPaymentShop);
             paymentShop.setAmount(amountPayment);
             paymentShop.setTransactionStatus(TransactionStatus.CREATED.name());
             paymentShop.setTotalAmount(amountPayment);
+            paymentShop.setTotalTax(null);
+            paymentShop.setPromotionAmount(null);
+            paymentShop.setTotalAlopointsUsed(null);
+            paymentShop.setTopUpDescription(null);
+            paymentShop.setBillPaymentDescription(null);
+            paymentShop.setExternalId(null);
+            paymentShop.setAdditional(null);
+            paymentShop.setAdditional2(null);
+            paymentShop.setCloseId(null);
+            paymentShop.setTransactionNumber("1");
+            entityManager.flush();
             entityManager.persist(paymentShop);
 
             try {
@@ -653,11 +678,21 @@ public class APIOperations {
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
             transfer.setCreationDate(creationDate);
-
             transfer.setConcept(Constante.sTransactionConceptTranferAccounts);
             transfer.setAmount(amountTransfer);
             transfer.setTransactionStatus(TransactionStatus.CREATED.name());
             transfer.setTotalAmount(amountTransfer);
+            transfer.setTotalTax(null);
+            transfer.setPromotionAmount(null);
+            transfer.setTotalAlopointsUsed(null);
+            transfer.setTopUpDescription(null);
+            transfer.setBillPaymentDescription(null);
+            transfer.setExternalId(null);
+            transfer.setAdditional(null);
+            transfer.setAdditional2(null);
+            transfer.setCloseId(null);
+            transfer.setTransactionNumber("1");
+            entityManager.flush();
             entityManager.persist(transfer);
 
             CommissionItem commissionItem = new CommissionItem();
@@ -921,6 +956,17 @@ public class APIOperations {
             exchange.setAmount(amountExchange);
             exchange.setTransactionStatus(TransactionStatus.CREATED.name());
             exchange.setTotalAmount(amountExchange);
+            exchange.setTotalTax(null);
+            exchange.setPromotionAmount(null);
+            exchange.setTotalAlopointsUsed(null);
+            exchange.setTopUpDescription(null);
+            exchange.setBillPaymentDescription(null);
+            exchange.setExternalId(null);
+            exchange.setAdditional(null);
+            exchange.setAdditional2(null);
+            exchange.setCloseId(null);
+            exchange.setTransactionNumber("1");
+            entityManager.flush();
             entityManager.persist(exchange);
 
             try {
@@ -1353,7 +1399,7 @@ public class APIOperations {
     }
 
     public TransactionResponse manualWithdrawals(Long bankId, String emailUser, String accountBank,
-            Float amountWithdrawal, Long productId, String conceptTransaction) {
+            Float amountWithdrawal, Long productId, String conceptTransaction, Long documentTypeId, Long originApplicationId) {
 
         Long idTransaction = 0L;
         Long userId = 0L;
@@ -1431,10 +1477,12 @@ public class APIOperations {
             }
 
             withdrawal.setId(null);
+            withdrawal.setTransactionNumber("1");
             withdrawal.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             withdrawal.setUserDestinationId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             Product product = entityManager.find(Product.class, productId);
             withdrawal.setProductId(product);
+            withdrawal.setPaymentInfoId(null);
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeManualWithdrawal);
             withdrawal.setTransactionTypeId(transactionType);
             TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
@@ -1446,8 +1494,17 @@ public class APIOperations {
             withdrawal.setAmount(amountWithdrawal);
             withdrawal.setTransactionStatus(TransactionStatus.CREATED.name());
             withdrawal.setTotalAmount(amountWithdrawal);
+            withdrawal.setTotalTax(null);
+            withdrawal.setPromotionAmount(null);
+            withdrawal.setTotalAlopointsUsed(null);
+            withdrawal.setTopUpDescription(null);
+            withdrawal.setBillPaymentDescription(null);
+            withdrawal.setExternalId(null);
+            withdrawal.setAdditional(null);
+            withdrawal.setAdditional2(null);
+            withdrawal.setCloseId(null);
+            entityManager.flush();
             entityManager.persist(withdrawal);
-
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransationTypeManualWithdrawal).getResultList();
                 if (commissions.size() < 1) {
@@ -1495,6 +1552,13 @@ public class APIOperations {
             entityManager.merge(withdrawal);
             Usuario usuario = new Usuario();
             usuario.setEmail(emailUser);
+            try {
+                System.out.println("" + manualWithdrawal.getId());
+                TransactionApproveRequestResponse transactionApproveRequestResponse = saveTransactionApproveRequest(userId, product.getId(), manualWithdrawal.getId(), bankId, documentTypeId, originApplicationId);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error saving transaction Aprrove Request");
+            }
             try {
                 products = getProductsListByUserId(userId);
                 for (Product p : products) {
@@ -1551,7 +1615,7 @@ public class APIOperations {
     }
 
     public TransactionResponse manualRecharge(Long bankId, String emailUser, String referenceNumberOperation,
-            Float amountRecharge, Long productId, String conceptTransaction) {
+            Float amountRecharge, Long productId, String conceptTransaction, Long documentTypeId, Long originApplicationId) {
 
         Long idTransaction = 0L;
         Long userId = 0L;
@@ -1647,8 +1711,18 @@ public class APIOperations {
             recharge.setAmount(amountRecharge);
             recharge.setTransactionStatus(TransactionStatus.CREATED.name());
             recharge.setTotalAmount(amountRecharge);
+            recharge.setTotalTax(null);
+            recharge.setPromotionAmount(null);
+            recharge.setTotalAlopointsUsed(null);
+            recharge.setTopUpDescription(null);
+            recharge.setBillPaymentDescription(null);
+            recharge.setExternalId(null);
+            recharge.setAdditional(null);
+            recharge.setAdditional2(null);
+            recharge.setCloseId(null);
+            recharge.setTransactionNumber("1");
+            entityManager.flush();
             entityManager.persist(recharge);
-
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransationTypeManualRecharge).getResultList();
                 if (commissions.size() < 1) {
@@ -1694,7 +1768,13 @@ public class APIOperations {
             recharge.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
 
             entityManager.merge(recharge);
-
+            try {
+                System.out.println("" + recharge.getId());
+                TransactionApproveRequestResponse transactionApproveRequestResponse = saveTransactionApproveRequest(userId, product.getId(), recharge.getId(), bankId, documentTypeId, originApplicationId);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error saving transaction Aprrove Request");
+            }
             try {
                 products = getProductsListByUserId(userId);
                 for (Product p : products) {
@@ -2048,6 +2128,17 @@ public class APIOperations {
             recharge.setTransactionStatus(TransactionStatus.CREATED.name());
             recharge.setTotalAmount(amountRecharge);
             recharge.setId(recharge.getId());
+            recharge.setTotalTax(null);
+            recharge.setPromotionAmount(null);
+            recharge.setTotalAlopointsUsed(null);
+            recharge.setTopUpDescription(null);
+            recharge.setBillPaymentDescription(null);
+            recharge.setExternalId(null);
+            recharge.setAdditional(null);
+            recharge.setAdditional2(null);
+            recharge.setCloseId(null);
+            recharge.setTransactionNumber("1");
+            entityManager.flush();
             entityManager.persist(recharge);
 
             try {
@@ -2359,7 +2450,7 @@ public class APIOperations {
             address.setCityId(null);
             address.setCountyId(null);
             address.setAddressLine1(addres1);
-            address.setZipCode(zipCode);            
+            address.setZipCode(zipCode);
             entityManager.persist(address);
             return address;
         } catch (RemoteException ex) {
@@ -3225,6 +3316,17 @@ public class APIOperations {
             transfer.setAmount(totalAmount);
             transfer.setTransactionStatus(TransactionStatus.CREATED.name());
             transfer.setTotalAmount(totalAmount);
+            transfer.setTotalTax(null);
+            transfer.setPromotionAmount(null);
+            transfer.setTotalAlopointsUsed(null);
+            transfer.setTopUpDescription(null);
+            transfer.setBillPaymentDescription(null);
+            transfer.setExternalId(null);
+            transfer.setAdditional(null);
+            transfer.setAdditional2(null);
+            transfer.setCloseId(null);
+            transfer.setTransactionNumber("1");
+            entityManager.flush();
             entityManager.persist(transfer);
 
             //Se crea el objeto commissionItem y se persiste en BD
@@ -3235,6 +3337,7 @@ public class APIOperations {
             Timestamp processedDate = new Timestamp(commissionDate.getTime());
             commissionItem.setProcessedDate(processedDate);
             commissionItem.setTransactionId(transfer);
+
             entityManager.persist(commissionItem);
 
             //Se actualiza el estatus de la transaccion a IN_PROCESS
@@ -3479,6 +3582,17 @@ public class APIOperations {
             transaction.setAmount(amountRecharge);
             transaction.setTransactionStatus(TransactionStatus.CREATED.name());
             transaction.setTotalAmount(amountRecharge);
+            transaction.setTotalTax(null);
+            transaction.setPromotionAmount(null);
+            transaction.setTotalAlopointsUsed(null);
+            transaction.setTopUpDescription(null);
+            transaction.setBillPaymentDescription(null);
+            transaction.setExternalId(null);
+            transaction.setAdditional(null);
+            transaction.setAdditional2(null);
+            transaction.setCloseId(null);
+            transaction.setTransactionNumber("1");
+            entityManager.flush();
             entityManager.persist(transaction);
 
             //Revisar si la transaccion esta sujeta a comisiones
@@ -3953,7 +4067,7 @@ public class APIOperations {
 
         TokenResponse tokenResponse = new TokenResponse();
         ExchangeTokenResponse exchangeTokenResponse = new ExchangeTokenResponse();
-        
+
         try {
             PlaidClientIntegration plaidClientIntegration = new PlaidClientIntegration();
 
@@ -3984,7 +4098,7 @@ public class APIOperations {
         try {
             PlaidClientIntegration plaidClientIntegration = new PlaidClientIntegration();
 
-            retriveAuthResponse = plaidClientIntegration.plaidRetrieveAuth(clientId,secret);
+            retriveAuthResponse = plaidClientIntegration.plaidRetrieveAuth(clientId, secret);
             RetriveAuthPlaidResponses retriveAuthPlaidResponses = new RetriveAuthPlaidResponses(retriveAuthResponse, ResponseCode.EXITO, "EXITO");
             return retriveAuthPlaidResponses;
 
@@ -4009,7 +4123,7 @@ public class APIOperations {
         try {
             PlaidClientIntegration plaidClientIntegration = new PlaidClientIntegration();
 
-            retriveTransactionResponse = plaidClientIntegration.plaidRetrieveTransaction(clientId,secret);
+            retriveTransactionResponse = plaidClientIntegration.plaidRetrieveTransaction(clientId, secret);
             RetriveTransactionPlaidResponses retriveTransactionPlaidResponses = new RetriveTransactionPlaidResponses(retriveTransactionResponse, ResponseCode.EXITO, "EXITO");
             return retriveTransactionPlaidResponses;
 
@@ -4097,6 +4211,141 @@ public class APIOperations {
         } catch (Exception ex) {
             ex.printStackTrace();
             return new RetriveIncomePlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR INCOME");
+        }
+
+    }
+
+    public Sequences getSequencesByDocumentTypeByOriginApplication(Long documentTypeId, Long originApplicationId) {
+
+        try {
+            Sequences sequences = (Sequences) entityManager.createNamedQuery("Sequences.findBydocumentType_idByoriginApplicationId", Sequences.class).setParameter("documentTypeId", documentTypeId).setParameter("originApplicationId", originApplicationId).getSingleResult();
+            return sequences;
+        } catch (NoResultException e) {
+            return null;
+        }
+
+    }
+
+    private String generateNumberSequence(Sequences s) {
+        String secuence = "";
+        try {
+            Integer numberSequence = s.getCurrentValue() > 1 ? s.getCurrentValue() : s.getInitialValue();
+            s.setCurrentValue(s.getCurrentValue() + 1);
+            //saveSequences(s);
+            Calendar cal = Calendar.getInstance();
+            int year = cal.get(Calendar.YEAR);
+            secuence = ((s.getOriginApplicationId().getId().equals(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID)) ? "APP-" : "ADM-")
+                    .concat(s.getDocumentTypeId().getAcronym()).concat("-")
+                    .concat(String.valueOf(year)).concat("-")
+                    .concat(numberSequence.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return secuence;
+    }
+
+    public TransactionApproveRequestResponse saveTransactionApproveRequest(Long unifiedRegistryUserId, Long productId, Long transactionId, Long bankOperationId, Long documentTypeId, Long originApplicationId) {
+        Date curDate = new Date();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
+        String statusTransactionApproveCode = StatusTransactionApproveRequestE.PENDIEN.getStatusTransactionApproveRequestCode();
+        System.out.println("statusTransactionApproveCode" + statusTransactionApproveCode);
+        try {
+            TransactionApproveRequest approveRequest = new TransactionApproveRequest();
+            approveRequest.setUnifiedRegistryUserId(unifiedRegistryUserId);
+            approveRequest.setCreateDate(new Timestamp(new Date().getTime()));
+            StatusTransactionApproveRequest statusTransactionApproveRequest = (StatusTransactionApproveRequest) entityManager.createNamedQuery(QueryConstants.STATUS_TRANSACTION_APPROVE_REQUEST_BY_CODE, StatusTransactionApproveRequest.class).setParameter("code", statusTransactionApproveCode).getSingleResult();
+            approveRequest.setStatusTransactionApproveRequestId(statusTransactionApproveRequest);
+            Sequences sequences = getSequencesByDocumentTypeByOriginApplication(documentTypeId, originApplicationId);
+            String numberSequence = generateNumberSequence(sequences);
+            approveRequest.setRequestNumber(numberSequence);
+            String DateToStr = format.format(curDate);
+            Date fechaDate = null;
+            fechaDate = format.parse(DateToStr);
+            System.out.println("fecha" + fechaDate);
+            approveRequest.setRequestDate(fechaDate);            
+            Product product = entityManager.find(Product.class, productId);
+            approveRequest.setProductId(product);
+            Transaction transaction = entityManager.find(Transaction.class, transactionId);
+            approveRequest.setTransactionId(transaction);            
+            BankOperation bankOperation = entityManager.find(BankOperation.class, bankOperationId);
+            approveRequest.setBankOperationId(bankOperation);            
+            approveRequest.setIndApproveRequest(null);
+            approveRequest.setApprovedRequestDate(null);
+            approveRequest.setUserApprovedRequestId(null);
+            entityManager.persist(approveRequest);
+            return new TransactionApproveRequestResponse(ResponseCode.EXITO, "", null);
+        } catch (NoResultException e) {
+            e.printStackTrace();
+            return new TransactionApproveRequestResponse(ResponseCode.ERROR_INTERNO, "Error");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new TransactionApproveRequestResponse(ResponseCode.ERROR_INTERNO, "Error");
+        }
+
+    }
+
+    public AccountBankResponse saveAccountBank(Long unifiedRegistryId, String accountNumber, Long bankId, Integer accountTypeBankId) {
+
+        String statusAccountBankCode = StatusAccountBankE.ACTIVA.getStatusAccountCode();
+        try {
+            AccountBank accountBank = new AccountBank();
+            accountBank.setUnifiedRegistryId(unifiedRegistryId);
+            accountBank.setAccountNumber(accountNumber);
+            Bank bank = entityManager.find(Bank.class, bankId);
+            accountBank.setBankId(bank);
+            StatusAccountBank statusAccountBank = (StatusAccountBank) entityManager.createNamedQuery(QueryConstants.STATUS_ACCOUNT_BANK_BY_CODE, StatusAccountBank.class).setParameter("code", statusAccountBankCode).getSingleResult();
+            accountBank.setStatusAccountBankId(statusAccountBank);
+            AccountTypeBank accountTypeBank = entityManager.find(AccountTypeBank.class, accountTypeBankId);
+            accountBank.setAccountTypeBankId(accountTypeBank);
+            accountBank.setCreateDate(new Timestamp(new Date().getTime()));
+            entityManager.persist(accountBank);
+            return new AccountBankResponse(ResponseCode.EXITO, "", accountBank);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new AccountBankResponse(ResponseCode.ERROR_INTERNO, "Error");
+        }
+
+    }
+
+    public AccountBankListResponse getAccountBankByUser(Long unifiedRegistryId) {
+        List<AccountBank> accountBanks = new ArrayList<AccountBank>();
+
+        try {
+            accountBanks = (List<AccountBank>) entityManager.createNamedQuery("AccountBank.findByUnifiedRegistryId", AccountBank.class).setParameter("unifiedRegistryId", unifiedRegistryId).getResultList();
+            if (accountBanks.size() <= 0) {
+                return new AccountBankListResponse(ResponseCode.ERROR_INTERNO, "Error loading account bank");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new AccountBankListResponse(ResponseCode.ERROR_INTERNO, "Error loading account bank");
+        }
+
+        return new AccountBankListResponse(ResponseCode.EXITO, "", accountBanks);
+    }
+
+    public AccountBankResponse updateAccountBankByAccountNumber(Long unifiedRegistryId, String accountNumberOld, String accountNumberCurrent, Long bankId) {
+
+        try {
+            AccountBank accountBanks = (AccountBank) entityManager.createNamedQuery("AccountBank.findByUnifiedRegistryIdByAccountNumberByBankIdByStatusAccountId", AccountBank.class).setParameter("unifiedRegistryId", unifiedRegistryId).setParameter("accountNumber", accountNumberOld).setParameter("bankId", bankId).getSingleResult();
+            accountBanks.setAccountNumber(accountNumberCurrent);
+            accountBanks.setUpdateDate(new Timestamp(new Date().getTime()));
+            entityManager.merge(accountBanks);
+            return new AccountBankResponse(ResponseCode.EXITO, "", accountBanks);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new AccountBankResponse(ResponseCode.ERROR_INTERNO, "Error");
+        }
+
+    }
+
+    public StatusTransactionApproveRequest getStatusTransactionAprove(String status) {
+
+        try {
+            StatusTransactionApproveRequest statusTransactionApproveRequests = entityManager.createNamedQuery(QueryConstants.CODE_BY_STATUS, StatusTransactionApproveRequest.class).setParameter("code", status).getSingleResult();
+            return statusTransactionApproveRequests;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
 
     }
