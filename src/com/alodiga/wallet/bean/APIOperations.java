@@ -1553,8 +1553,8 @@ public class APIOperations {
             Usuario usuario = new Usuario();
             usuario.setEmail(emailUser);
             try {
-                System.out.println("" + manualWithdrawal.getId());
-                //TransactionApproveRequestResponse transactionApproveRequestResponse = saveTransactionApproveRequest(userId, product.getId(), manualWithdrawal.getId(), bankId, documentTypeId, originApplicationId);
+                System.out.println("" + withdrawal.getId());
+                TransactionApproveRequestResponse transactionApproveRequestResponse = saveTransactionApproveRequest(userId, product.getId(), withdrawal.getId(), bankId, documentTypeId, originApplicationId);
             } catch (Exception e) {
                 e.printStackTrace();
                 return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error saving transaction Aprrove Request");
@@ -1770,7 +1770,7 @@ public class APIOperations {
             entityManager.merge(recharge);
             try {
                 System.out.println("" + recharge.getId());
-//                TransactionApproveRequestResponse transactionApproveRequestResponse = saveTransactionApproveRequest(userId, product.getId(), recharge.getId(), bankId, documentTypeId, originApplicationId);
+                TransactionApproveRequestResponse transactionApproveRequestResponse = saveTransactionApproveRequest(userId, product.getId(), recharge.getId(), bankId, documentTypeId, originApplicationId);
             } catch (Exception e) {
                 e.printStackTrace();
                 return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error saving transaction Aprrove Request");
@@ -4267,7 +4267,7 @@ public class APIOperations {
 
     }
 
-    public TransactionApproveRequestResponse saveTransactionApproveRequest(Long unifiedRegistryUserId, Long productId, Long transactionId, Long bankOperationId, Long documentTypeId, Long originApplicationId, Integer StatusId) {
+    public TransactionApproveRequestResponse saveTransactionApproveRequest(Long unifiedRegistryUserId, Long productId, Long transactionId, Long bankOperationId, Long documentTypeId, Long originApplicationId) {
         Date curDate = new Date();
         SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
         try {
@@ -4290,7 +4290,8 @@ public class APIOperations {
             transactionApproveRequest.setTransactionId(transaction);
             BankOperation bankOperation = entityManager.find(BankOperation.class, bankOperationId);
             transactionApproveRequest.setBankOperationId(bankOperation);
-            StatusTransactionApproveRequest statusTransactionApproveRequest = entityManager.find(StatusTransactionApproveRequest.class, StatusId);
+            StatusTransactionApproveRequest statusTransactionApproveRequest = (StatusTransactionApproveRequest) entityManager.createNamedQuery(QueryConstants.STATUS_TRANSACTION_APPROVE_REQUEST_BY_CODE, StatusTransactionApproveRequest.class).setParameter("code", statusTransactionApproveRequestE).getSingleResult();
+           
             transactionApproveRequest.setStatusTransactionApproveRequestId(statusTransactionApproveRequest);
             entityManager.flush();
             entityManager.persist(transactionApproveRequest);

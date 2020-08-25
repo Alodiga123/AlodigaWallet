@@ -649,9 +649,8 @@ public class APIAlodigaWallet {
             @WebParam(name = "transactionId") Long transactionId,
             @WebParam(name = "bankOperationId") Long bankOperationId,
             @WebParam(name = "documentTypeId") Long documentTypeId,
-            @WebParam(name = "originApplicationId") Long originApplicationId,
-            @WebParam(name = "statusId") Integer statusId){
-        return operations.saveTransactionApproveRequest(unifiedRegistryId,productId,transactionId,bankOperationId,documentTypeId,originApplicationId,statusId);
+            @WebParam(name = "originApplicationId") Long originApplicationId){
+        return operations.saveTransactionApproveRequest(unifiedRegistryId,productId,transactionId,bankOperationId,documentTypeId,originApplicationId);
 
     }
     
