@@ -18,9 +18,11 @@ import com.alodiga.wallet.respuestas.CheckStatusCardResponses;
 import com.alodiga.wallet.respuestas.CheckStatusCredentialCard;
 import com.alodiga.wallet.respuestas.DesactivateCardResponses;
 import com.alodiga.wallet.respuestas.ResponseCode;
-import com.alodiga.wallet.common.utils.Constants;
-import static com.alodiga.wallet.common.utils.EncriptedRsa.encrypt;
-import com.alodiga.wallet.common.utils.S3cur1ty3Cryt3r;
+import com.alodiga.wallet.utils.Constants;
+import com.alodiga.wallet.utils.S3cur1ty3Cryt3r;
+
+import static com.alodiga.wallet.utils.EncriptedRsa.encrypt;
+
 import java.io.IOException;
 import java.math.BigInteger;
 import java.rmi.RemoteException;

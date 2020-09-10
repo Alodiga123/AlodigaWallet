@@ -65,7 +65,7 @@
     <class>com.alodiga.wallet.common.model.Profile</class>
     <class>com.alodiga.wallet.common.model.ProfileData</class>
     <class>com.alodiga.wallet.common.model.User</class>
-    <class>com.alodiga.wallet.common.model.UserHasProfileHasEnterprise</class>
+    <class>com.alodiga.wallet.common.model.UserHasProfile</class>
     <class>com.alodiga.wallet.common.model.Cumplimient</class>
     <class>com.alodiga.wallet.common.model.CumplimientStatus</class>
     <class>com.alodiga.wallet.common.model.Card</class>

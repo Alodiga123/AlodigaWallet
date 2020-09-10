@@ -11,7 +11,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.alodiga.wallet.common.model.User;
-import com.alodiga.wallet.common.model.UserHasProfileHasEnterprise;
+import com.alodiga.wallet.common.model.UserHasProfile;
 import com.alodiga.wallet.respuestas.Response;
 import com.alodiga.wallet.respuestas.ResponseCode;
 
@@ -74,7 +74,7 @@ public class UserResponse extends Response implements Serializable {
 		this.password = user.getPassword();
 		this.phoneNumber = user.getPhoneNumber();
 		this.userHasProfileHasEnterpriseResponse = new ArrayList<UserHasProfileHasEnterpriseResponse>();
-		for (UserHasProfileHasEnterprise uhp:user.getUserHasProfileHasEnterprises()){
+		for (UserHasProfile uhp:user.getUserHasProfileHasEnterprises()){
 			this.userHasProfileHasEnterpriseResponse.add(new UserHasProfileHasEnterpriseResponse(uhp));
 	    }
 		
@@ -92,7 +92,7 @@ public class UserResponse extends Response implements Serializable {
 		this.password = user.getPassword();
 		this.phoneNumber = user.getPhoneNumber();
 		this.userHasProfileHasEnterpriseResponse = new ArrayList<UserHasProfileHasEnterpriseResponse>();
-		for (UserHasProfileHasEnterprise uhp:user.getUserHasProfileHasEnterprises()){
+		for (UserHasProfile uhp:user.getUserHasProfileHasEnterprises()){
 			userHasProfileHasEnterpriseResponse.add(new UserHasProfileHasEnterpriseResponse(uhp));
 	    }
 	}

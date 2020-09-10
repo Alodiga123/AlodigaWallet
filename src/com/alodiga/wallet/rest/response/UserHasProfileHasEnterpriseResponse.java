@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
-import com.alodiga.wallet.common.model.UserHasProfileHasEnterprise;
+import com.alodiga.wallet.common.model.UserHasProfile;
 
 import lombok.Data;
 
@@ -34,7 +34,7 @@ public class UserHasProfileHasEnterpriseResponse implements Serializable {
 		super();
 	}
 
-	public UserHasProfileHasEnterpriseResponse(UserHasProfileHasEnterprise userHasProfileHasEnterprise) {
+	public UserHasProfileHasEnterpriseResponse(UserHasProfile userHasProfileHasEnterprise) {
 		this.id = userHasProfileHasEnterprise.getId();
 		this.beginningDate = userHasProfileHasEnterprise.getBeginningDate();
 		this.endingDate = userHasProfileHasEnterprise.getEndingDate();

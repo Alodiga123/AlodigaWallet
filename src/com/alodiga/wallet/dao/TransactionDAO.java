@@ -7,7 +7,8 @@ import com.alodiga.wallet.common.model.Transaction;
 import com.alodiga.wallet.common.model.TransactionType;
 import com.alodiga.wallet.sources.model.BalanceHistory_;
 import com.alodiga.wallet.sources.model.Commission_;
-import com.alodiga.wallet.common.utils.Constante;
+import com.alodiga.wallet.utils.Constante;
+
 import java.sql.Timestamp;
 import java.util.Date;
 import javax.persistence.EntityManager;

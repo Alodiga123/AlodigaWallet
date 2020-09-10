@@ -58,6 +58,11 @@ import com.alodiga.wallet.common.model.UserHasCard;
 import com.alodiga.wallet.common.model.UserHasProduct;
 import com.alodiga.wallet.common.model.UserWS;
 import com.alodiga.wallet.common.model.ValidationCollection;
+import com.alodiga.wallet.common.utils.Constante;
+import com.alodiga.wallet.common.utils.Constants;
+import com.alodiga.wallet.common.utils.Mail;
+import com.alodiga.wallet.common.utils.SendMailTherad;
+import com.alodiga.wallet.common.utils.Utils;
 import com.alodiga.wallet.response.generic.BankGeneric;
 import com.alodiga.wallet.respuestas.ActivateCardResponses;
 import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
@@ -105,21 +110,17 @@ import com.alodiga.wallet.respuestas.TransactionResponse;
 import com.alodiga.wallet.respuestas.TransferCardToCardCredential;
 import com.alodiga.wallet.respuestas.TransferCardToCardResponses;
 import com.alodiga.wallet.topup.TopUpInfo;
-import com.alodiga.wallet.common.utils.AmazonSESSendMail;
-import com.alodiga.wallet.common.utils.Constante;
-import com.alodiga.wallet.common.utils.Constants;
-import static com.alodiga.wallet.common.utils.EncriptedRsa.encrypt;
-import com.alodiga.wallet.common.utils.Mail;
-import com.alodiga.wallet.common.utils.S3cur1ty3Cryt3r;
-import com.alodiga.wallet.common.utils.SendMailTherad;
-import com.alodiga.wallet.common.utils.SendSmsThread;
+import com.alodiga.wallet.utils.AmazonSESSendMail;
+import com.alodiga.wallet.utils.S3cur1ty3Cryt3r;
+import com.alodiga.wallet.utils.SendSmsThread;
+import com.alodiga.wallet.utils.XTrustProvider;
+
 import java.rmi.RemoteException;
 import com.ericsson.alodiga.ws.APIRegistroUnificadoProxy;
 import com.ericsson.alodiga.ws.Usuario;
 import com.ericsson.alodiga.ws.RespuestaUsuario;
 import java.sql.Timestamp;
-import com.alodiga.wallet.common.utils.Utils;
-import com.alodiga.wallet.common.utils.XTrustProvider;
+
 import com.alodiga.ws.cumpliments.services.OFACMethodWSProxy;
 import com.alodiga.ws.cumpliments.services.WsExcludeListResponse;
 import com.alodiga.ws.cumpliments.services.WsLoginResponse;
@@ -129,6 +130,9 @@ import com.alodiga.ws.remittance.services.WsAddressListResponse;
 import com.alodiga.ws.remittance.services.WsRemittenceResponse;
 
 import com.ericsson.alodiga.ws.Cuenta;
+
+import static com.alodiga.wallet.utils.EncriptedRsa.encrypt;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -2346,14 +2350,14 @@ public class APIOperations {
             Address address = new Address();
             address.setId(null);
             address.setCountryId(codeCountry);
-            address.setStateId(null);
+//            address.setStateId(null);
             address.setCityId(null);
             address.setCountyId(null);
-            address.setAddress(addres1);
+//            address.setAddress(addres1);
             address.setZipCode(zipCode);
-            address.setStateName(estado);
-            address.setCountyName(null);
-            address.setCityName(ciudad);
+//            address.setStateName(estado);
+//            address.setCountyName(null);
+//            address.setCityName(ciudad);
             entityManager.persist(address);
             return address;
         } catch (RemoteException ex) {
