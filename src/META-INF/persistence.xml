@@ -120,6 +120,13 @@
     <class>com.alodiga.wallet.common.model.PasswordChangeRequest</class>
     <class>com.alodiga.wallet.common.model.Employee</class>
     <class>com.alodiga.wallet.common.model.ComercialAgency</class>
+    <class>com.alodiga.wallet.common.model.CalendarDays</class>
+    <class>com.alodiga.wallet.common.model.CodeErrorTransactionLog</class>
+    <class>com.alodiga.wallet.common.model.DailyClosing</class>
+    <class>com.alodiga.wallet.common.model.StatusTransactionLog</class>
+    <class>com.alodiga.wallet.common.model.TransactionLog</class>
+    <class>com.alodiga.wallet.common.model.DailyClosingType</class>
+    <class>com.alodiga.wallet.common.model.BusinessHasProduct</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <properties>
       <property name="eclipselink.logging.level" value="ALL"/>
