@@ -17,6 +17,7 @@ import com.alodiga.wallet.responses.AccountBankResponse;
 import com.alodiga.wallet.responses.ActivateCardResponses;
 import com.alodiga.wallet.responses.BalanceHistoryResponse;
 import com.alodiga.wallet.responses.BankListResponse;
+import com.alodiga.wallet.responses.BusinessHasProductResponse;
 import com.alodiga.wallet.responses.CardListResponse;
 import com.alodiga.wallet.responses.CardResponse;
 import com.alodiga.wallet.responses.CheckStatusAccountResponses;
@@ -654,7 +655,26 @@ public class APIAlodigaWallet {
 
     }
     
+    @WebMethod
+    public BusinessHasProductResponse saveBusinessHasProductDefault(
+            @WebParam(name = "businessId") String businessId) {
+        return operations.saveBusinessHasProductDefault(Long.valueOf(businessId));
+    }
+
+    @WebMethod
+    public ProductListResponse getProductsByBusinessId(
+            @WebParam(name = "businessId") String businessId) {
+        return operations.getProductsByBusinessId(Long.valueOf(businessId));
+    }
     
+    @WebMethod
+    public BalanceHistoryResponse getBalanceHistoryByProductAndBusinessId(
+            @WebParam(name = "businessId") Long businessId,
+            @WebParam(name = "productId") Long productId) {
+        return operations.getBalanceHistoryByBusinessAndProduct(businessId, productId);
+    }
+    
+
     
     
     

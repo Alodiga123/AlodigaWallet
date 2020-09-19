@@ -62,6 +62,7 @@ public enum ResponseCode {
     THERE_ARE_NO_RECORDS_FOR_THE_REQUESTED_SEARCH("58"),
     THE_REQUESTED_PRODUCT_DOES_NOT_EXIST("59"),
     THE_NUMBER_OF_ORDERS_ALLOWED_IS_EXCEEDED("60"),
+    BUSINESS_NOT_HAS_PRODUCT("61"),
     
     //Mensajes transferencia cardtocard credencial servicio autorizacion
     NON_EXISTENT_CARD("100"),
