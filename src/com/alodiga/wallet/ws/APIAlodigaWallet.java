@@ -2,12 +2,14 @@ package com.alodiga.wallet.ws;
 
 
 
-import com.alodiga.wallet.bean.APICardOperations;
 import javax.ejb.EJB;
 import javax.jws.WebMethod;
 import javax.jws.WebParam;
 import javax.jws.WebService;
+
 import org.apache.log4j.Logger;
+
+import com.alodiga.wallet.bean.APICardOperations;
 import com.alodiga.wallet.bean.APIOperations;
 import com.alodiga.wallet.bean.APIRechargeOperations;
 import com.alodiga.wallet.common.model.Address;
@@ -22,20 +24,15 @@ import com.alodiga.wallet.responses.CardListResponse;
 import com.alodiga.wallet.responses.CardResponse;
 import com.alodiga.wallet.responses.CheckStatusAccountResponses;
 import com.alodiga.wallet.responses.CheckStatusCardResponses;
-import com.alodiga.wallet.responses.CityListResponse;
 import com.alodiga.wallet.responses.CollectionListResponse;
-import com.alodiga.wallet.responses.CollectionRequestListResponse;
-import com.alodiga.wallet.responses.CollectionTypeListResponse;
 import com.alodiga.wallet.responses.CountryListResponse;
 import com.alodiga.wallet.responses.CreditCardListResponse;
 import com.alodiga.wallet.responses.CumplimientResponse;
 import com.alodiga.wallet.responses.DesactivateCardResponses;
-import com.alodiga.wallet.responses.DocumentsPersonTypeListResponse;
 import com.alodiga.wallet.responses.ExchangeTokenPlaidResponses;
 import com.alodiga.wallet.responses.LanguageListResponse;
 import com.alodiga.wallet.responses.PaymentInfoListResponse;
 import com.alodiga.wallet.responses.PaymentInfoResponse;
-import com.alodiga.wallet.responses.PersonTypeListResponse;
 import com.alodiga.wallet.responses.ProductListResponse;
 import com.alodiga.wallet.responses.ProductResponse;
 import com.alodiga.wallet.responses.RechargeAfinitasResponses;
@@ -46,16 +43,13 @@ import com.alodiga.wallet.responses.RetriveBalancePlaidResponses;
 import com.alodiga.wallet.responses.RetriveIdentityPlaidResponses;
 import com.alodiga.wallet.responses.RetriveIncomePlaidResponses;
 import com.alodiga.wallet.responses.RetriveTransactionPlaidResponses;
-import com.alodiga.wallet.responses.StateListResponse;
-import com.alodiga.wallet.responses.StatusTransactionAproveListResponse;
 import com.alodiga.wallet.responses.TopUpCountryListResponse;
 import com.alodiga.wallet.responses.TopUpInfoListResponse;
 import com.alodiga.wallet.responses.TransactionApproveRequestResponse;
-import com.alodiga.wallet.responses.UserHasProductResponse;
 import com.alodiga.wallet.responses.TransactionListResponse;
 import com.alodiga.wallet.responses.TransactionResponse;
 import com.alodiga.wallet.responses.TransferCardToCardResponses;
-import java.text.ParseException;
+import com.alodiga.wallet.responses.UserHasProductResponse;
 
 @WebService
 public class APIAlodigaWallet {
@@ -651,7 +645,7 @@ public class APIAlodigaWallet {
             @WebParam(name = "bankOperationId") Long bankOperationId,
             @WebParam(name = "documentTypeId") Long documentTypeId,
             @WebParam(name = "originApplicationId") Long originApplicationId){
-        return operations.saveTransactionApproveRequest(unifiedRegistryId,productId,transactionId,bankOperationId,documentTypeId,originApplicationId);
+        return operations.saveTransactionApproveRequest(unifiedRegistryId,productId,transactionId,bankOperationId,documentTypeId,originApplicationId,0L);
 
     }
     
@@ -674,9 +668,52 @@ public class APIAlodigaWallet {
         return operations.getBalanceHistoryByBusinessAndProduct(businessId, productId);
     }
     
+    @WebMethod
+    public TransactionResponse manualWithdrawalsBusiness(
+            @WebParam(name = "bankId") Long bankId,
+            @WebParam(name = "accountBank") String accountBank,
+            @WebParam(name = "amountWithdrawal") Float amountWithdrawal,
+            @WebParam(name = "productId") Long productId,
+            @WebParam(name = "conceptTransaction") String conceptTransaction,
+            @WebParam(name = "documentTypeId") Long documentTypeId,
+            @WebParam(name = "originApplicationId") Long originApplicationId,
+            @WebParam(name = "businessId") Long businessId,
+            @WebParam(name = "businessTransactionId") Long businessTransactionId) {
+        return operations.manualWithdrawalsBusiness(bankId, accountBank, amountWithdrawal, productId, conceptTransaction,documentTypeId,originApplicationId, businessId,businessTransactionId);
+    }
+    
+    @WebMethod
+    public TransactionResponse saveTransferBetweenBusinessWithUser(
+            @WebParam(name = "productId") Long productId,
+            @WebParam(name = "amountTransfer") Float amountTransfer,
+            @WebParam(name = "conceptTransaction") String conceptTransaction,
+            @WebParam(name = "idUserDestination") Long idUserDestination,
+            @WebParam(name = "businessId") Long businessId,
+            @WebParam(name = "transactionBusinessId") Long transactionBusinessId) {
 
+        return operations.saveTransferBetweenBusinessWithUser(productId, amountTransfer,
+                conceptTransaction, idUserDestination, businessId, transactionBusinessId);
+    }
     
+    @WebMethod
+    public TransactionResponse saveTransferBetweenBusinessAccount(
+            @WebParam(name = "productId") Long productId,
+            @WebParam(name = "amountTransfer") Float amountTransfer,
+            @WebParam(name = "conceptTransaction") String conceptTransaction,
+            @WebParam(name = "businessId") Long businessId,
+            @WebParam(name = "businessDestinationId") Long businessDestinationId,
+            @WebParam(name = "transactionBusinessId") Long transactionBusinessId) {
+
+        return operations.saveTransferBetweenBusinessAccount(productId, amountTransfer,
+                conceptTransaction,businessId, businessDestinationId, transactionBusinessId);
+    }
     
-    
+    @WebMethod
+    public TransactionListResponse getTransactionsByBusinessId(
+            @WebParam(name = "businessId") String businessId,
+            @WebParam(name = "maxResult") String maxResult) {
+        return operations.getTransactionsByBusinessId(Long.valueOf(businessId), Integer.valueOf(maxResult));
+    }
+
     
 }
