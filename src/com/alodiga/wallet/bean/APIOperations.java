@@ -1,7 +1,37 @@
 package com.alodiga.wallet.bean;
 
-import afinitaspaymentintegration.AfinitasPaymentIntegration;
-import cardcredentialserviceclient.CardCredentialServiceClient;
+import static com.alodiga.wallet.common.utils.EncriptedRsa.encrypt;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigInteger;
+import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
+import java.net.URL;
+import java.rmi.ConnectException;
+import java.rmi.RemoteException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import javax.ejb.Stateless;
+import javax.ejb.TransactionManagement;
+import javax.ejb.TransactionManagementType;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+import javax.persistence.TemporalType;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.log4j.Logger;
+
 import com.alodiga.account.client.AccountCredentialServiceClient;
 import com.alodiga.account.credential.response.StatusAccountResponse;
 import com.alodiga.afinitas.json.charge.object.ChargeResponse;
@@ -28,50 +58,63 @@ import com.alodiga.wallet.common.enumeraciones.StatusAccountBankE;
 import com.alodiga.wallet.common.enumeraciones.StatusTransactionApproveRequestE;
 import com.alodiga.wallet.common.model.AccountBank;
 import com.alodiga.wallet.common.model.AccountTypeBank;
-import com.alodiga.wallet.common.model.Product;
 import com.alodiga.wallet.common.model.Address;
+import com.alodiga.wallet.common.model.BalanceHistory;
 import com.alodiga.wallet.common.model.Bank;
+import com.alodiga.wallet.common.model.BankHasProduct;
 import com.alodiga.wallet.common.model.BankOperation;
 import com.alodiga.wallet.common.model.BankOperationMode;
 import com.alodiga.wallet.common.model.BankOperationType;
 import com.alodiga.wallet.common.model.BusinessHasProduct;
+import com.alodiga.wallet.common.model.Card;
 import com.alodiga.wallet.common.model.Category;
-import com.alodiga.wallet.common.model.Country;
-import com.alodiga.wallet.common.model.Enterprise;
-import com.alodiga.wallet.common.model.Language;
-import com.alodiga.wallet.common.model.ProductIntegrationType;
-import com.alodiga.wallet.common.model.UserHasProduct;
-import com.alodiga.wallet.common.model.Transaction;
-import com.alodiga.wallet.common.model.Preference;
-import com.alodiga.wallet.common.model.PreferenceField;
-import com.alodiga.wallet.common.model.PreferenceValue;
-import com.alodiga.wallet.common.model.Provider;
-import com.alodiga.wallet.common.model.TopUpResponseConstants;
-import com.alodiga.wallet.common.model.TransactionType;
-import com.alodiga.wallet.common.model.TransactionSource;
-import com.alodiga.wallet.common.model.TransactionStatus;
 import com.alodiga.wallet.common.model.Commission;
 import com.alodiga.wallet.common.model.CommissionItem;
-import com.alodiga.wallet.common.model.BalanceHistory;
-import com.alodiga.wallet.common.model.BankHasProduct;
-import com.alodiga.wallet.common.model.Card;
+import com.alodiga.wallet.common.model.Country;
 import com.alodiga.wallet.common.model.CreditcardType;
 import com.alodiga.wallet.common.model.Cumplimient;
 import com.alodiga.wallet.common.model.CumplimientStatus;
-import com.alodiga.wallet.common.model.ExchangeRate;
+import com.alodiga.wallet.common.model.Enterprise;
 import com.alodiga.wallet.common.model.ExchangeDetail;
+import com.alodiga.wallet.common.model.ExchangeRate;
+import com.alodiga.wallet.common.model.Language;
 import com.alodiga.wallet.common.model.PaymentInfo;
 import com.alodiga.wallet.common.model.PaymentPatner;
 import com.alodiga.wallet.common.model.PaymentType;
+import com.alodiga.wallet.common.model.Preference;
+import com.alodiga.wallet.common.model.PreferenceField;
+import com.alodiga.wallet.common.model.PreferenceValue;
+import com.alodiga.wallet.common.model.Product;
+import com.alodiga.wallet.common.model.ProductIntegrationType;
+import com.alodiga.wallet.common.model.Provider;
 import com.alodiga.wallet.common.model.Sequences;
 import com.alodiga.wallet.common.model.StatusAccountBank;
 import com.alodiga.wallet.common.model.StatusTransactionApproveRequest;
 import com.alodiga.wallet.common.model.TopUpCountry;
+import com.alodiga.wallet.common.model.TopUpResponseConstants;
+import com.alodiga.wallet.common.model.Transaction;
 import com.alodiga.wallet.common.model.TransactionApproveRequest;
+import com.alodiga.wallet.common.model.TransactionSource;
+import com.alodiga.wallet.common.model.TransactionStatus;
+import com.alodiga.wallet.common.model.TransactionType;
 import com.alodiga.wallet.common.model.UserHasCard;
+import com.alodiga.wallet.common.model.UserHasProduct;
 import com.alodiga.wallet.common.model.UserWS;
 import com.alodiga.wallet.common.model.ValidationCollection;
+import com.alodiga.wallet.common.utils.AmazonSESSendMail;
+import com.alodiga.wallet.common.utils.Constante;
+import com.alodiga.wallet.common.utils.Constants;
+import com.alodiga.wallet.common.utils.EjbUtils;
+import com.alodiga.wallet.common.utils.Mail;
+import com.alodiga.wallet.common.utils.QueryConstants;
+import com.alodiga.wallet.common.utils.S3cur1ty3Cryt3r;
+import com.alodiga.wallet.common.utils.SendMailTherad;
+import com.alodiga.wallet.common.utils.SendSmsThread;
+import com.alodiga.wallet.common.utils.Utils;
+import com.alodiga.wallet.common.utils.XTrustProvider;
 import com.alodiga.wallet.response.generic.BankGeneric;
+import com.alodiga.wallet.responses.AccountBankListResponse;
+import com.alodiga.wallet.responses.AccountBankResponse;
 import com.alodiga.wallet.responses.ActivateCardResponses;
 import com.alodiga.wallet.responses.BalanceHistoryResponse;
 import com.alodiga.wallet.responses.BankListResponse;
@@ -84,28 +127,7 @@ import com.alodiga.wallet.responses.CheckStatusCardResponses;
 import com.alodiga.wallet.responses.CheckStatusCredentialAccount;
 import com.alodiga.wallet.responses.CheckStatusCredentialCard;
 import com.alodiga.wallet.responses.CollectionListResponse;
-import com.alodiga.wallet.responses.AccountBankResponse;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.math.BigInteger;
-
-import javax.ejb.Stateless;
-import javax.ejb.TransactionManagement;
-import javax.ejb.TransactionManagementType;
-import javax.jws.WebParam;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import org.apache.log4j.Logger;
-import com.alodiga.wallet.responses.ResponseCode;
-import com.alodiga.wallet.responses.ProductResponse;
-import com.alodiga.wallet.responses.UserHasProductResponse;
 import com.alodiga.wallet.responses.CountryListResponse;
-import com.alodiga.wallet.responses.CountryResponse;
 import com.alodiga.wallet.responses.CreditCardListResponse;
 import com.alodiga.wallet.responses.CumplimientResponse;
 import com.alodiga.wallet.responses.DesactivateCardResponses;
@@ -114,9 +136,10 @@ import com.alodiga.wallet.responses.LanguageListResponse;
 import com.alodiga.wallet.responses.PaymentInfoListResponse;
 import com.alodiga.wallet.responses.PaymentInfoResponse;
 import com.alodiga.wallet.responses.ProductListResponse;
-import com.alodiga.wallet.responses.PublicTokenPlaidResponses;
+import com.alodiga.wallet.responses.ProductResponse;
 import com.alodiga.wallet.responses.RechargeAfinitasResponses;
 import com.alodiga.wallet.responses.RemittanceResponse;
+import com.alodiga.wallet.responses.ResponseCode;
 import com.alodiga.wallet.responses.RetriveAuthPlaidResponses;
 import com.alodiga.wallet.responses.RetriveBalancePlaidResponses;
 import com.alodiga.wallet.responses.RetriveIdentityPlaidResponses;
@@ -124,56 +147,26 @@ import com.alodiga.wallet.responses.RetriveIncomePlaidResponses;
 import com.alodiga.wallet.responses.RetriveTransactionPlaidResponses;
 import com.alodiga.wallet.responses.TopUpCountryListResponse;
 import com.alodiga.wallet.responses.TopUpInfoListResponse;
+import com.alodiga.wallet.responses.TransactionApproveRequestResponse;
 import com.alodiga.wallet.responses.TransactionListResponse;
 import com.alodiga.wallet.responses.TransactionResponse;
 import com.alodiga.wallet.responses.TransferCardToCardCredential;
 import com.alodiga.wallet.responses.TransferCardToCardResponses;
+import com.alodiga.wallet.responses.UserHasProductResponse;
 import com.alodiga.wallet.topup.TopUpInfo;
-import com.alodiga.wallet.common.utils.AmazonSESSendMail;
-import com.alodiga.wallet.common.utils.Constante;
-import com.alodiga.wallet.common.utils.Constants;
-import com.alodiga.wallet.common.utils.EjbUtils;
-
-import static com.alodiga.wallet.common.utils.EncriptedRsa.encrypt;
-import com.alodiga.wallet.common.utils.Mail;
-import com.alodiga.wallet.common.utils.QueryConstants;
-import com.alodiga.wallet.common.utils.S3cur1ty3Cryt3r;
-import com.alodiga.wallet.common.utils.SendMailTherad;
-import com.alodiga.wallet.common.utils.SendSmsThread;
-import java.rmi.RemoteException;
-import com.ericsson.alodiga.ws.APIRegistroUnificadoProxy;
-import com.ericsson.alodiga.ws.Usuario;
-import com.ericsson.alodiga.ws.RespuestaUsuario;
-import java.sql.Timestamp;
-import com.alodiga.wallet.common.utils.Utils;
-import com.alodiga.wallet.common.utils.XTrustProvider;
-import com.alodiga.wallet.responses.AccountBankListResponse;
-import com.alodiga.wallet.responses.TransactionApproveRequestResponse;
-
 import com.alodiga.ws.cumpliments.services.OFACMethodWSProxy;
 import com.alodiga.ws.cumpliments.services.WsExcludeListResponse;
 import com.alodiga.ws.cumpliments.services.WsLoginResponse;
 import com.alodiga.ws.remittance.services.WSRemittenceMobileProxy;
 import com.alodiga.ws.remittance.services.WsAddressListResponse;
-
 import com.alodiga.ws.remittance.services.WsRemittenceResponse;
-
+import com.ericsson.alodiga.ws.APIRegistroUnificadoProxy;
 import com.ericsson.alodiga.ws.Cuenta;
-import java.io.IOException;
-import java.io.InputStream;
+import com.ericsson.alodiga.ws.RespuestaUsuario;
+import com.ericsson.alodiga.ws.Usuario;
 
-import java.net.MalformedURLException;
-import java.net.SocketTimeoutException;
-import java.net.URL;
-import java.rmi.ConnectException;
-import java.text.ParseException;
-import java.util.Calendar;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSession;
-import javax.validation.ConstraintViolationException;
-import org.apache.commons.codec.binary.Base64;
+import afinitaspaymentintegration.AfinitasPaymentIntegration;
+import cardcredentialserviceclient.CardCredentialServiceClient;
 import plaidclientintegration.PlaidClientIntegration;
 
 @Stateless(name = "FsProcessorWallet", mappedName = "ejb/FsProcessorWallet")
@@ -328,17 +321,16 @@ public class APIOperations {
             String conceptTransaction, String cryptogramUser, Long idUserDestination) {
 
     	 Long idTransaction = 0L;
-         Long idPreferenceField = 0L;
          Long userId = 0L;
-         int totalTransactionsByUser = 0;
-         Long totalTransactionsByProduct = 0L;
-         Double totalAmountByUser = 0.00D;
-         List<Transaction> transactionsByUser = new ArrayList<Transaction>();
+         int totalTransactionsByUserDaily = 0;
+         int totalTransactionsByUserMonthly = 0;
+         int totalTransactionsByUserYearly = 0;
+         Double totalAmountByUserDaily = 0.00D;
+         Double totalAmountByUserMonthly = 0.00D;
+         Double totalAmountByUserYearly = 0.00D;	
          List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
          List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
          List<Commission> commissions = new ArrayList<Commission>();
-         Timestamp begginingDateTime = new Timestamp(0);
-         Timestamp endingDateTime = new Timestamp(0);
          Float amountCommission = 0.00F;
          short isPercentCommission = 0;
          ArrayList<Product> products = new ArrayList<Product>();
@@ -358,58 +350,112 @@ public class APIOperations {
                  return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE, "The user has no balance available to complete the transaction");
              }
 
-             begginingDateTime = Utils.DateTransaction()[0];
-             endingDateTime = Utils.DateTransaction()[1];
+			totalTransactionsByUserDaily = TransactionsByUserCurrentDate(userId,EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
 
-             totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+			totalAmountByUserDaily = AmountMaxByUserCurrentDate(userId,	EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
 
-             totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+			totalTransactionsByUserMonthly = TransactionsByUserCurrentDate(userId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
 
-             totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
+			totalAmountByUserMonthly = AmountMaxByBusinessCurrentDate(userId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
 
-             List<Preference> preferences = getPreferences();
-             for (Preference p : preferences) {
-                 if (p.getName().equals(Constants.sPreferenceTransaction)) {
-                     idTransaction = p.getId();
-                 }
-             }
-             preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
-             for (PreferenceField pf : preferencesField) {
-                 switch (pf.getName()) {
-                     case Constants.sValidatePreferenceTransaction1:
-                         if (pf.getEnabled() == 1) {
-                             preferencesValue = getPreferenceValuePayment(pf);
-                             for (PreferenceValue pv : preferencesValue) {
-                                 if (totalAmountByUser >= Double.parseDouble(pv.getValue())) {
-                                     return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT, "The user exceeded the maximum amount per day");
-                                 }
-                             }
-                         }
-                         break;
-                     case Constants.sValidatePreferenceTransaction2:
-                         if (pf.getEnabled() == 1) {
-                             preferencesValue = getPreferenceValuePayment(pf);
-                             for (PreferenceValue pv : preferencesValue) {
-                                 if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
-                                     return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT, "The user exceeded the maximum number of transactions per product");
-                                 }
-                             }
-                         }
-                         break;
-                     case Constants.sValidatePreferenceTransaction3:
-                         if (pf.getEnabled() == 1) {
-                             preferencesValue = getPreferenceValuePayment(pf);
-                             for (PreferenceValue pv : preferencesValue) {
-                                 if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
-                                     return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER, "The user exceeded the maximum number of transactions per day");
-                                 }
-                             }
-                         }
-                         break;
-                 }
-             }
+			totalTransactionsByUserYearly = TransactionsByBusinessCurrentDate(userId,EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
 
-             paymentShop.setId(null);
+			totalAmountByUserYearly = AmountMaxByBusinessCurrentDate(userId,EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			List<Preference> preferences = getPreferences();
+			for (Preference p : preferences) {
+				if (p.getName().equals(Constante.sPreferenceTransaction)) {
+					idTransaction = p.getId();
+				}
+			}
+			preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
+			for (PreferenceField pf : preferencesField) {
+				switch (pf.getName()) {
+				case Constante.sValidatePreferenceTransaction11:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (pv.getValue().equals("0")) {
+								return new TransactionResponse(ResponseCode.DISABLED_TRANSACTION,"Transactions disabled");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction4:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (amountPayment >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT,"The user exceeded the maximum amount per transaction");
+							}
+						}
+					}
+					break;
+
+				case Constante.sValidatePreferenceTransaction5:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserDaily >= Integer.parseInt(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY,"The user exceeded the maximum number of transactions per day");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction6:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalAmountByUserDaily >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_DIALY,"The user exceeded the maximum amount per day");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction7:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserMonthly >= Integer.parseInt(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY,"The user exceeded the maximum number of transactions per month");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction8:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalAmountByUserMonthly >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_MONTHLY,"The user exceeded the maximum amount per month");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction9:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserYearly >= Integer.parseInt(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_YEARLY,"The user exceeded the maximum number of transactions per year");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction10:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+
+							if (totalAmountByUserYearly >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_YEARLY,"The user exceeded the maximum amount per year");
+							}
+						}
+					}
+					break;
+				}
+			 }
+			 paymentShop.setId(null);
              paymentShop.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
              paymentShop.setUserDestinationId(BigInteger.valueOf(addSellTransaction.getIdBusiness()));
              paymentShop.setTransactionBusinessId(addSellTransaction.getIdTransaction());
@@ -565,17 +611,16 @@ public class APIOperations {
             String conceptTransaction, String cryptograUserDestination, Long idUserDestination) {
 
         Long idTransaction = 0L;
-        Long idPreferenceField = 0L;
         Long userId = 0L;
-        int totalTransactionsByUser = 0;
-        Long totalTransactionsByProduct = 0L;
-        Double totalAmountByUser = 0.00D;
-        List<Transaction> transactionsByUser = new ArrayList<Transaction>();
+        int totalTransactionsByUserDaily = 0;
+        int totalTransactionsByUserMonthly = 0;
+        int totalTransactionsByUserYearly = 0;
+        Double totalAmountByUserDaily = 0.00D;
+        Double totalAmountByUserMonthly = 0.00D;
+        Double totalAmountByUserYearly = 0.00D;
         List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
         List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
         List<Commission> commissions = new ArrayList<Commission>();
-        Timestamp begginingDateTime = new Timestamp(0);
-        Timestamp endingDateTime = new Timestamp(0);
         Float amountCommission = 0.00F;
         short isPercentCommission = 0;
         Commission commissionTransfer = new Commission();
@@ -612,56 +657,111 @@ public class APIOperations {
                 return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE, "The user has no balance available to complete the transaction");
             }
 
-            begginingDateTime = Utils.DateTransaction()[0];
-            endingDateTime = Utils.DateTransaction()[1];
+            totalTransactionsByUserDaily = TransactionsByUserCurrentDate(userId,EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+			totalAmountByUserDaily = AmountMaxByUserCurrentDate(userId,	EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+			totalTransactionsByUserMonthly = TransactionsByUserCurrentDate(userId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
+			totalAmountByUserMonthly = AmountMaxByBusinessCurrentDate(userId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            List<Preference> preferences = getPreferences();
-            for (Preference p : preferences) {
-                if (p.getName().equals(Constante.sPreferenceTransaction)) {
-                    idTransaction = p.getId();
-                }
-            }
-            preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
-            for (PreferenceField pf : preferencesField) {
-                switch (pf.getName()) {
-                    case Constante.sValidatePreferenceTransaction1:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalAmountByUser >= Double.parseDouble(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT, "The user exceeded the maximum amount per day");
-                                }
-                            }
-                        }
-                        break;
-                    case Constante.sValidatePreferenceTransaction2:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT, "The user exceeded the maximum number of transactions per product");
-                                }
-                            }
-                        }
-                        break;
-                    case Constante.sValidatePreferenceTransaction3:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER, "The user exceeded the maximum number of transactions per day");
-                                }
-                            }
-                        }
-                        break;
-                }
-            }
+			totalTransactionsByUserYearly = TransactionsByBusinessCurrentDate(userId,EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			totalAmountByUserYearly = AmountMaxByBusinessCurrentDate(userId,EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			List<Preference> preferences = getPreferences();
+			for (Preference p : preferences) {
+				if (p.getName().equals(Constante.sPreferenceTransaction)) {
+					idTransaction = p.getId();
+				}
+			}
+			preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
+			for (PreferenceField pf : preferencesField) {
+				switch (pf.getName()) {
+				case Constante.sValidatePreferenceTransaction11:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (pv.getValue().equals("0")) {
+								return new TransactionResponse(ResponseCode.DISABLED_TRANSACTION,"Transactions disabled");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction4:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (amountTransfer >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT,"The user exceeded the maximum amount per transaction");
+							}
+						}
+					}
+					break;
+
+				case Constante.sValidatePreferenceTransaction5:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserDaily >= Integer.parseInt(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY,"The user exceeded the maximum number of transactions per day");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction6:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalAmountByUserDaily >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_DIALY,"The user exceeded the maximum amount per day");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction7:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserMonthly >= Integer.parseInt(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY,"The user exceeded the maximum number of transactions per month");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction8:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalAmountByUserMonthly >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_MONTHLY,"The user exceeded the maximum amount per month");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction9:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserYearly >= Integer.parseInt(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_YEARLY,"The user exceeded the maximum number of transactions per year");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction10:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+
+							if (totalAmountByUserYearly >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_YEARLY,"The user exceeded the maximum amount per year");
+							}
+						}
+					}
+					break;
+				}
+			}
 
             transfer.setId(null);
             transfer.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
@@ -864,18 +964,17 @@ public class APIOperations {
             Float amountExchange, String conceptTransaction, int includedAmount) {
 
         Long idTransaction = 0L;
-        Long idPreferenceField = 0L;
         Long userId = 0L;
         Float totalDebit = 0.00F;
-        int totalTransactionsByUser = 0;
-        Long totalTransactionsByProduct = 0L;
-        Double totalAmountByUser = 0.00D;
-        List<Transaction> transactionsByUser = new ArrayList<Transaction>();
+        int totalTransactionsByUserDaily = 0;
+        int totalTransactionsByUserMonthly = 0;
+        int totalTransactionsByUserYearly = 0;
+        Double totalAmountByUserDaily = 0.00D;
+        Double totalAmountByUserMonthly = 0.00D;
+        Double totalAmountByUserYearly = 0.00D;
         List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
         List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
         List<Commission> commissions = new ArrayList<Commission>();
-        Timestamp begginingDateTime = new Timestamp(0);
-        Timestamp endingDateTime = new Timestamp(0);
         Float amountCommission = 0.00F;
         short isPercentCommission = 0;
         ArrayList<Product> products = new ArrayList<Product>();
@@ -886,56 +985,111 @@ public class APIOperations {
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS", "passwordWS", emailUser);
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
 
-            begginingDateTime = Utils.DateTransaction()[0];
-            endingDateTime = Utils.DateTransaction()[1];
+            totalTransactionsByUserDaily = TransactionsByUserCurrentDate(userId,EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+			totalAmountByUserDaily = AmountMaxByUserCurrentDate(userId,	EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+			totalTransactionsByUserMonthly = TransactionsByUserCurrentDate(userId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productSourceId, userId, begginingDateTime, endingDateTime);
+			totalAmountByUserMonthly = AmountMaxByBusinessCurrentDate(userId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            List<Preference> preferences = getPreferences();
-            for (Preference p : preferences) {
-                if (p.getName().equals(Constante.sPreferenceTransaction)) {
-                    idTransaction = p.getId();
-                }
-            }
-            preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
-            for (PreferenceField pf : preferencesField) {
-                switch (pf.getName()) {
-                    case Constante.sValidatePreferenceTransaction1:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalAmountByUser >= Double.parseDouble(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT, "The user exceeded the maximum amount per day");
-                                }
-                            }
-                        }
-                        break;
-                    case Constante.sValidatePreferenceTransaction2:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT, "The user exceeded the maximum number of transactions per product");
-                                }
-                            }
-                        }
-                        break;
-                    case Constante.sValidatePreferenceTransaction3:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER, "The user exceeded the maximum number of transactions per day");
-                                }
-                            }
-                        }
-                        break;
-                }
-            }
+			totalTransactionsByUserYearly = TransactionsByBusinessCurrentDate(userId,EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			totalAmountByUserYearly = AmountMaxByBusinessCurrentDate(userId,EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			List<Preference> preferences = getPreferences();
+			for (Preference p : preferences) {
+				if (p.getName().equals(Constante.sPreferenceTransaction)) {
+					idTransaction = p.getId();
+				}
+			}
+			preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
+			for (PreferenceField pf : preferencesField) {
+				switch (pf.getName()) {
+				case Constante.sValidatePreferenceTransaction11:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (pv.getValue().equals("0")) {
+								return new TransactionResponse(ResponseCode.DISABLED_TRANSACTION,"Transactions disabled");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction4:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (amountExchange >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT,"The user exceeded the maximum amount per transaction");
+							}
+						}
+					}
+					break;
+
+				case Constante.sValidatePreferenceTransaction5:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserDaily >= Integer.parseInt(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY,"The user exceeded the maximum number of transactions per day");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction6:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalAmountByUserDaily >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_DIALY,"The user exceeded the maximum amount per day");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction7:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserMonthly >= Integer.parseInt(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY,"The user exceeded the maximum number of transactions per month");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction8:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalAmountByUserMonthly >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_MONTHLY,"The user exceeded the maximum amount per month");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction9:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserYearly >= Integer.parseInt(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_YEARLY,"The user exceeded the maximum number of transactions per year");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction10:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+
+							if (totalAmountByUserYearly >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_YEARLY,"The user exceeded the maximum amount per year");
+							}
+						}
+					}
+					break;
+				}
+			 }
 
             exchange.setId(null);
             exchange.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
@@ -1117,10 +1271,10 @@ public class APIOperations {
                 .setParameter("userSourceId", userId).getResultList();
     }
 
-    private List<PreferenceValue> getPreferenceValuePayment(PreferenceField pf) {
+    private List<PreferenceValue> getPreferenceValuePayment(PreferenceField pf, Long preferenceClassficationId) {
         List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
         Long idPreferenceField = pf.getId();
-        return preferencesValue = entityManager.createNamedQuery("PreferenceValue.findByPreferenceFieldId", PreferenceValue.class).setParameter("preferenceFieldId", idPreferenceField).getResultList();
+        return preferencesValue = entityManager.createNamedQuery("PreferenceValue.findByPreferenceFieldId", PreferenceValue.class).setParameter("preferenceFieldId", idPreferenceField).setParameter("preferenceClassficationId",preferenceClassficationId).getResultList();
     }
 
     public BalanceHistory loadLastBalanceHistoryByAccount(Long userId, Long productId) {
@@ -1134,7 +1288,7 @@ public class APIOperations {
         }
     }
 
-    public int TransactionsByUserCurrentDate(Long userId, Timestamp begginingDateTime, Timestamp endingDateTime) {
+    public int TransactionsByUserCurrentDate(Long userId, Date begginingDateTime, Date endingDateTime) {
         StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM transaction t WHERE t.creationDate between ?1 AND ?2 AND t.userSourceId = ?3");
         Query query = entityManager.createNativeQuery(sqlBuilder.toString());
         query.setParameter("1", begginingDateTime);
@@ -1156,7 +1310,7 @@ public class APIOperations {
         return result.size();
     }
 
-    public Double AmountMaxByUserCurrentDate(Long userId, Timestamp begginingDateTime, Timestamp endingDateTime) {
+    public Double AmountMaxByUserCurrentDate(Long userId, Date begginingDateTime, Date endingDateTime) {
         StringBuilder sqlBuilder = new StringBuilder("SELECT SUM(t.totalAmount) FROM transaction t WHERE t.creationDate between ?1 AND ?2 AND t.userSourceId = ?3");
         Query query = entityManager.createNativeQuery(sqlBuilder.toString());
         query.setParameter("1", begginingDateTime);
@@ -1400,15 +1554,15 @@ public class APIOperations {
 
         Long idTransaction = 0L;
         Long userId = 0L;
-        int totalTransactionsByUser = 0;
-        Long totalTransactionsByProduct = 0L;
-        Double totalAmountByUser = 0.00D;
-        List<Transaction> transactionsByUser = new ArrayList<Transaction>();
+        int totalTransactionsByUserDaily = 0;
+        int totalTransactionsByUserMonthly = 0;
+        int totalTransactionsByUserYearly = 0;
+        Double totalAmountByUserDaily = 0.00D;
+        Double totalAmountByUserMonthly = 0.00D;
+        Double totalAmountByUserYearly = 0.00D;
         List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
         List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
         List<Commission> commissions = new ArrayList<Commission>();
-        Timestamp begginingDateTime = new Timestamp(0);
-        Timestamp endingDateTime = new Timestamp(0);
         Float amountCommission = 0.00F;
         short isPercentCommission = 0;
         Commission commissionWithdrawal = new Commission();
@@ -1422,56 +1576,111 @@ public class APIOperations {
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS", "passwordWS", emailUser);
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
 
-            begginingDateTime = Utils.DateTransaction()[0];
-            endingDateTime = Utils.DateTransaction()[1];
+            totalTransactionsByUserDaily = TransactionsByUserCurrentDate(userId,EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+			totalAmountByUserDaily = AmountMaxByUserCurrentDate(userId,	EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+			totalTransactionsByUserMonthly = TransactionsByUserCurrentDate(userId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
+			totalAmountByUserMonthly = AmountMaxByBusinessCurrentDate(userId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            List<Preference> preferences = getPreferences();
-            for (Preference p : preferences) {
-                if (p.getName().equals(Constante.sPreferenceTransaction)) {
-                    idTransaction = p.getId();
-                }
-            }
-            preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
-            for (PreferenceField pf : preferencesField) {
-                switch (pf.getName()) {
-                    case Constante.sValidatePreferenceTransaction1:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalAmountByUser >= Double.parseDouble(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT, "The user exceeded the maximum amount per day");
-                                }
-                            }
-                        }
-                        break;
-                    case Constante.sValidatePreferenceTransaction2:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT, "The user exceeded the maximum number of transactions per product");
-                                }
-                            }
-                        }
-                        break;
-                    case Constante.sValidatePreferenceTransaction3:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER, "The user exceeded the maximum number of transactions per day");
-                                }
-                            }
-                        }
-                        break;
-                }
-            }
+			totalTransactionsByUserYearly = TransactionsByBusinessCurrentDate(userId,EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			totalAmountByUserYearly = AmountMaxByBusinessCurrentDate(userId,EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			List<Preference> preferences = getPreferences();
+			for (Preference p : preferences) {
+				if (p.getName().equals(Constante.sPreferenceTransaction)) {
+					idTransaction = p.getId();
+				}
+			}
+			preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
+			for (PreferenceField pf : preferencesField) {
+				switch (pf.getName()) {
+				case Constante.sValidatePreferenceTransaction11:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (pv.getValue().equals("0")) {
+								return new TransactionResponse(ResponseCode.DISABLED_TRANSACTION,"Transactions disabled");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction4:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (amountWithdrawal >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT,"The user exceeded the maximum amount per transaction");
+							}
+						}
+					}
+					break;
+
+				case Constante.sValidatePreferenceTransaction5:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserDaily >= Integer.parseInt(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY,"The user exceeded the maximum number of transactions per day");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction6:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalAmountByUserDaily >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_DIALY,"The user exceeded the maximum amount per day");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction7:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserMonthly >= Integer.parseInt(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY,"The user exceeded the maximum number of transactions per month");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction8:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalAmountByUserMonthly >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_MONTHLY,"The user exceeded the maximum amount per month");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction9:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserYearly >= Integer.parseInt(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_YEARLY,"The user exceeded the maximum number of transactions per year");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction10:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+
+							if (totalAmountByUserYearly >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_YEARLY,"The user exceeded the maximum amount per year");
+							}
+						}
+					}
+					break;
+				}
+			 }
 
             withdrawal.setId(null);
             withdrawal.setTransactionNumber("1");
@@ -1616,15 +1825,16 @@ public class APIOperations {
 
         Long idTransaction = 0L;
         Long userId = 0L;
-        int totalTransactionsByUser = 0;
-        Long totalTransactionsByProduct = 0L;
-        Double totalAmountByUser = 0.00D;
+        int totalTransactionsByUserDaily = 0;
+        int totalTransactionsByUserMonthly = 0;
+        int totalTransactionsByUserYearly = 0;
+        Double totalAmountByUserDaily = 0.00D;
+        Double totalAmountByUserMonthly = 0.00D;
+        Double totalAmountByUserYearly = 0.00D;
         List<Transaction> transactionsByUser = new ArrayList<Transaction>();
         List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
         List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
         List<Commission> commissions = new ArrayList<Commission>();
-        Timestamp begginingDateTime = new Timestamp(0);
-        Timestamp endingDateTime = new Timestamp(0);
         Float amountCommission = 0.00F;
         short isPercentCommission = 0;
         Commission commissionRecharge = new Commission();
@@ -1640,57 +1850,111 @@ public class APIOperations {
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
 
             //Validar preferencias
-            begginingDateTime = Utils.DateTransaction()[0];
-            endingDateTime = Utils.DateTransaction()[1];
+            totalTransactionsByUserDaily = TransactionsByUserCurrentDate(userId,EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            //Obtiene las transacciones del día para el usuario
-            totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+			totalAmountByUserDaily = AmountMaxByUserCurrentDate(userId,	EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+			totalTransactionsByUserMonthly = TransactionsByUserCurrentDate(userId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
+			totalAmountByUserMonthly = AmountMaxByBusinessCurrentDate(userId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            List<Preference> preferences = getPreferences();
-            for (Preference p : preferences) {
-                if (p.getName().equals(Constante.sPreferenceTransaction)) {
-                    idTransaction = p.getId();
-                }
-            }
-            preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
-            for (PreferenceField pf : preferencesField) {
-                switch (pf.getName()) {
-                    case Constante.sValidatePreferenceTransaction1:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalAmountByUser >= Double.parseDouble(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT, "The user exceeded the maximum amount per day");
-                                }
-                            }
-                        }
-                        break;
-                    case Constante.sValidatePreferenceTransaction2:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT, "The user exceeded the maximum number of transactions per product");
-                                }
-                            }
-                        }
-                        break;
-                    case Constante.sValidatePreferenceTransaction3:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER, "The user exceeded the maximum number of transactions per day");
-                                }
-                            }
-                        }
-                        break;
-                }
-            }
+			totalTransactionsByUserYearly = TransactionsByBusinessCurrentDate(userId,EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			totalAmountByUserYearly = AmountMaxByBusinessCurrentDate(userId,EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			List<Preference> preferences = getPreferences();
+			for (Preference p : preferences) {
+				if (p.getName().equals(Constante.sPreferenceTransaction)) {
+					idTransaction = p.getId();
+				}
+			}
+			preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
+			for (PreferenceField pf : preferencesField) {
+				switch (pf.getName()) {
+				case Constante.sValidatePreferenceTransaction11:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (pv.getValue().equals("0")) {
+								return new TransactionResponse(ResponseCode.DISABLED_TRANSACTION,"Transactions disabled");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction4:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (amountRecharge >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT,"The user exceeded the maximum amount per transaction");
+							}
+						}
+					}
+					break;
+
+				case Constante.sValidatePreferenceTransaction5:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserDaily >= Integer.parseInt(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY,"The user exceeded the maximum number of transactions per day");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction6:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalAmountByUserDaily >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_DIALY,"The user exceeded the maximum amount per day");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction7:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserMonthly >= Integer.parseInt(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY,"The user exceeded the maximum number of transactions per month");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction8:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalAmountByUserMonthly >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_MONTHLY,"The user exceeded the maximum amount per month");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction9:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserYearly >= Integer.parseInt(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_YEARLY,"The user exceeded the maximum number of transactions per year");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction10:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+
+							if (totalAmountByUserYearly >= Double.parseDouble(pv.getValue())) {
+								return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_YEARLY,"The user exceeded the maximum amount per year");
+							}
+						}
+					}
+					break;
+				}
+			 }
 
             recharge.setId(null);
             recharge.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
@@ -2075,7 +2339,7 @@ public class APIOperations {
                 switch (pf.getName()) {
                     case Constants.sValidatePreferenceTransaction1:
                         if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
+                            preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
                             for (PreferenceValue pv : preferencesValue) {
                                 if (totalAmountByUser >= Double.parseDouble(pv.getValue())) {
                                     return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT, "The user exceeded the maximum amount per day");
@@ -2085,7 +2349,7 @@ public class APIOperations {
                         break;
                     case Constants.sValidatePreferenceTransaction2:
                         if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
+                            preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
                             for (PreferenceValue pv : preferencesValue) {
                                 if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
                                     return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT, "The user exceeded the maximum number of transactions per product");
@@ -2095,7 +2359,7 @@ public class APIOperations {
                         break;
                     case Constants.sValidatePreferenceTransaction3:
                         if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
+                            preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
                             for (PreferenceValue pv : preferencesValue) {
                                 if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
                                     return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER, "The user exceeded the maximum number of transactions per day");
@@ -3195,12 +3459,14 @@ public class APIOperations {
             Commission commissionTransfer = new Commission();
             Float amountCommission = 0.00F;
             short isPercentCommission = 0;
-            Timestamp begginingDateTime = new Timestamp(0);
-            Timestamp endingDateTime = new Timestamp(0);
 
-            int totalTransactionsByUser = 0;
-            Long totalTransactionsByProduct = 0L;
-            Double totalAmountByUser = 0.00D;
+            int totalTransactionsByUserDaily = 0;
+            int totalTransactionsByUserMonthly = 0;
+            int totalTransactionsByUserYearly = 0;
+            Double totalAmountByUserDaily = 0.00D;
+            Double totalAmountByUserMonthly = 0.00D;
+            Double totalAmountByUserYearly = 0.00D;
+   		
             Long idTransaction = 0L;
             Transaction transfer = new Transaction();
             String remittentCountryId_ = null;
@@ -3240,60 +3506,112 @@ public class APIOperations {
             }
 
             //Validar preferencias
-            begginingDateTime = Utils.DateTransaction()[0];
-            endingDateTime = Utils.DateTransaction()[1];
 
-            //Obtiene las transacciones del dÃ­a para el usuario
-            totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+			totalTransactionsByUserDaily = TransactionsByUserCurrentDate(userId,EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            //Obtiene la sumatoria de los montos de las transacciones del usuario
-            totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+			totalAmountByUserDaily = AmountMaxByUserCurrentDate(userId,	EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            //Obtiene las transacciones del dÃ­a para el producto que se estÃ¡ comprando
-            totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(Constants.PRODUCT_REMITTANCE, userId, begginingDateTime, endingDateTime);
+			totalTransactionsByUserMonthly = TransactionsByUserCurrentDate(userId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            //Cotejar las preferencias vs las transacciones del usuario
-            List<Preference> preferences = getPreferences();
-            for (Preference p : preferences) {
-                if (p.getName().equals(Constante.sPreferenceTransaction)) {
-                    idTransaction = p.getId();
-                }
-            }
-            preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
-            for (PreferenceField pf : preferencesField) {
-                switch (pf.getName()) {
-                    case Constante.sValidatePreferenceTransaction1:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalAmountByUser >= Double.parseDouble(pv.getValue())) {
-                                    return new RemittanceResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT, "The user exceeded the maximum amount per day");
-                                }
-                            }
-                        }
-                        break;
-                    case Constante.sValidatePreferenceTransaction2:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
-                                    return new RemittanceResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT, "The user exceeded the maximum number of transactions per product");
-                                }
-                            }
-                        }
-                        break;
-                    case Constante.sValidatePreferenceTransaction3:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
-                                    return new RemittanceResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER, "The user exceeded the maximum number of transactions per day");
-                                }
-                            }
-                        }
-                        break;
-                }
-            }
+			totalAmountByUserMonthly = AmountMaxByBusinessCurrentDate(userId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			totalTransactionsByUserYearly = TransactionsByBusinessCurrentDate(userId,EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			totalAmountByUserYearly = AmountMaxByBusinessCurrentDate(userId,EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			List<Preference> preferences = getPreferences();
+			for (Preference p : preferences) {
+				if (p.getName().equals(Constante.sPreferenceTransaction)) {
+					idTransaction = p.getId();
+				}
+			}
+			preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
+			for (PreferenceField pf : preferencesField) {
+				switch (pf.getName()) {
+				case Constante.sValidatePreferenceTransaction11:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (pv.getValue().equals("0")) {
+								return new RemittanceResponse(ResponseCode.DISABLED_TRANSACTION,"Transactions disabled");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction4:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalAmount >= Double.parseDouble(pv.getValue())) {
+								return new RemittanceResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT,"The user exceeded the maximum amount per transaction");
+							}
+						}
+					}
+					break;
+
+				case Constante.sValidatePreferenceTransaction5:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserDaily >= Integer.parseInt(pv.getValue())) {
+								return new RemittanceResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY,"The user exceeded the maximum number of transactions per day");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction6:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalAmountByUserDaily >= Double.parseDouble(pv.getValue())) {
+								return new RemittanceResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_DIALY,"The user exceeded the maximum amount per day");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction7:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserMonthly >= Integer.parseInt(pv.getValue())) {
+								return new RemittanceResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY,"The user exceeded the maximum number of transactions per month");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction8:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalAmountByUserMonthly >= Double.parseDouble(pv.getValue())) {
+								return new RemittanceResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_MONTHLY,"The user exceeded the maximum amount per month");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction9:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserYearly >= Integer.parseInt(pv.getValue())) {
+								return new RemittanceResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_YEARLY,"The user exceeded the maximum number of transactions per year");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction10:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+
+							if (totalAmountByUserYearly >= Double.parseDouble(pv.getValue())) {
+								return new RemittanceResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_YEARLY,"The user exceeded the maximum amount per year");
+							}
+						}
+					}
+					break;
+				}
+			 }
 
             //Crear el objeto Transaction para registrar la transferencia del cliente
             transfer.setId(null);
@@ -3478,9 +3796,12 @@ public class APIOperations {
 
         Long idTransaction = 0L;
         Long idPreferenceField = 0L;
-        int totalTransactionsByUser = 0;
-        Long totalTransactionsByProduct = 0L;
-        Double totalAmountByUser = 0.00D;
+        int totalTransactionsByUserDaily = 0;
+        int totalTransactionsByUserMonthly = 0;
+        int totalTransactionsByUserYearly = 0;
+        Double totalAmountByUserDaily = 0.00D;
+        Double totalAmountByUserMonthly = 0.00D;
+        Double totalAmountByUserYearly = 0.00D;
         List<Transaction> transactionsByUser = new ArrayList<Transaction>();
         List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
         List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
@@ -3506,61 +3827,111 @@ public class APIOperations {
             RespuestaUsuario userSource_ = proxy.getUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId));
 
             //Validar preferencias
-            begginingDateTime = Utils.DateTransaction()[0];
-            endingDateTime = Utils.DateTransaction()[1];
+            totalTransactionsByUserDaily = TransactionsByUserCurrentDate(userId,EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            //Obtiene la cantidad de transacciones del dÃ­a para el usuario pasarle el 
-            totalTransactionsByUser = TransactionsByUserByTransactionByProductCurrentDate(userId, begginingDateTime, endingDateTime, Constants.PRODUCT_AFINITAS, Constante.sTransationTypeAF);
+			totalAmountByUserDaily = AmountMaxByUserCurrentDate(userId,	EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            //Obtiene la sumatoria de los montos de las transacciones del usuario
-            totalAmountByUser = AmountMaxByUserByUserByTransactionByProductCurrentDate(userId, begginingDateTime, endingDateTime, Constants.PRODUCT_AFINITAS, Constante.sTransationTypeAF);
+			totalTransactionsByUserMonthly = TransactionsByUserCurrentDate(userId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            //Obtiene las transacciones del dÃ­a para el producto que se estÃ¡ comprando
-            totalTransactionsByProduct = TransactionsByProductByUserByTransactionCurrentDate(Constants.PRODUCT_AFINITAS, userId, begginingDateTime, endingDateTime, Constante.sTransationTypeAF);
+			totalAmountByUserMonthly = AmountMaxByBusinessCurrentDate(userId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            //Cotejar las preferencias vs las transacciones del usuario
-            List<Preference> preferences = getPreferences();
-            for (Preference p : preferences) {
-                if (p.getName().equals(Constante.sPreferenceTransaction)) {
-                    idTransaction = p.getId();
-                }
-            }
-            preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
-            for (PreferenceField pf : preferencesField) {
-                switch (pf.getName()) {
-                    case Constante.sValidatePreferenceTransaction1:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalAmountByUser >= Double.parseDouble(pv.getValue())) {
-                                    return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_AMOUNT_LIMIT, "The user exceeded the maximum amount per day");
-                                }
-                            }
-                        }
-                        break;
-                    case Constante.sValidatePreferenceTransaction2:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
-                                    return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT, "The user exceeded the maximum number of transactions per product");
-                                }
-                            }
-                        }
-                        break;
-                    case Constante.sValidatePreferenceTransaction3:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
-                                    return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER, "The user exceeded the maximum number of transactions per day");
-                                }
-                            }
-                        }
-                        break;
-                }
-            }
+			totalTransactionsByUserYearly = TransactionsByBusinessCurrentDate(userId,EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
 
+			totalAmountByUserYearly = AmountMaxByBusinessCurrentDate(userId,EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			List<Preference> preferences = getPreferences();
+			for (Preference p : preferences) {
+				if (p.getName().equals(Constante.sPreferenceTransaction)) {
+					idTransaction = p.getId();
+				}
+			}
+			preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
+			for (PreferenceField pf : preferencesField) {
+				switch (pf.getName()) {
+				case Constante.sValidatePreferenceTransaction11:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (pv.getValue().equals("0")) {
+								return new RechargeAfinitasResponses(ResponseCode.DISABLED_TRANSACTION,"Transactions disabled");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction4:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (amountRecharge >= Double.parseDouble(pv.getValue())) {
+								return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_AMOUNT_LIMIT,"The user exceeded the maximum amount per transaction");
+							}
+						}
+					}
+					break;
+
+				case Constante.sValidatePreferenceTransaction5:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserDaily >= Integer.parseInt(pv.getValue())) {
+								return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY,"The user exceeded the maximum number of transactions per day");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction6:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalAmountByUserDaily >= Double.parseDouble(pv.getValue())) {
+								return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_AMOUNT_LIMIT_DIALY,"The user exceeded the maximum amount per day");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction7:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserMonthly >= Integer.parseInt(pv.getValue())) {
+								return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY,"The user exceeded the maximum number of transactions per month");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction8:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalAmountByUserMonthly >= Double.parseDouble(pv.getValue())) {
+								return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_AMOUNT_LIMIT_MONTHLY,"The user exceeded the maximum amount per month");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction9:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+							if (totalTransactionsByUserYearly >= Integer.parseInt(pv.getValue())) {
+								return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_QUANTITY_LIMIT_YEARLY,"The user exceeded the maximum number of transactions per year");
+							}
+						}
+					}
+					break;
+				case Constante.sValidatePreferenceTransaction10:
+					if (pf.getEnabled() == 1) {
+						preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+						for (PreferenceValue pv : preferencesValue) {
+
+							if (totalAmountByUserYearly >= Double.parseDouble(pv.getValue())) {
+								return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_AMOUNT_LIMIT_YEARLY,"The user exceeded the maximum amount per year");
+							}
+						}
+					}
+					break;
+				}
+			 }
             //Crear el objeto Transaction para registrar la transferencia del cliente
             transaction.setId(null);
             transaction.setUserSourceId(BigInteger.valueOf(userSource_.getDatosRespuesta().getUsuarioID()));
@@ -3880,7 +4251,6 @@ public class APIOperations {
         rechargeAfinitasResponses.setProducts(products);
         rechargeAfinitasResponses.setIdTransaction(transaction.getId().toString());
         return rechargeAfinitasResponses;
-//        return new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
     }
 
     public PaymentInfoListResponse getPaymentInfo(String userApi, String passwordApi, Long userId) {
@@ -4454,7 +4824,16 @@ public class APIOperations {
     
     public TransactionResponse manualWithdrawalsBusiness(Long bankId,Long accountBankBusinessId, String accountBank,
             Float amountWithdrawal, Long productId, String conceptTransaction, Long businessId, Long transactionBusinessId) {
-
+       
+        Long idTransaction = 0L;
+        int totalTransactionsByBusinessDaily = 0;
+        int totalTransactionsByBusinessMonthly = 0;
+        int totalTransactionsByBusinessYearly = 0;
+        Double totalAmountByBusinessDaily = 0.00D;
+        Double totalAmountByBusinessMonthly = 0.00D;
+        Double totalAmountByBusinessYearly = 0.00D;
+        List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
+        List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
         List<Commission> commissions = new ArrayList<Commission>();
         Float amountCommission = 0.00F;
         short isPercentCommission = 0;
@@ -4463,7 +4842,111 @@ public class APIOperations {
         ArrayList<Product> products = new ArrayList<Product>();
 
         try {
-      
+      		  totalTransactionsByBusinessDaily = TransactionsByBusinessCurrentDate(businessId, EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			  totalAmountByBusinessDaily = AmountMaxByBusinessCurrentDate(businessId,EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			  totalTransactionsByBusinessMonthly = TransactionsByBusinessCurrentDate(businessId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			  totalAmountByBusinessMonthly = AmountMaxByBusinessCurrentDate(businessId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			  totalTransactionsByBusinessYearly = TransactionsByBusinessCurrentDate(businessId, EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			  totalAmountByBusinessYearly = AmountMaxByBusinessCurrentDate(businessId,EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+
+              List<Preference> preferences = getPreferences();
+              for (Preference p : preferences) {
+                  if (p.getName().equals(Constante.sPreferenceTransaction)) {
+                      idTransaction = p.getId();
+                  }
+              }
+              preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
+              for (PreferenceField pf : preferencesField) {
+                  switch (pf.getName()) {
+                  case Constante.sValidatePreferenceTransaction11:
+                      if (pf.getEnabled() == 1) {
+                          preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+                          for (PreferenceValue pv : preferencesValue) {
+                              if (pv.getValue().equals("0")) {
+                                  return new TransactionResponse(ResponseCode.DISABLED_TRANSACTION, "Transactions disabled");
+                              }
+                          }
+                      }
+                      break;
+                  	case Constante.sValidatePreferenceTransaction4:
+                      if (pf.getEnabled() == 1) {
+                          preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+                          for (PreferenceValue pv : preferencesValue) {
+                              if (amountWithdrawal >= Double.parseDouble(pv.getValue())) {
+                                  return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT, "The user exceeded the maximum amount per transaction");
+                              }
+                          }
+                      }
+                      break;
+                  
+                      case Constante.sValidatePreferenceTransaction5:
+                          if (pf.getEnabled() == 1) {
+                              preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+                              for (PreferenceValue pv : preferencesValue) {
+                            	  if (totalTransactionsByBusinessDaily >= Integer.parseInt(pv.getValue())) {
+                                      return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY, "The user exceeded the maximum number of transactions per day");
+                                  }                             
+                              }
+                          }
+                          break;
+                      case Constante.sValidatePreferenceTransaction6:
+                          if (pf.getEnabled() == 1) {
+                              preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+                              for (PreferenceValue pv : preferencesValue) {
+                                  if (totalAmountByBusinessDaily >= Double.parseDouble(pv.getValue())) {
+                                      return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_DIALY, "The user exceeded the maximum amount per day");
+                                  }
+                              }
+                          }
+                          break;
+                      case Constante.sValidatePreferenceTransaction7:
+                          if (pf.getEnabled() == 1) {
+                              preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+                              for (PreferenceValue pv : preferencesValue) {
+                                  if (totalTransactionsByBusinessMonthly >= Integer.parseInt(pv.getValue())) {
+                                      return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY, "The user exceeded the maximum number of transactions per month");
+                                  }
+                              }
+                          }
+                          break;
+                      case Constante.sValidatePreferenceTransaction8:
+                          if (pf.getEnabled() == 1) {
+                              preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+                              for (PreferenceValue pv : preferencesValue) {
+                                  if (totalAmountByBusinessMonthly >= Double.parseDouble(pv.getValue())) {
+                                      return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_MONTHLY, "The user exceeded the maximum amount per month");
+                                  }
+                              }
+                          }
+                          break;
+                      case Constante.sValidatePreferenceTransaction9:
+                          if (pf.getEnabled() == 1) {
+                              preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+                              for (PreferenceValue pv : preferencesValue) {
+                                  if (totalTransactionsByBusinessYearly >= Integer.parseInt(pv.getValue())) {
+                                      return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_YEARLY, "The user exceeded the maximum number of transactions per year");
+                                  }
+                              }
+                          }
+                          break;
+                      case Constante.sValidatePreferenceTransaction10:
+                          if (pf.getEnabled() == 1) {
+                              preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+                              for (PreferenceValue pv : preferencesValue) {
+
+                                  if (totalAmountByBusinessYearly >= Double.parseDouble(pv.getValue())) {
+                                      return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_YEARLY, "The user exceeded the maximum amount per year");
+                                  }
+                              }
+                          }
+                          break;
+                  }
+              }
             withdrawal.setId(null);           
             Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Constante.sDocumentTypeBusinessManualWithdrawal, Constante.sOriginApplicationPortalBusiness);
             String generateNumberSequence = generateNumberSequence(sequences);
@@ -4606,14 +5089,15 @@ public class APIOperations {
             String conceptTransaction, Long idUserDestination, Long businessId) {
 
         Long idTransaction = 0L;
-        int totalTransactionsByBusiness = 0;
-        Long totalTransactionsByProduct = 0L;
-        Double totalAmountByBusiness = 0.00D;
+        int totalTransactionsByBusinessDaily = 0;
+        int totalTransactionsByBusinessMonthly = 0;
+        int totalTransactionsByBusinessYearly = 0;
+        Double totalAmountByBusinessDaily = 0.00D;
+        Double totalAmountByBusinessMonthly = 0.00D;
+        Double totalAmountByBusinessYearly = 0.00D;
         List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
         List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
         List<Commission> commissions = new ArrayList<Commission>();
-        Timestamp begginingDateTime = new Timestamp(0);
-        Timestamp endingDateTime = new Timestamp(0);
         Float amountCommission = 0.00F;
         short isPercentCommission = 0;
         Commission commissionTransfer = new Commission();
@@ -4646,58 +5130,114 @@ public class APIOperations {
             if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < amountTransferTotal) {
                 return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE, "The user has no balance available to complete the transaction");
             }
+            
 
-            begginingDateTime = Utils.DateTransaction()[0];
-            endingDateTime = Utils.DateTransaction()[1];
+			totalTransactionsByBusinessDaily = TransactionsByBusinessCurrentDate(businessId, EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            totalTransactionsByBusiness = TransactionsByBusinessCurrentDate(businessId, begginingDateTime, endingDateTime);
+			totalAmountByBusinessDaily = AmountMaxByBusinessCurrentDate(businessId,EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            totalAmountByBusiness = AmountMaxByBusinessCurrentDate(businessId, begginingDateTime, endingDateTime);
+			totalTransactionsByBusinessMonthly = TransactionsByBusinessCurrentDate(businessId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            totalTransactionsByProduct = TransactionsByProductByBusinessCurrentDate(productId, businessId, begginingDateTime, endingDateTime);
+			totalAmountByBusinessMonthly = AmountMaxByBusinessCurrentDate(businessId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            List<Preference> preferences = getPreferences();
-            for (Preference p : preferences) {
-                if (p.getName().equals(Constante.sPreferenceTransaction)) {
-                    idTransaction = p.getId();
-                }
-            }
-            preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
+			totalTransactionsByBusinessYearly = TransactionsByBusinessCurrentDate(businessId, EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			totalAmountByBusinessYearly = AmountMaxByBusinessCurrentDate(businessId,EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			List<Preference> preferences = getPreferences();
+			for (Preference p : preferences) {
+				if (p.getName().equals(Constante.sPreferenceTransaction)) {
+					idTransaction = p.getId();
+				}
+			}
+			preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
             for (PreferenceField pf : preferencesField) {
                 switch (pf.getName()) {
-                    case Constante.sValidatePreferenceTransaction1:
+                case Constante.sValidatePreferenceTransaction11:
+                    if (pf.getEnabled() == 1) {
+                        preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+                        for (PreferenceValue pv : preferencesValue) {
+                            if (pv.getValue().equals("0")) {
+                                return new TransactionResponse(ResponseCode.DISABLED_TRANSACTION, "Transactions disabled");
+                            }
+                        }
+                    }
+                    break;
+                	case Constante.sValidatePreferenceTransaction4:
+                    if (pf.getEnabled() == 1) {
+                        preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+                        for (PreferenceValue pv : preferencesValue) {
+                            if (amountTransfer >= Double.parseDouble(pv.getValue())) {
+                                return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT, "The user exceeded the maximum amount per transaction");
+                            }
+                        }
+                    }
+                    break;
+                
+                    case Constante.sValidatePreferenceTransaction5:
                         if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
+                            preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
                             for (PreferenceValue pv : preferencesValue) {
-                                if (totalAmountByBusiness >= Double.parseDouble(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT, "The user exceeded the maximum amount per day");
+                          	  if (totalTransactionsByBusinessDaily >= Integer.parseInt(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY, "The user exceeded the maximum number of transactions per day");
+                                }                             
+                            }
+                        }
+                        break;
+                    case Constante.sValidatePreferenceTransaction6:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+                            for (PreferenceValue pv : preferencesValue) {
+                                if (totalAmountByBusinessDaily >= Double.parseDouble(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_DIALY, "The user exceeded the maximum amount per day");
                                 }
                             }
                         }
                         break;
-                    case Constante.sValidatePreferenceTransaction2:
+                    case Constante.sValidatePreferenceTransaction7:
                         if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
+                            preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
                             for (PreferenceValue pv : preferencesValue) {
-                                if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT, "The user exceeded the maximum number of transactions per product");
+                                if (totalTransactionsByBusinessMonthly >= Integer.parseInt(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY, "The user exceeded the maximum number of transactions per month");
                                 }
                             }
                         }
                         break;
-                    case Constante.sValidatePreferenceTransaction3:
+                    case Constante.sValidatePreferenceTransaction8:
                         if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
+                            preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
                             for (PreferenceValue pv : preferencesValue) {
-                                if (totalTransactionsByBusiness >= Integer.parseInt(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER, "The user exceeded the maximum number of transactions per day");
+                                if (totalAmountByBusinessMonthly >= Double.parseDouble(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_MONTHLY, "The user exceeded the maximum amount per month");
+                                }
+                            }
+                        }
+                        break;
+                    case Constante.sValidatePreferenceTransaction9:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+                            for (PreferenceValue pv : preferencesValue) {
+                                if (totalTransactionsByBusinessYearly >= Integer.parseInt(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_YEARLY, "The user exceeded the maximum number of transactions per year");
+                                }
+                            }
+                        }
+                        break;
+                    case Constante.sValidatePreferenceTransaction10:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+                            for (PreferenceValue pv : preferencesValue) {
+
+                                if (totalAmountByBusinessYearly >= Double.parseDouble(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_YEARLY, "The user exceeded the maximum amount per year");
                                 }
                             }
                         }
                         break;
                 }
             }
-
+            
             transfer.setId(null);
             transfer.setBusinessId(businessId);
             transfer.setUserDestinationId(BigInteger.valueOf(idUserDestination));
@@ -4807,7 +5347,7 @@ public class APIOperations {
         return transactionResponse;
     }
     
-    public int TransactionsByBusinessCurrentDate(Long businessId, Timestamp begginingDateTime, Timestamp endingDateTime) {
+    public int TransactionsByBusinessCurrentDate(Long businessId, Date begginingDateTime, Date endingDateTime) {
         StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM transaction t WHERE t.creationDate between ?1 AND ?2 AND t.businessId = ?3");
         Query query = entityManager.createNativeQuery(sqlBuilder.toString());
         query.setParameter("1", begginingDateTime);
@@ -4829,7 +5369,7 @@ public class APIOperations {
         return result.size();
     }
 
-    public Double AmountMaxByBusinessCurrentDate(Long businessId, Timestamp begginingDateTime, Timestamp endingDateTime) {
+    public Double AmountMaxByBusinessCurrentDate(Long businessId, Date begginingDateTime, Date endingDateTime) {
         StringBuilder sqlBuilder = new StringBuilder("SELECT SUM(t.totalAmount) FROM transaction t WHERE t.creationDate between ?1 AND ?2 AND t.businessId = ?3");
         Query query = entityManager.createNativeQuery(sqlBuilder.toString());
         query.setParameter("1", begginingDateTime);
@@ -4878,14 +5418,15 @@ public class APIOperations {
             String conceptTransaction, Long businessId, Long businessDestinationId) {
 
         Long idTransaction = 0L;
-        int totalTransactionsByBusiness = 0;
-        Long totalTransactionsByProduct = 0L;
-        Double totalAmountByBusiness = 0.00D;
+        int totalTransactionsByBusinessDaily = 0;
+        int totalTransactionsByBusinessMonthly = 0;
+        int totalTransactionsByBusinessYearly = 0;
+        Double totalAmountByBusinessDaily = 0.00D;
+        Double totalAmountByBusinessMonthly = 0.00D;
+        Double totalAmountByBusinessYearly = 0.00D;
         List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
         List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
         List<Commission> commissions = new ArrayList<Commission>();
-        Timestamp begginingDateTime = new Timestamp(0);
-        Timestamp endingDateTime = new Timestamp(0);
         Float amountCommission = 0.00F;
         short isPercentCommission = 0;
         Commission commissionTransfer = new Commission();
@@ -4917,57 +5458,111 @@ public class APIOperations {
                 return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE, "The user has no balance available to complete the transaction");
             }
 
-            begginingDateTime = Utils.DateTransaction()[0];
-            endingDateTime = Utils.DateTransaction()[1];
+			totalTransactionsByBusinessDaily = TransactionsByBusinessCurrentDate(businessId, EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            totalTransactionsByBusiness = TransactionsByBusinessCurrentDate(businessId, begginingDateTime, endingDateTime);
+			totalAmountByBusinessDaily = AmountMaxByBusinessCurrentDate(businessId,EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            totalAmountByBusiness = AmountMaxByBusinessCurrentDate(businessId, begginingDateTime, endingDateTime);
+			totalTransactionsByBusinessMonthly = TransactionsByBusinessCurrentDate(businessId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            totalTransactionsByProduct = TransactionsByProductByBusinessCurrentDate(productId, businessId, begginingDateTime, endingDateTime);
+			totalAmountByBusinessMonthly = AmountMaxByBusinessCurrentDate(businessId,EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
 
-            List<Preference> preferences = getPreferences();
-            for (Preference p : preferences) {
-                if (p.getName().equals(Constante.sPreferenceTransaction)) {
-                    idTransaction = p.getId();
-                }
-            }
-            preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
-            for (PreferenceField pf : preferencesField) {
-                switch (pf.getName()) {
-                    case Constante.sValidatePreferenceTransaction1:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalAmountByBusiness >= Double.parseDouble(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT, "The user exceeded the maximum amount per day");
-                                }
-                            }
-                        }
-                        break;
-                    case Constante.sValidatePreferenceTransaction2:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT, "The user exceeded the maximum number of transactions per product");
-                                }
-                            }
-                        }
-                        break;
-                    case Constante.sValidatePreferenceTransaction3:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalTransactionsByBusiness >= Integer.parseInt(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER, "The user exceeded the maximum number of transactions per day");
-                                }
-                            }
-                        }
-                        break;
-                }
-            }
+			totalTransactionsByBusinessYearly = TransactionsByBusinessCurrentDate(businessId, EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
 
+			totalAmountByBusinessYearly = AmountMaxByBusinessCurrentDate(businessId,EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+
+			List<Preference> preferences = getPreferences();
+			for (Preference p : preferences) {
+				if (p.getName().equals(Constante.sPreferenceTransaction)) {
+					idTransaction = p.getId();
+				}
+			}
+			preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
+			   for (PreferenceField pf : preferencesField) {
+	                switch (pf.getName()) {
+	                case Constante.sValidatePreferenceTransaction11:
+	                    if (pf.getEnabled() == 1) {
+	                        preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+	                        for (PreferenceValue pv : preferencesValue) {
+	                            if (pv.getValue().equals("0")) {
+	                                return new TransactionResponse(ResponseCode.DISABLED_TRANSACTION, "Transactions disabled");
+	                            }
+	                        }
+	                    }
+	                    break;
+	                	case Constante.sValidatePreferenceTransaction4:
+	                    if (pf.getEnabled() == 1) {
+	                        preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+	                        for (PreferenceValue pv : preferencesValue) {
+	                            if (amountTransfer >= Double.parseDouble(pv.getValue())) {
+	                                return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT, "The user exceeded the maximum amount per transaction");
+	                            }
+	                        }
+	                    }
+	                    break;
+	                
+	                    case Constante.sValidatePreferenceTransaction5:
+	                        if (pf.getEnabled() == 1) {
+	                            preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+	                            for (PreferenceValue pv : preferencesValue) {
+	                          	  if (totalTransactionsByBusinessDaily >= Integer.parseInt(pv.getValue())) {
+	                                    return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY, "The user exceeded the maximum number of transactions per day");
+	                                }                             
+	                            }
+	                        }
+	                        break;
+	                    case Constante.sValidatePreferenceTransaction6:
+	                        if (pf.getEnabled() == 1) {
+	                            preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+	                            for (PreferenceValue pv : preferencesValue) {
+	                                if (totalAmountByBusinessDaily >= Double.parseDouble(pv.getValue())) {
+	                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_DIALY, "The user exceeded the maximum amount per day");
+	                                }
+	                            }
+	                        }
+	                        break;
+	                    case Constante.sValidatePreferenceTransaction7:
+	                        if (pf.getEnabled() == 1) {
+	                            preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+	                            for (PreferenceValue pv : preferencesValue) {
+	                                if (totalTransactionsByBusinessMonthly >= Integer.parseInt(pv.getValue())) {
+	                                    return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY, "The user exceeded the maximum number of transactions per month");
+	                                }
+	                            }
+	                        }
+	                        break;
+	                    case Constante.sValidatePreferenceTransaction8:
+	                        if (pf.getEnabled() == 1) {
+	                            preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+	                            for (PreferenceValue pv : preferencesValue) {
+	                                if (totalAmountByBusinessMonthly >= Double.parseDouble(pv.getValue())) {
+	                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_MONTHLY, "The user exceeded the maximum amount per month");
+	                                }
+	                            }
+	                        }
+	                        break;
+	                    case Constante.sValidatePreferenceTransaction9:
+	                        if (pf.getEnabled() == 1) {
+	                            preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+	                            for (PreferenceValue pv : preferencesValue) {
+	                                if (totalTransactionsByBusinessYearly >= Integer.parseInt(pv.getValue())) {
+	                                    return new TransactionResponse(ResponseCode.TRANSACTION_QUANTITY_LIMIT_YEARLY, "The user exceeded the maximum number of transactions per year");
+	                                }
+	                            }
+	                        }
+	                        break;
+	                    case Constante.sValidatePreferenceTransaction10:
+	                        if (pf.getEnabled() == 1) {
+	                            preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationBusiness);
+	                            for (PreferenceValue pv : preferencesValue) {
+
+	                                if (totalAmountByBusinessYearly >= Double.parseDouble(pv.getValue())) {
+	                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT_YEARLY, "The user exceeded the maximum amount per year");
+	                                }
+	                            }
+	                        }
+	                        break;
+	                }
+	            }
             transfer.setId(null);
             transfer.setBusinessId(businessId);
             transfer.setBusinessDestinationId(businessDestinationId);
