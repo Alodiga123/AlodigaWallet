@@ -94,6 +94,7 @@ import java.math.BigInteger;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
+import javax.jws.WebParam;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
@@ -3453,9 +3454,9 @@ public class APIOperations {
                     receiverCityName,
                     receiverAddress,
                     receiverZipCode);
-            if (addressId == 0) {
-                proxy.actualizarUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId), String.valueOf(response.getRemittanceSingleResponse().getAddressId()));
-            }
+//            if (addressId == 0) {
+//                proxy.actualizarUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId), String.valueOf(response.getRemittanceSingleResponse().getAddressId()));
+//            }
             RemittanceResponse remittanceResponse = new RemittanceResponse(response.getRemittanceSingleResponse().getId(), response.getRemittanceSingleResponse().getApplicationDate(), response.getRemittanceSingleResponse().getCommentary(), response.getRemittanceSingleResponse().getAmountOrigin(), response.getRemittanceSingleResponse().getTotalAmount(), response.getRemittanceSingleResponse().getSendingOptionSMS(), response.getRemittanceSingleResponse().getAmountDestiny(), response.getRemittanceSingleResponse().getBank(), response.getRemittanceSingleResponse().getPaymentServiceId(), response.getRemittanceSingleResponse().getSecondaryKey(), response.getRemittanceSingleResponse().getAdditionalChanges(), response.getRemittanceSingleResponse().getCreationDate(), response.getRemittanceSingleResponse().getCreationHour(), response.getRemittanceSingleResponse().getLocalSales(), response.getRemittanceSingleResponse().getReserveField1(), response.getRemittanceSingleResponse().getRemittent(), response.getRemittanceSingleResponse().getReceiver(), response.getRemittanceSingleResponse().getCorrespondent(), response.getRemittanceSingleResponse().getAddressReciever(), response.getRemittanceSingleResponse().getSalesType(), response.getRemittanceSingleResponse().getAddressRemittent(), response.getRemittanceSingleResponse().getExchangeRate(), response.getRemittanceSingleResponse().getRatePaymentNetwork(), response.getRemittanceSingleResponse().getLanguage(), response.getRemittanceSingleResponse().getOriginCurrent(), response.getRemittanceSingleResponse().getDestinyCurrent(), response.getRemittanceSingleResponse().getPaymentMethod(), response.getRemittanceSingleResponse().getServiceType(), response.getRemittanceSingleResponse().getPaymentNetwork(), response.getRemittanceSingleResponse().getPaymentNetworkPoint(), response.getRemittanceSingleResponse().getCashBox(), response.getRemittanceSingleResponse().getCashier(), response.getRemittanceSingleResponse().getStatus(), response.getRemittanceSingleResponse().getRemittanceNumber(), response.getRemittanceSingleResponse().getPaymentKey(), response.getRemittanceSingleResponse().getCorrelative(), response.getRemittanceSingleResponse().getDeliveryForm(), ResponseCode.EXITO, "");
             remittanceResponse.setAmountTransferTotal(String.valueOf(amountTransferTotal));
             return remittanceResponse;
@@ -4451,9 +4452,8 @@ public class APIOperations {
 
     }
     
-    public TransactionResponse manualWithdrawalsBusiness(Long bankId, String accountBank,
-            Float amountWithdrawal, Long productId, String conceptTransaction, Long documentTypeId, Long originApplicationId,
-            Long businessId, Long transactionBusinessId) {
+    public TransactionResponse manualWithdrawalsBusiness(Long bankId,Long accountBankBusinessId, String accountBank,
+            Float amountWithdrawal, Long productId, String conceptTransaction, Long businessId, Long transactionBusinessId) {
 
         List<Commission> commissions = new ArrayList<Commission>();
         Float amountCommission = 0.00F;
@@ -4465,7 +4465,7 @@ public class APIOperations {
         try {
       
             withdrawal.setId(null);           
-            Sequences sequences = getSequencesByDocumentTypeByOriginApplication(documentTypeId, originApplicationId);
+            Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Constante.sDocumentTypeBusinessManualWithdrawal, Constante.sOriginApplicationPortalBusiness);
             String generateNumberSequence = generateNumberSequence(sequences);
             withdrawal.setTransactionNumber(generateNumberSequence);
             withdrawal.setTransactionBusinessId(transactionBusinessId);
@@ -4536,14 +4536,20 @@ public class APIOperations {
             Bank bank = entityManager.find(Bank.class, bankId);
             manualWithdrawal.setBankId(bank);
             manualWithdrawal.setBankOperationNumber(accountBank);
+            manualWithdrawal.setAccountBankBusinessId(accountBankBusinessId);
+            entityManager.flush();
             entityManager.persist(manualWithdrawal);
+            commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransationTypeManualWithdrawal).getResultList();
+            if (commissions.size() < 1) {
+                throw new NoResultException(Constante.sProductNotCommission + " in productId:" + productId + " and businessId: " + businessId);
+            }
 
             withdrawal.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(withdrawal);
 
             try {
                 System.out.println("" + withdrawal.getId());
-                saveTransactionApproveRequest(0L, product.getId(), withdrawal.getId(), bankId, documentTypeId, originApplicationId,businessId);
+                saveTransactionApproveRequest(0L, product.getId(), withdrawal.getId(), manualWithdrawal.getId(), Constante.sDocumentTypeBusinessManualWithdrawal, Constante.sOriginApplicationPortalBusiness,businessId);
             } catch (Exception e) {
                 e.printStackTrace();
                 return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error saving transaction Aprrove Request");
@@ -4597,7 +4603,7 @@ public class APIOperations {
     }
     
     public TransactionResponse saveTransferBetweenBusinessWithUser(Long productId, Float amountTransfer,
-            String conceptTransaction, Long idUserDestination, Long businessId, Long transactionBusinessId) {
+            String conceptTransaction, Long idUserDestination, Long businessId) {
 
         Long idTransaction = 0L;
         int totalTransactionsByBusiness = 0;
@@ -4695,7 +4701,6 @@ public class APIOperations {
             transfer.setId(null);
             transfer.setBusinessId(businessId);
             transfer.setUserDestinationId(BigInteger.valueOf(idUserDestination));
-            transfer.setTransactionBusinessId(transactionBusinessId);
             Product product = entityManager.find(Product.class, productId);
             transfer.setProductId(product);
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeTA);
@@ -4870,7 +4875,7 @@ public class APIOperations {
     }
 
     public TransactionResponse saveTransferBetweenBusinessAccount(Long productId, Float amountTransfer,
-            String conceptTransaction, Long businessId, Long businessDestinationId, Long transactionBusinessId) {
+            String conceptTransaction, Long businessId, Long businessDestinationId) {
 
         Long idTransaction = 0L;
         int totalTransactionsByBusiness = 0;
@@ -4966,7 +4971,6 @@ public class APIOperations {
             transfer.setId(null);
             transfer.setBusinessId(businessId);
             transfer.setBusinessDestinationId(businessDestinationId);
-            transfer.setTransactionBusinessId(transactionBusinessId);
             Product product = entityManager.find(Product.class, productId);
             transfer.setProductId(product);
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeTA);

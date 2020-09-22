@@ -671,15 +671,14 @@ public class APIAlodigaWallet {
     @WebMethod
     public TransactionResponse manualWithdrawalsBusiness(
             @WebParam(name = "bankId") Long bankId,
+            @WebParam(name = "accountBankBusinessId") Long accountBankBusinessId,
             @WebParam(name = "accountBank") String accountBank,
             @WebParam(name = "amountWithdrawal") Float amountWithdrawal,
             @WebParam(name = "productId") Long productId,
             @WebParam(name = "conceptTransaction") String conceptTransaction,
-            @WebParam(name = "documentTypeId") Long documentTypeId,
-            @WebParam(name = "originApplicationId") Long originApplicationId,
             @WebParam(name = "businessId") Long businessId,
             @WebParam(name = "businessTransactionId") Long businessTransactionId) {
-        return operations.manualWithdrawalsBusiness(bankId, accountBank, amountWithdrawal, productId, conceptTransaction,documentTypeId,originApplicationId, businessId,businessTransactionId);
+        return operations.manualWithdrawalsBusiness(bankId,accountBankBusinessId, accountBank, amountWithdrawal, productId, conceptTransaction, businessId,businessTransactionId);
     }
     
     @WebMethod
@@ -688,11 +687,10 @@ public class APIAlodigaWallet {
             @WebParam(name = "amountTransfer") Float amountTransfer,
             @WebParam(name = "conceptTransaction") String conceptTransaction,
             @WebParam(name = "idUserDestination") Long idUserDestination,
-            @WebParam(name = "businessId") Long businessId,
-            @WebParam(name = "transactionBusinessId") Long transactionBusinessId) {
+            @WebParam(name = "businessId") Long businessId) {
 
         return operations.saveTransferBetweenBusinessWithUser(productId, amountTransfer,
-                conceptTransaction, idUserDestination, businessId, transactionBusinessId);
+                conceptTransaction, idUserDestination, businessId);
     }
     
     @WebMethod
@@ -701,11 +699,9 @@ public class APIAlodigaWallet {
             @WebParam(name = "amountTransfer") Float amountTransfer,
             @WebParam(name = "conceptTransaction") String conceptTransaction,
             @WebParam(name = "businessId") Long businessId,
-            @WebParam(name = "businessDestinationId") Long businessDestinationId,
-            @WebParam(name = "transactionBusinessId") Long transactionBusinessId) {
-
+            @WebParam(name = "businessDestinationId") Long businessDestinationId) {
         return operations.saveTransferBetweenBusinessAccount(productId, amountTransfer,
-                conceptTransaction,businessId, businessDestinationId, transactionBusinessId);
+                conceptTransaction,businessId, businessDestinationId);
     }
     
     @WebMethod
