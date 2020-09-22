@@ -714,6 +714,15 @@ public class APIAlodigaWallet {
             @WebParam(name = "maxResult") String maxResult) {
         return operations.getTransactionsByBusinessId(Long.valueOf(businessId), Integer.valueOf(maxResult));
     }
+    
+    
+    @WebMethod
+    public TransactionListResponse getTransactionsByBusinessIdBetweenDate(
+            @WebParam(name = "businessId") Long businessId,
+            @WebParam(name = "from") String from,
+            @WebParam(name = "to") String to) {
+        return operations.getTransactionsByBusinessIdBetweenDate(Long.valueOf(businessId), from, to);
+    }
 
     
 }

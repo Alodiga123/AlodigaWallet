@@ -96,6 +96,7 @@ import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.TemporalType;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import org.apache.log4j.Logger;
@@ -130,6 +131,8 @@ import com.alodiga.wallet.topup.TopUpInfo;
 import com.alodiga.wallet.common.utils.AmazonSESSendMail;
 import com.alodiga.wallet.common.utils.Constante;
 import com.alodiga.wallet.common.utils.Constants;
+import com.alodiga.wallet.common.utils.EjbUtils;
+
 import static com.alodiga.wallet.common.utils.EncriptedRsa.encrypt;
 import com.alodiga.wallet.common.utils.Mail;
 import com.alodiga.wallet.common.utils.QueryConstants;
@@ -4227,7 +4230,7 @@ public class APIOperations {
             //saveSequences(s);
             Calendar cal = Calendar.getInstance();
             int year = cal.get(Calendar.YEAR);
-            secuence = ((s.getOriginApplicationId().getId().equals(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID)) ? "APP-" : "ADM-")
+            secuence = ((s.getOriginApplicationId().getId().equals(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID)) ? "APP-" : (s.getOriginApplicationId().getId().equals(Constants.ORIGIN_APPLICATION_ADMIN_WALLET_ID))?"ADM-":"PBW-")
                     .concat(s.getDocumentTypeId().getAcronym()).concat("-")
                     .concat(String.valueOf(year)).concat("-")
                     .concat(numberSequence.toString());
@@ -4341,8 +4344,15 @@ public class APIOperations {
     }
     
     public BusinessHasProductResponse saveBusinessHasProductDefault(Long businessId) {
+    	List<BusinessHasProduct> businessHasProducts = new ArrayList<BusinessHasProduct>();
         try {
-            BusinessHasProduct businessHasProduct = new BusinessHasProduct();
+
+			businessHasProducts = (List<BusinessHasProduct>) entityManager.createNamedQuery("BusinessHasProduct.findByBusinessIdAllProduct", BusinessHasProduct.class).setParameter("businessId", businessId).getResultList();
+			if (!businessHasProducts.isEmpty()) {
+				return new BusinessHasProductResponse(ResponseCode.EXISTING_WALLET_BUSINESS,"Error creating wallet business. Existing");
+			}
+
+			BusinessHasProduct businessHasProduct = new BusinessHasProduct();
             businessHasProduct.setProductId(Product.ALOCOIN_PRODUCT);
             businessHasProduct.setBusinessId(businessId);
             businessHasProduct.setBeginningDate(new Timestamp(new Date().getTime()));
@@ -4454,8 +4464,10 @@ public class APIOperations {
 
         try {
       
-            withdrawal.setId(null);
-            withdrawal.setTransactionNumber("1");
+            withdrawal.setId(null);           
+            Sequences sequences = getSequencesByDocumentTypeByOriginApplication(documentTypeId, originApplicationId);
+            String generateNumberSequence = generateNumberSequence(sequences);
+            withdrawal.setTransactionNumber(generateNumberSequence);
             withdrawal.setTransactionBusinessId(transactionBusinessId);
             withdrawal.setBusinessId(businessId);
             Product product = entityManager.find(Product.class, productId);
@@ -5078,20 +5090,37 @@ public class APIOperations {
             return new TransactionListResponse(ResponseCode.ERROR_INTERNO, "error interno");
         }
 
-//        APIRegistroUnificadoProxy api = new APIRegistroUnificadoProxy();
+        for (Transaction t : transactions) {
+            t.setPaymentInfoId(null);
+            t.setProductId(t.getProductId());
+            t.setTransactionType(t.getTransactionTypeId().getId().toString());
+            t.setId(t.getId());
+        }
+        return new TransactionListResponse(ResponseCode.EXITO, "", transactions);
+    }
+    
+    public TransactionListResponse getTransactionsByBusinessIdBetweenDate(Long businessId, String from, String to) {
+        List<Transaction> transactions = new ArrayList<Transaction>();
+        try {
+            entityManager.flush();
+            transactions = (List<Transaction>) entityManager.createNamedQuery("Transaction.findByBusinessIdBetweenDate", Transaction.class).setParameter("businessId", businessId).setParameter("from", EjbUtils.convertStringToTimestampBeginningDate(from),TemporalType.TIMESTAMP).setParameter("to", EjbUtils.convertStringToTimestampEndingDate(to),TemporalType.TIMESTAMP).setParameter("businessDestinationId", businessId).getResultList();
+            if (transactions.size() < 1) {
+                throw new NoResultException(ResponseCode.TRANSACTION_LIST_NOT_FOUND_EXCEPTION.toString());
+            }
+        } catch (NoResultException e) {
+            e.printStackTrace();
+            return new TransactionListResponse(ResponseCode.TRANSACTION_LIST_NOT_FOUND_EXCEPTION, "El negocio no tiene transacciones asociadas");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new TransactionListResponse(ResponseCode.ERROR_INTERNO, "error interno");
+        }
+
 
         for (Transaction t : transactions) {
             t.setPaymentInfoId(null);
             t.setProductId(t.getProductId());
             t.setTransactionType(t.getTransactionTypeId().getId().toString());
             t.setId(t.getId());
-//            RespuestaUsuario usuarioRespuesta = new RespuestaUsuario();
-//            try {
-//                usuarioRespuesta = api.getUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId));
-//                t.setDestinationUser(usuarioRespuesta.getDatosRespuesta().getEmail() + " / " + usuarioRespuesta.getDatosRespuesta().getMovil() + " / " + usuarioRespuesta.getDatosRespuesta().getNombre());
-//            } catch (RemoteException ex) {
-//                return new TransactionListResponse(ResponseCode.ERROR_INTERNO, "No se logro comunicacion entre alodiga wallet y RU");
-//            }
         }
         return new TransactionListResponse(ResponseCode.EXITO, "", transactions);
     }
