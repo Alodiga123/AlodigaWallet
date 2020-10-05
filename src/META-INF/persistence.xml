@@ -125,8 +125,8 @@
     <class>com.alodiga.wallet.common.model.DailyClosing</class>
     <class>com.alodiga.wallet.common.model.StatusTransactionLog</class>
     <class>com.alodiga.wallet.common.model.TransactionLog</class>
-    <class>com.alodiga.wallet.common.model.DailyClosingType</class>
     <class>com.alodiga.wallet.common.model.BusinessHasProduct</class>
+    <class>com.alodiga.wallet.common.model.ReportHasProfile</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <properties>
       <property name="eclipselink.logging.level" value="ALL"/>
