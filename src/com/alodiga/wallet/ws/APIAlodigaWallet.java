@@ -20,6 +20,7 @@ import com.alodiga.wallet.responses.ActivateCardResponses;
 import com.alodiga.wallet.responses.BalanceHistoryResponse;
 import com.alodiga.wallet.responses.BankListResponse;
 import com.alodiga.wallet.responses.BusinessHasProductResponse;
+import com.alodiga.wallet.responses.BusinessShopResponse;
 import com.alodiga.wallet.responses.CardListResponse;
 import com.alodiga.wallet.responses.CardResponse;
 import com.alodiga.wallet.responses.CheckStatusAccountResponses;
@@ -125,12 +126,10 @@ public class APIAlodigaWallet {
             @WebParam(name = "emailUser") String emailUser,
             @WebParam(name = "productId") Long productId,
             @WebParam(name = "amountPayment") Float amountPayment,
-            @WebParam(name = "conceptTransaction") String conceptTransaction,
-            @WebParam(name = "cryptogramaUser") String cryptogramUser,
-            @WebParam(name = "idUserDestination") Long idUserDestination) {
+            @WebParam(name = "conceptTransaction") String conceptTransaction) {
 
         return operations.savePaymentShop(cryptogramShop, emailUser, productId, amountPayment,
-                conceptTransaction, cryptogramUser, idUserDestination);
+                conceptTransaction);
     }
 
     @WebMethod
@@ -720,5 +719,11 @@ public class APIAlodigaWallet {
         return operations.getTransactionsByBusinessIdBetweenDate(Long.valueOf(businessId), from, to);
     }
 
+    
+    @WebMethod
+    public BusinessShopResponse getBusinessInfoByCryptogram(
+            @WebParam(name = "cryptogram") String cryptogram){
+        return operations.getBusinessInfoByCryptogram(cryptogram);
+    }
     
 }
