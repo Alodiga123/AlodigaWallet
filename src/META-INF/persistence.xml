@@ -127,6 +127,10 @@
     <class>com.alodiga.wallet.common.model.TransactionLog</class>
     <class>com.alodiga.wallet.common.model.BusinessHasProduct</class>
     <class>com.alodiga.wallet.common.model.ReportHasProfile</class>
+    <class>com.alodiga.wallet.common.model.StatusRequest</class>
+    <class>com.alodiga.wallet.common.model.AffiliationRequest</class>
+    <class>com.alodiga.wallet.common.model.RequestType</class>
+    <class>com.alodiga.wallet.common.model.ReviewAffiliationRequest</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <properties>
       <property name="eclipselink.logging.level" value="ALL"/>

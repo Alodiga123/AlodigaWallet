@@ -1,6 +1,5 @@
 package com.alodiga.wallet.bean;
 
-
 import com.alodiga.wallet.common.model.BalanceHistory;
 import com.alodiga.wallet.common.model.Commission;
 import com.alodiga.wallet.common.model.CommissionItem;
@@ -15,10 +14,12 @@ import com.alodiga.wallet.dao.TransactionDAO;
 import com.alodiga.wallet.responses.RechargeValidationResponse;
 import com.alodiga.wallet.responses.ResponseCode;
 import com.alodiga.wallet.responses.TransactionResponse;
+import com.alodiga.wallet.utils.TransactionHelper;
 import com.ericsson.alodiga.ws.APIRegistroUnificadoProxy;
 import com.ericsson.alodiga.ws.RespuestaUsuario;
 import java.math.BigInteger;
 import java.sql.Timestamp;
+import java.util.Calendar;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionManagement;
@@ -80,13 +81,17 @@ public class APIRechargeOperations {
             recharge.setUserDestinationId(BigInteger.valueOf(userId));
             recharge.setProductId(product);
             recharge.setTransactionTypeId(transactionType);
-            TransactionSource transactionSource = entityManager.find(TransactionSource.class, 1L);
+            TransactionSource transactionSource = entityManager.find(TransactionSource.class, 2L);
             recharge.setTransactionSourceId(transactionSource);
             recharge.setCreationDate(new Timestamp(System.currentTimeMillis()));
             recharge.setConcept("Recharge Wallet");
             recharge.setAmount((float) amountFee.amountBefore);
             recharge.setTransactionStatus(TransactionStatus.CREATED.name());
             recharge.setTotalAmount((float) amountFee.totalAmount);
+            recharge.setTransactionNumber(TransactionHelper.generateNextRechargeSequence(TransactionHelper.OriginApplicationType.BUSINESS_PORTAL));
+
+            recharge.setIndClosed(false);
+            
             entityManager.persist(recharge);
 
             CommissionItem commissionItem = new CommissionItem((float) amountFee.fee,
@@ -165,13 +170,15 @@ public class APIRechargeOperations {
             recharge.setUserDestinationId(null);
             recharge.setProductId(product);
             recharge.setTransactionTypeId(transactionType);
-            TransactionSource transactionSource = entityManager.find(TransactionSource.class, 1L);
+            TransactionSource transactionSource = entityManager.find(TransactionSource.class, 2L);
             recharge.setTransactionSourceId(transactionSource);
             recharge.setCreationDate(new Timestamp(System.currentTimeMillis()));
             recharge.setConcept("Recharge Card");
             recharge.setAmount((float) amountFee.amountBefore);
             recharge.setTransactionStatus(TransactionStatus.CREATED.name());
             recharge.setTotalAmount((float) amountFee.totalAmount);
+            Calendar cal = Calendar.getInstance();
+            recharge.setTransactionNumber(TransactionHelper.generateNextRechargeSequence(TransactionHelper.OriginApplicationType.BUSINESS_PORTAL));
             entityManager.persist(recharge);
 
             CommissionItem commissionItem = new CommissionItem((float) amountFee.fee,

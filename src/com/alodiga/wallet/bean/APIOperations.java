@@ -74,7 +74,6 @@ import com.alodiga.wallet.common.model.Country;
 import com.alodiga.wallet.common.model.CreditcardType;
 import com.alodiga.wallet.common.model.Cumplimient;
 import com.alodiga.wallet.common.model.CumplimientStatus;
-import com.alodiga.wallet.common.model.Enterprise;
 import com.alodiga.wallet.common.model.ExchangeDetail;
 import com.alodiga.wallet.common.model.ExchangeRate;
 import com.alodiga.wallet.common.model.Language;
@@ -85,7 +84,6 @@ import com.alodiga.wallet.common.model.Preference;
 import com.alodiga.wallet.common.model.PreferenceField;
 import com.alodiga.wallet.common.model.PreferenceValue;
 import com.alodiga.wallet.common.model.Product;
-import com.alodiga.wallet.common.model.ProductIntegrationType;
 import com.alodiga.wallet.common.model.Provider;
 import com.alodiga.wallet.common.model.Sequences;
 import com.alodiga.wallet.common.model.StatusAccountBank;
@@ -170,7 +168,6 @@ import cardcredentialserviceclient.CardCredentialServiceClient;
 import com.alodiga.businessportal.ws.BpBusinessInfoResponse;
 import com.alodiga.businessportal.ws.BusinessPortalWSException;
 import com.alodiga.wallet.responses.BusinessShopResponse;
-import java.util.logging.Level;
 import plaidclientintegration.PlaidClientIntegration;
 
 @Stateless(name = "FsProcessorWallet", mappedName = "ejb/FsProcessorWallet")
@@ -180,25 +177,18 @@ public class APIOperations {
     @PersistenceContext(unitName = "AlodigaWalletPU")
     private EntityManager entityManager;
 
-    private static final Logger logger = Logger.getLogger(APIOperations.class);
 
     public ProductResponse saveProduct(Long enterpriseId, Long categoryId, Long productIntegrationTypeId, String name, boolean taxInclude, boolean status, String referenceCode, String rateUrl, String accesNumberURL, boolean isFree, boolean isAlocashProduct, String symbol) {
         try {
             //t
             Product product = new Product();
             product.setId(null);
-            Enterprise enterprise = entityManager.find(Enterprise.class, enterpriseId);
-            product.setEnterpriseId(enterprise);
             Category category = entityManager.find(Category.class, categoryId);
             product.setCategoryId(category);
-            ProductIntegrationType productIntegrationType = entityManager.find(ProductIntegrationType.class, productIntegrationTypeId);
-            product.setProductIntegrationTypeId(productIntegrationType);
             product.setName(name);
             product.setTaxInclude(taxInclude);
             product.setEnabled(status);
             product.setReferenceCode(referenceCode);
-            product.setRatesUrl(rateUrl);
-            product.setAccessNumberUrl(accesNumberURL);
             product.setIsFree(isFree);
             product.setIsAlocashProduct(isAlocashProduct);
             product.setSymbol(symbol);
@@ -482,9 +472,6 @@ public class APIOperations {
             paymentShop.setTopUpDescription(null);
             paymentShop.setBillPaymentDescription(null);
             paymentShop.setExternalId(null);
-            paymentShop.setAdditional(null);
-            paymentShop.setAdditional2(null);
-            paymentShop.setCloseId(null);
             paymentShop.setTransactionNumber("1");
             entityManager.flush();
             entityManager.persist(paymentShop);
@@ -789,9 +776,6 @@ public class APIOperations {
             transfer.setTopUpDescription(null);
             transfer.setBillPaymentDescription(null);
             transfer.setExternalId(null);
-            transfer.setAdditional(null);
-            transfer.setAdditional2(null);
-            transfer.setCloseId(null);
             transfer.setTransactionNumber("1");
             entityManager.flush();
             entityManager.persist(transfer);
@@ -1117,9 +1101,6 @@ public class APIOperations {
             exchange.setTopUpDescription(null);
             exchange.setBillPaymentDescription(null);
             exchange.setExternalId(null);
-            exchange.setAdditional(null);
-            exchange.setAdditional2(null);
-            exchange.setCloseId(null);
             exchange.setTransactionNumber("1");
             entityManager.flush();
             entityManager.persist(exchange);
@@ -1710,9 +1691,6 @@ public class APIOperations {
             withdrawal.setTopUpDescription(null);
             withdrawal.setBillPaymentDescription(null);
             withdrawal.setExternalId(null);
-            withdrawal.setAdditional(null);
-            withdrawal.setAdditional2(null);
-            withdrawal.setCloseId(null);
             entityManager.flush();
             entityManager.persist(withdrawal);
             try {
@@ -1982,9 +1960,6 @@ public class APIOperations {
             recharge.setTopUpDescription(null);
             recharge.setBillPaymentDescription(null);
             recharge.setExternalId(null);
-            recharge.setAdditional(null);
-            recharge.setAdditional2(null);
-            recharge.setCloseId(null);
             recharge.setTransactionNumber("1");
             entityManager.flush();
             entityManager.persist(recharge);
@@ -2399,9 +2374,6 @@ public class APIOperations {
             recharge.setTopUpDescription(null);
             recharge.setBillPaymentDescription(null);
             recharge.setExternalId(null);
-            recharge.setAdditional(null);
-            recharge.setAdditional2(null);
-            recharge.setCloseId(null);
             recharge.setTransactionNumber("1");
             entityManager.flush();
             entityManager.persist(recharge);
@@ -3640,9 +3612,6 @@ public class APIOperations {
             transfer.setTopUpDescription(null);
             transfer.setBillPaymentDescription(null);
             transfer.setExternalId(null);
-            transfer.setAdditional(null);
-            transfer.setAdditional2(null);
-            transfer.setCloseId(null);
             transfer.setTransactionNumber("1");
             entityManager.flush();
             entityManager.persist(transfer);
@@ -3959,9 +3928,6 @@ public class APIOperations {
             transaction.setTopUpDescription(null);
             transaction.setBillPaymentDescription(null);
             transaction.setExternalId(null);
-            transaction.setAdditional(null);
-            transaction.setAdditional2(null);
-            transaction.setCloseId(null);
             transaction.setTransactionNumber("1");
             entityManager.flush();
             entityManager.persist(transaction);
@@ -4976,9 +4942,6 @@ public class APIOperations {
             withdrawal.setTopUpDescription(null);
             withdrawal.setBillPaymentDescription(null);
             withdrawal.setExternalId(null);
-            withdrawal.setAdditional(null);
-            withdrawal.setAdditional2(null);
-            withdrawal.setCloseId(null);
             entityManager.flush();
             entityManager.persist(withdrawal);
             try {
@@ -5262,9 +5225,6 @@ public class APIOperations {
             transfer.setTopUpDescription(null);
             transfer.setBillPaymentDescription(null);
             transfer.setExternalId(null);
-            transfer.setAdditional(null);
-            transfer.setAdditional2(null);
-            transfer.setCloseId(null);
             transfer.setTransactionNumber("1");
             entityManager.flush();
             entityManager.persist(transfer);
@@ -5587,9 +5547,6 @@ public class APIOperations {
             transfer.setTopUpDescription(null);
             transfer.setBillPaymentDescription(null);
             transfer.setExternalId(null);
-            transfer.setAdditional(null);
-            transfer.setAdditional2(null);
-            transfer.setCloseId(null);
             transfer.setTransactionNumber("1");
             entityManager.flush();
             entityManager.persist(transfer);
