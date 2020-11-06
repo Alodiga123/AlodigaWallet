@@ -1,23 +1,25 @@
 package com.alodiga.wallet.bean;
 
+
+import com.alodiga.wallet.common.model.BalanceHistory;
+import com.alodiga.wallet.common.model.Commission;
+import com.alodiga.wallet.common.model.CommissionItem;
+import com.alodiga.wallet.common.model.Product;
+import com.alodiga.wallet.common.model.Transaction;
+import com.alodiga.wallet.common.model.TransactionSource;
+import com.alodiga.wallet.common.model.TransactionStatus;
+import com.alodiga.wallet.common.model.TransactionType;
+import com.alodiga.wallet.common.utils.SendMailTherad;
+import com.alodiga.wallet.common.utils.SendSmsThread;
 import com.alodiga.wallet.dao.TransactionDAO;
-import com.alodiga.wallet.model.BalanceHistory;
-import com.alodiga.wallet.model.Commission;
-import com.alodiga.wallet.model.CommissionItem;
-import com.alodiga.wallet.model.Product;
-import com.alodiga.wallet.model.Transaction;
-import com.alodiga.wallet.model.TransactionSource;
-import com.alodiga.wallet.model.TransactionStatus;
-import com.alodiga.wallet.model.TransactionType;
-import com.alodiga.wallet.respuestas.RechargeValidationResponse;
-import com.alodiga.wallet.respuestas.ResponseCode;
-import com.alodiga.wallet.respuestas.TransactionResponse;
-import com.alodiga.wallet.utils.SendMailTherad;
-import com.alodiga.wallet.utils.SendSmsThread;
+import com.alodiga.wallet.responses.RechargeValidationResponse;
+import com.alodiga.wallet.responses.ResponseCode;
+import com.alodiga.wallet.responses.TransactionResponse;
 import com.ericsson.alodiga.ws.APIRegistroUnificadoProxy;
 import com.ericsson.alodiga.ws.RespuestaUsuario;
 import java.math.BigInteger;
 import java.sql.Timestamp;
+
 import javax.ejb.Stateless;
 import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
