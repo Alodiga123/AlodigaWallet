@@ -66,7 +66,7 @@ import com.alodiga.wallet.common.model.BankOperation;
 import com.alodiga.wallet.common.model.BankOperationMode;
 import com.alodiga.wallet.common.model.BankOperationType;
 import com.alodiga.wallet.common.model.BusinessHasProduct;
-import com.alodiga.wallet.common.model.Card;
+import com.cms.commons.models.Card;
 import com.alodiga.wallet.common.model.Category;
 import com.alodiga.wallet.common.model.Commission;
 import com.alodiga.wallet.common.model.CommissionItem;
@@ -167,7 +167,10 @@ import afinitaspaymentintegration.AfinitasPaymentIntegration;
 import cardcredentialserviceclient.CardCredentialServiceClient;
 import com.alodiga.businessportal.ws.BpBusinessInfoResponse;
 import com.alodiga.businessportal.ws.BusinessPortalWSException;
+import com.alodiga.cms.commons.ejb.CardEJB;
 import com.alodiga.wallet.responses.BusinessShopResponse;
+import com.cms.commons.util.EJBServiceLocator;
+import com.cms.commons.util.EjbConstants;
 import plaidclientintegration.PlaidClientIntegration;
 
 @Stateless(name = "FsProcessorWallet", mappedName = "ejb/FsProcessorWallet")
@@ -2767,19 +2770,6 @@ public class APIOperations {
                     userHasProduct2.setBeginningDate(new Timestamp(new Date().getTime()));
                     entityManager.persist(userHasProduct2);
                 }
-                if (!hasPrepayCard(userId)) {
-
-                    Card card1 = new Card();
-                    card1.setNumberCard(Card);
-                    card1.setNameCard(responseUser.getDatosRespuesta().getNombre() + responseUser.getDatosRespuesta().getApellido());
-                    entityManager.persist(card1);
-                    entityManager.flush();
-                    UserHasCard userHasCard = new UserHasCard();
-                    userHasCard.setUserId(userId);
-                    userHasCard.setCardId(card1);
-                    entityManager.persist(userHasCard);
-                }
-
                 try {
                     products = getProductsListByUserId(userId);
                     for (Product p : products) {
@@ -5695,5 +5685,68 @@ public class APIOperations {
             return new BusinessShopResponse(ResponseCode.ERROR_INTERNO, "Error processing businessInfo");
         }
     }
+    
+    
+    public CardResponse getCardByIdentificationNumber(String numberIdentification) {
 
+       List<Card> cards = new ArrayList<Card>();
+       CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
+       String alias = null;
+       try {
+           cards = cardEJB.getCardByIdentificationNumber(numberIdentification);
+           for (Card card : cards) {
+               alias = card.getAlias();
+           }
+       } catch (NoResultException e) {
+           e.printStackTrace();
+           return new CardResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
+       } catch (Exception e) {
+           e.printStackTrace();
+           return new CardResponse(ResponseCode.ERROR_INTERNO, "Error loading cards");
+       }
+       return new CardResponse(ResponseCode.EXITO, "", alias);
+   }
+
+    
+    public CardResponse getCardByEmail(String email) {
+
+       List<Card> cards = new ArrayList<Card>();
+       CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
+       String alias = null;
+       try {
+           cards = cardEJB.getCardByEmail(email);
+           for (Card card : cards) {
+               alias = card.getAlias();
+           }
+       } catch (NoResultException e) {
+           e.printStackTrace();
+           return new CardResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
+       } catch (Exception e) {
+           e.printStackTrace();
+           return new CardResponse(ResponseCode.ERROR_INTERNO, "Error loading cards");
+       }
+       return new CardResponse(ResponseCode.EXITO, "", alias);
+   }
+    
+    
+    public CardResponse getCardByPhone (String phone) {
+
+       List<Card> cards = new ArrayList<Card>();
+       CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
+       String alias = null;
+       try {
+           cards = cardEJB.getCardByPhone(phone);
+           for (Card card : cards) {
+               alias = card.getAlias();
+           }
+       } catch (NoResultException e) {
+           e.printStackTrace();
+           return new CardResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
+       } catch (Exception e) {
+           e.printStackTrace();
+           return new CardResponse(ResponseCode.ERROR_INTERNO, "Error loading cards");
+       }
+       return new CardResponse(ResponseCode.EXITO, "", alias);
+   }
+    
 }
