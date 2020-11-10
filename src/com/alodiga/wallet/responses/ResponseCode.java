@@ -38,11 +38,13 @@ public enum ResponseCode {
     USUARIO_NO_EXISTE("97"),
     ERROR_CREDENCIALES("98"),
     ERROR_INTERNO("99"),
+    
     //Mensajeria TopUp
     DENOMINATION_NOT_AVAILABLE("301"),
     DESTINATION_MSISDN_OUT_OF_RANGE("101"),
     DESTINATION_NOT_PREPAID("204"),
     ERROR_TRANSACTION_TOP_UP("205"),
+    
     //Mensajes Guardar Transaction
     TRANSACTION_AMOUNT_LIMIT("30"),
     TRANSACTION_MAX_NUMBER_BY_ACCOUNT("31"),
@@ -55,8 +57,10 @@ public enum ResponseCode {
     TRANSACTION_QUANTITY_LIMIT_MONTHLY("38"),
     TRANSACTION_QUANTITY_LIMIT_YEARLY("39"),
     DISABLED_TRANSACTION("41"),
+    
     //Mensajes Status Cumplimient
     NOT_VALIDATE("40"),
+    
     //Mensajes Status Card
     CARD_NUMBER_EXISTS("50"),
     NOT_ALLOWED_TO_CHANGE_STATE("51"),
@@ -177,13 +181,7 @@ public enum ResponseCode {
     NOT_DOCUMENTS_PERSON_TYPE("301"),
     NOT_COLLECTION_TYPE("302"),
     NOT_COLLECTION_REQUEST("303");
-    
-    
-    
-    
-    
    
-
     private String codigo; 
 	
 

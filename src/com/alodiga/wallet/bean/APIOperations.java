@@ -66,7 +66,7 @@ import com.alodiga.wallet.common.model.BankOperation;
 import com.alodiga.wallet.common.model.BankOperationMode;
 import com.alodiga.wallet.common.model.BankOperationType;
 import com.alodiga.wallet.common.model.BusinessHasProduct;
-import com.alodiga.wallet.common.model.Card;
+import com.cms.commons.models.Card;
 import com.alodiga.wallet.common.model.Category;
 import com.alodiga.wallet.common.model.Commission;
 import com.alodiga.wallet.common.model.CommissionItem;
@@ -74,7 +74,6 @@ import com.alodiga.wallet.common.model.Country;
 import com.alodiga.wallet.common.model.CreditcardType;
 import com.alodiga.wallet.common.model.Cumplimient;
 import com.alodiga.wallet.common.model.CumplimientStatus;
-import com.alodiga.wallet.common.model.Enterprise;
 import com.alodiga.wallet.common.model.ExchangeDetail;
 import com.alodiga.wallet.common.model.ExchangeRate;
 import com.alodiga.wallet.common.model.Language;
@@ -85,7 +84,6 @@ import com.alodiga.wallet.common.model.Preference;
 import com.alodiga.wallet.common.model.PreferenceField;
 import com.alodiga.wallet.common.model.PreferenceValue;
 import com.alodiga.wallet.common.model.Product;
-import com.alodiga.wallet.common.model.ProductIntegrationType;
 import com.alodiga.wallet.common.model.Provider;
 import com.alodiga.wallet.common.model.Sequences;
 import com.alodiga.wallet.common.model.StatusAccountBank;
@@ -169,8 +167,10 @@ import afinitaspaymentintegration.AfinitasPaymentIntegration;
 import cardcredentialserviceclient.CardCredentialServiceClient;
 import com.alodiga.businessportal.ws.BpBusinessInfoResponse;
 import com.alodiga.businessportal.ws.BusinessPortalWSException;
+import com.alodiga.cms.commons.ejb.CardEJB;
 import com.alodiga.wallet.responses.BusinessShopResponse;
-import java.util.logging.Level;
+import com.cms.commons.util.EJBServiceLocator;
+import com.cms.commons.util.EjbConstants;
 import plaidclientintegration.PlaidClientIntegration;
 
 @Stateless(name = "FsProcessorWallet", mappedName = "ejb/FsProcessorWallet")
@@ -180,25 +180,18 @@ public class APIOperations {
     @PersistenceContext(unitName = "AlodigaWalletPU")
     private EntityManager entityManager;
 
-    private static final Logger logger = Logger.getLogger(APIOperations.class);
 
     public ProductResponse saveProduct(Long enterpriseId, Long categoryId, Long productIntegrationTypeId, String name, boolean taxInclude, boolean status, String referenceCode, String rateUrl, String accesNumberURL, boolean isFree, boolean isAlocashProduct, String symbol) {
         try {
             //t
             Product product = new Product();
             product.setId(null);
-            Enterprise enterprise = entityManager.find(Enterprise.class, enterpriseId);
-            product.setEnterpriseId(enterprise);
             Category category = entityManager.find(Category.class, categoryId);
             product.setCategoryId(category);
-            ProductIntegrationType productIntegrationType = entityManager.find(ProductIntegrationType.class, productIntegrationTypeId);
-            product.setProductIntegrationTypeId(productIntegrationType);
             product.setName(name);
             product.setTaxInclude(taxInclude);
             product.setEnabled(status);
             product.setReferenceCode(referenceCode);
-            product.setRatesUrl(rateUrl);
-            product.setAccessNumberUrl(accesNumberURL);
             product.setIsFree(isFree);
             product.setIsAlocashProduct(isAlocashProduct);
             product.setSymbol(symbol);
@@ -482,9 +475,6 @@ public class APIOperations {
             paymentShop.setTopUpDescription(null);
             paymentShop.setBillPaymentDescription(null);
             paymentShop.setExternalId(null);
-            paymentShop.setAdditional(null);
-            paymentShop.setAdditional2(null);
-            paymentShop.setCloseId(null);
             paymentShop.setTransactionNumber("1");
             entityManager.flush();
             entityManager.persist(paymentShop);
@@ -789,9 +779,6 @@ public class APIOperations {
             transfer.setTopUpDescription(null);
             transfer.setBillPaymentDescription(null);
             transfer.setExternalId(null);
-            transfer.setAdditional(null);
-            transfer.setAdditional2(null);
-            transfer.setCloseId(null);
             transfer.setTransactionNumber("1");
             entityManager.flush();
             entityManager.persist(transfer);
@@ -1117,9 +1104,6 @@ public class APIOperations {
             exchange.setTopUpDescription(null);
             exchange.setBillPaymentDescription(null);
             exchange.setExternalId(null);
-            exchange.setAdditional(null);
-            exchange.setAdditional2(null);
-            exchange.setCloseId(null);
             exchange.setTransactionNumber("1");
             entityManager.flush();
             entityManager.persist(exchange);
@@ -1710,9 +1694,6 @@ public class APIOperations {
             withdrawal.setTopUpDescription(null);
             withdrawal.setBillPaymentDescription(null);
             withdrawal.setExternalId(null);
-            withdrawal.setAdditional(null);
-            withdrawal.setAdditional2(null);
-            withdrawal.setCloseId(null);
             entityManager.flush();
             entityManager.persist(withdrawal);
             try {
@@ -1982,9 +1963,6 @@ public class APIOperations {
             recharge.setTopUpDescription(null);
             recharge.setBillPaymentDescription(null);
             recharge.setExternalId(null);
-            recharge.setAdditional(null);
-            recharge.setAdditional2(null);
-            recharge.setCloseId(null);
             recharge.setTransactionNumber("1");
             entityManager.flush();
             entityManager.persist(recharge);
@@ -2399,9 +2377,6 @@ public class APIOperations {
             recharge.setTopUpDescription(null);
             recharge.setBillPaymentDescription(null);
             recharge.setExternalId(null);
-            recharge.setAdditional(null);
-            recharge.setAdditional2(null);
-            recharge.setCloseId(null);
             recharge.setTransactionNumber("1");
             entityManager.flush();
             entityManager.persist(recharge);
@@ -2795,19 +2770,6 @@ public class APIOperations {
                     userHasProduct2.setBeginningDate(new Timestamp(new Date().getTime()));
                     entityManager.persist(userHasProduct2);
                 }
-                if (!hasPrepayCard(userId)) {
-
-                    Card card1 = new Card();
-                    card1.setNumberCard(Card);
-                    card1.setNameCard(responseUser.getDatosRespuesta().getNombre() + responseUser.getDatosRespuesta().getApellido());
-                    entityManager.persist(card1);
-                    entityManager.flush();
-                    UserHasCard userHasCard = new UserHasCard();
-                    userHasCard.setUserId(userId);
-                    userHasCard.setCardId(card1);
-                    entityManager.persist(userHasCard);
-                }
-
                 try {
                     products = getProductsListByUserId(userId);
                     for (Product p : products) {
@@ -3640,9 +3602,6 @@ public class APIOperations {
             transfer.setTopUpDescription(null);
             transfer.setBillPaymentDescription(null);
             transfer.setExternalId(null);
-            transfer.setAdditional(null);
-            transfer.setAdditional2(null);
-            transfer.setCloseId(null);
             transfer.setTransactionNumber("1");
             entityManager.flush();
             entityManager.persist(transfer);
@@ -3959,9 +3918,6 @@ public class APIOperations {
             transaction.setTopUpDescription(null);
             transaction.setBillPaymentDescription(null);
             transaction.setExternalId(null);
-            transaction.setAdditional(null);
-            transaction.setAdditional2(null);
-            transaction.setCloseId(null);
             transaction.setTransactionNumber("1");
             entityManager.flush();
             entityManager.persist(transaction);
@@ -4976,9 +4932,6 @@ public class APIOperations {
             withdrawal.setTopUpDescription(null);
             withdrawal.setBillPaymentDescription(null);
             withdrawal.setExternalId(null);
-            withdrawal.setAdditional(null);
-            withdrawal.setAdditional2(null);
-            withdrawal.setCloseId(null);
             entityManager.flush();
             entityManager.persist(withdrawal);
             try {
@@ -5262,9 +5215,6 @@ public class APIOperations {
             transfer.setTopUpDescription(null);
             transfer.setBillPaymentDescription(null);
             transfer.setExternalId(null);
-            transfer.setAdditional(null);
-            transfer.setAdditional2(null);
-            transfer.setCloseId(null);
             transfer.setTransactionNumber("1");
             entityManager.flush();
             entityManager.persist(transfer);
@@ -5587,9 +5537,6 @@ public class APIOperations {
             transfer.setTopUpDescription(null);
             transfer.setBillPaymentDescription(null);
             transfer.setExternalId(null);
-            transfer.setAdditional(null);
-            transfer.setAdditional2(null);
-            transfer.setCloseId(null);
             transfer.setTransactionNumber("1");
             entityManager.flush();
             entityManager.persist(transfer);
@@ -5738,5 +5685,68 @@ public class APIOperations {
             return new BusinessShopResponse(ResponseCode.ERROR_INTERNO, "Error processing businessInfo");
         }
     }
+    
+    
+    public CardResponse getCardByIdentificationNumber(String numberIdentification) {
 
+       List<Card> cards = new ArrayList<Card>();
+       CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
+       String alias = null;
+       try {
+           cards = cardEJB.getCardByIdentificationNumber(numberIdentification);
+           for (Card card : cards) {
+               alias = card.getAlias();
+           }
+       } catch (NoResultException e) {
+           e.printStackTrace();
+           return new CardResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
+       } catch (Exception e) {
+           e.printStackTrace();
+           return new CardResponse(ResponseCode.ERROR_INTERNO, "Error loading cards");
+       }
+       return new CardResponse(ResponseCode.EXITO, "", alias);
+   }
+
+    
+    public CardResponse getCardByEmail(String email) {
+
+       List<Card> cards = new ArrayList<Card>();
+       CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
+       String alias = null;
+       try {
+           cards = cardEJB.getCardByEmail(email);
+           for (Card card : cards) {
+               alias = card.getAlias();
+           }
+       } catch (NoResultException e) {
+           e.printStackTrace();
+           return new CardResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
+       } catch (Exception e) {
+           e.printStackTrace();
+           return new CardResponse(ResponseCode.ERROR_INTERNO, "Error loading cards");
+       }
+       return new CardResponse(ResponseCode.EXITO, "", alias);
+   }
+    
+    
+    public CardResponse getCardByPhone (String phone) {
+
+       List<Card> cards = new ArrayList<Card>();
+       CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
+       String alias = null;
+       try {
+           cards = cardEJB.getCardByPhone(phone);
+           for (Card card : cards) {
+               alias = card.getAlias();
+           }
+       } catch (NoResultException e) {
+           e.printStackTrace();
+           return new CardResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
+       } catch (Exception e) {
+           e.printStackTrace();
+           return new CardResponse(ResponseCode.ERROR_INTERNO, "Error loading cards");
+       }
+       return new CardResponse(ResponseCode.EXITO, "", alias);
+   }
+    
 }
