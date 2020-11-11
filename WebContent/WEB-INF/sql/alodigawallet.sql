@@ -1482,6 +1482,19 @@ ENGINE = InnoDB;
 -- Dumping data for table `withdrawal_type`
 --
 
+--Se modificó la tabla withdrawal
+--fecha de modificación: 30/09/2019, analista: Jesús Gómez
+ALTER TABLE `alodigaWallet`.`withdrawal` 
+DROP COLUMN `userHasBankId`,
+ADD COLUMN `bankId` BIGINT(3) NOT NULL AFTER `transactionId`,
+ADD COLUMN `accountBank` VARCHAR(40) AFTER `bankId`,
+ADD INDEX `fk_withdrawal_bank1_idx` (`bankId` ASC),
+ADD CONSTRAINT `fk_withdrawal_bank1`
+  FOREIGN KEY (`bankId`)
+  REFERENCES `alodigaWallet`.`bank` (`id`)
+  ON DELETE RESTRICT
+  ON UPDATE RESTRICT;
+
 LOCK TABLES `withdrawal_type` WRITE;
 /*!40000 ALTER TABLE `withdrawal_type` DISABLE KEYS */;
 /*!40000 ALTER TABLE `withdrawal_type` ENABLE KEYS */;

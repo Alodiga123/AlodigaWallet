@@ -726,4 +726,22 @@ public class APIAlodigaWallet {
         return operations.getBusinessInfoByCryptogram(cryptogram);
     }
     
+    @WebMethod
+    public CardResponse getCardByPhone(
+            @WebParam(name = "phone") String phone){
+        return operations.getCardByPhone(phone);
+    }
+    
+    @WebMethod
+    public CardResponse getCardByEmail(
+            @WebParam(name = "email") String email){
+        return operations.getCardByEmail(email);
+    }
+    
+    @WebMethod
+    public CardResponse getCardByIdentificationNumber(
+            @WebParam(name = "numberIdentification") String numberIdentification){
+        return operations.getCardByIdentificationNumber(numberIdentification);
+    }
+    
 }
