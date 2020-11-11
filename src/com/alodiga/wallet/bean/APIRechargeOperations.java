@@ -36,7 +36,7 @@ import javax.persistence.PersistenceContext;
 @TransactionManagement(TransactionManagementType.CONTAINER)
 public class APIRechargeOperations {
 
-    @PersistenceContext(unitName = "AlodigaWalletPU")
+    
     private EntityManager entityManager;
 
     private Double truncDouble(Double in) {
