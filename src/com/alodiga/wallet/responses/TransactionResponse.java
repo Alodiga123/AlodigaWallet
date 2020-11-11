@@ -33,25 +33,25 @@ public class TransactionResponse extends Response implements Serializable {
     }
 
     public TransactionResponse(ResponseCode codigo) {
-        super(new Date(), codigo.getCodigo(), codigo.name());
+        super(new Date(), codigo.getCode(), codigo.name());
         this.response = null;
     }
 
     public TransactionResponse(ResponseCode codigo,
             String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.response = null;
     }
 
     public TransactionResponse(ResponseCode codigo,
             String mensajeRespuesta, Transaction transactionId) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.response = transactionId;
     }
 
     public TransactionResponse(ResponseCode codigo,
             String mensajeRespuesta, ArrayList<Product> products) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.products = products;
     }
 
@@ -60,7 +60,7 @@ public class TransactionResponse extends Response implements Serializable {
             Float valueCommission, Float totalDebit, Float amountConversion,
             Float exchangeRateProductSource, Float exchangeRateProductDestination,
             Short isPercentCommision) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.amountCommission = amountCommission;
         this.valueCommission = valueCommission;
         this.totalDebit = totalDebit;

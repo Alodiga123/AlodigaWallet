@@ -18,18 +18,18 @@ public class DesactivateCardResponses extends Response implements Serializable {
     }
 
     public DesactivateCardResponses(ChangeStatusCredentialCard credentialResponse) {
-        super(ResponseCode.EXITO);
+        super(ResponseCode.SUCCESS);
         this.credentialResponse = credentialResponse;
     }
 
     public DesactivateCardResponses(ChangeStatusCredentialCard credentialResponse, ResponseCode codigo, String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.credentialResponse = credentialResponse;
     }
 
     public DesactivateCardResponses(ResponseCode codigo,
             String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
     }
 
     public ChangeStatusCredentialCard getCredentialResponse() {

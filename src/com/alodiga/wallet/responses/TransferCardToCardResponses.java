@@ -27,19 +27,19 @@ public class TransferCardToCardResponses extends Response implements Serializabl
     
 
     public TransferCardToCardResponses(TransferCardToCardCredential transferCardToCardCredential, ResponseCode codigo, String mensajeRespuesta,ArrayList<Product> products) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.transferCardToCardCredential = transferCardToCardCredential;
         this.products = products;
     }
     
     public TransferCardToCardResponses(TransferCardToCardCredential transferCardToCardCredential, ResponseCode codigo, String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.transferCardToCardCredential = transferCardToCardCredential;
         
     }
     public TransferCardToCardResponses(ResponseCode codigo,
 			String mensajeRespuesta) {
-	   super(new Date(), codigo.getCodigo(), mensajeRespuesta);	
+	   super(new Date(), codigo.getCode(), mensajeRespuesta);	
     }
 
     public TransferCardToCardCredential getTransferCardToCardCredential() {

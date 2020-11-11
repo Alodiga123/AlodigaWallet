@@ -39,7 +39,7 @@ public class Response {
 
     public Response(ResponseCode codigo) {
         this.fechaHora = new Date();
-        this.codigoRespuesta = codigo.getCodigo();
+        this.codigoRespuesta = codigo.getCode();
         this.mensajeRespuesta = codigo.name();
     }
 

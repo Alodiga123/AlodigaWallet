@@ -21,17 +21,17 @@ public class LanguageListResponse extends Response {
 	}
 	
 	public LanguageListResponse(ResponseCode code) {
-		super(new Date(), code.getCodigo(), code.name());
+		super(new Date(), code.getCode(), code.name());
 		this.languages = null;
 	}
 	
 	public LanguageListResponse(ResponseCode code, String mensaje) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.languages = null;
 	}
 
 	public LanguageListResponse(ResponseCode code, String mensaje, List<Language> languages) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.languages = languages;
 	}
         

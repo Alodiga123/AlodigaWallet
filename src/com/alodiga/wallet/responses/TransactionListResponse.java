@@ -25,19 +25,19 @@ public class TransactionListResponse extends Response implements Serializable {
 	}
 
 	public TransactionListResponse(ResponseCode codigo) {
-		super(new Date(), codigo.getCodigo(), codigo.name());
+		super(new Date(), codigo.getCode(), codigo.name());
 		this.response = null;
 	}
 
 	public TransactionListResponse(ResponseCode codigo,
 			String mensajeRespuesta) {
-		super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+		super(new Date(), codigo.getCode(), mensajeRespuesta);
 		this.response = null;
 	}
 
 	public TransactionListResponse(ResponseCode codigo,
 			String mensajeRespuesta, List<Transaction> transactions) {
-		super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+		super(new Date(), codigo.getCode(), mensajeRespuesta);
 		this.transactions = transactions;
 	}
 

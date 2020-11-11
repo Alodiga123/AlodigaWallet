@@ -195,9 +195,9 @@ public class APIOperations {
             entityManager.persist(product);
         } catch (Exception e) {
             e.printStackTrace();
-            return new ProductResponse(ResponseCode.ERROR_INTERNO, "Error in process saving product");
+            return new ProductResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving product");
         }
-        return new ProductResponse(ResponseCode.EXITO);
+        return new ProductResponse(ResponseCode.SUCCESS);
     }
 
     public UserHasProductResponse saveUserHasProduct(Long userId, Long productId) {
@@ -209,9 +209,9 @@ public class APIOperations {
             entityManager.persist(userHasProduct);
         } catch (Exception e) {
             e.printStackTrace();
-            return new UserHasProductResponse(ResponseCode.ERROR_INTERNO, "Error in process saving product_has_response");
+            return new UserHasProductResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving product_has_response");
         }
-        return new UserHasProductResponse(ResponseCode.EXITO);
+        return new UserHasProductResponse(ResponseCode.SUCCESS);
     }
 
     public UserHasProductResponse saveUserHasProductDefault(Long userId) {
@@ -230,9 +230,9 @@ public class APIOperations {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new UserHasProductResponse(ResponseCode.ERROR_INTERNO, "Error in process saving product_has_response");
+            return new UserHasProductResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving product_has_response");
         }
-        return new UserHasProductResponse(ResponseCode.EXITO);
+        return new UserHasProductResponse(ResponseCode.SUCCESS);
     }
 
     public ProductListResponse getProductsByUserId(Long userId) {
@@ -253,10 +253,10 @@ public class APIOperations {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return new ProductListResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
+            return new ProductListResponse(ResponseCode.INTERNAL_ERROR, "Error loading products");
         }
 
-        return new ProductListResponse(ResponseCode.EXITO, "", products);
+        return new ProductListResponse(ResponseCode.SUCCESS, "", products);
     }
 
     public CountryListResponse getCountries() {
@@ -265,9 +265,9 @@ public class APIOperations {
             countries = entityManager.createNamedQuery("Country.findAll", Country.class).getResultList();
 
         } catch (Exception e) {
-            return new CountryListResponse(ResponseCode.ERROR_INTERNO, "Error loading countries");
+            return new CountryListResponse(ResponseCode.INTERNAL_ERROR, "Error loading countries");
         }
-        return new CountryListResponse(ResponseCode.EXITO, "", countries);
+        return new CountryListResponse(ResponseCode.SUCCESS, "", countries);
     }
 
     public BankListResponse getBankApp() {
@@ -275,7 +275,7 @@ public class APIOperations {
         try {
             banks = entityManager.createNamedQuery("Bank.findAll", Bank.class).getResultList();
         } catch (Exception e) {
-            return new BankListResponse(ResponseCode.ERROR_INTERNO, "Error loading bank");
+            return new BankListResponse(ResponseCode.INTERNAL_ERROR, "Error loading bank");
         }
         ArrayList<BankGeneric> bankGenerics = new ArrayList<BankGeneric>();
         for (Bank b : banks) {
@@ -283,7 +283,7 @@ public class APIOperations {
             bankGenerics.add(bankGeneric);
         }
 
-        return new BankListResponse(ResponseCode.EXITO, "", bankGenerics);
+        return new BankListResponse(ResponseCode.SUCCESS, "", bankGenerics);
 
     }
 
@@ -295,7 +295,7 @@ public class APIOperations {
             banks = (List<Bank>) entityManager.createNamedQuery("Bank.findByCountryId", Bank.class).setParameter("countryId", countryId).getResultList();
 
             if (banks.size() <= 0) {
-                return new BankListResponse(ResponseCode.ERROR_INTERNO, "Lista de banco vacia");
+                return new BankListResponse(ResponseCode.INTERNAL_ERROR, "Lista de banco vacia");
             }
 
             for (Bank b : banks) {
@@ -305,10 +305,10 @@ public class APIOperations {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new BankListResponse(ResponseCode.ERROR_INTERNO, "Error loading bank");
+            return new BankListResponse(ResponseCode.INTERNAL_ERROR, "Error loading bank");
         }
 
-        return new BankListResponse(ResponseCode.EXITO, "", bankGenerics);
+        return new BankListResponse(ResponseCode.SUCCESS, "", bankGenerics);
     }
 
     public TransactionResponse savePaymentShop(String cryptogramShop, String emailUser, Long productId, Float amountPayment,
@@ -500,7 +500,7 @@ public class APIOperations {
                 }
             } catch (NoResultException e) {
                 e.printStackTrace();
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
             }
 
             paymentShop.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
@@ -589,9 +589,9 @@ public class APIOperations {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+            return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
         }
-        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
+        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.SUCCESS, "EXITO", products);
         transactionResponse.setIdTransaction(paymentShop.getId().toString());
         transactionResponse.setProducts(products);
         transactionResponse.setIdBussines(addSellTransaction.getIdBusiness());
@@ -641,7 +641,7 @@ public class APIOperations {
                 }
             } catch (NoResultException e) {
                 e.printStackTrace();
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
             }
             Float amountTransferTotal = amountTransfer + amountCommission;
             if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < amountTransferTotal) {
@@ -878,10 +878,10 @@ public class APIOperations {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
+            return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
         }
 
-        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
+        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.SUCCESS, "EXITO", products);
         transactionResponse.setIdTransaction(transfer.getId().toString());
         transactionResponse.setProducts(products);
         return transactionResponse;
@@ -921,7 +921,7 @@ public class APIOperations {
                 }
             } catch (NoResultException e) {
                 e.printStackTrace();
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
             }
             if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < totalDebit) {
                 return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE, "The user has no balance available to complete the transaction");
@@ -942,9 +942,9 @@ public class APIOperations {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+            return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
         }
-        return new TransactionResponse(ResponseCode.EXITO, "", amountCommission, valueCommission, totalDebit,
+        return new TransactionResponse(ResponseCode.SUCCESS, "", amountCommission, valueCommission, totalDebit,
                 amountConversion, valueRateByProductSource, valueRateByProductDestination, isPercentCommission);
     }
 
@@ -1128,7 +1128,7 @@ public class APIOperations {
                 }
             } catch (NoResultException e) {
                 e.printStackTrace();
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
             }
 
             ExchangeRate RateByProductSource = (ExchangeRate) entityManager.createNamedQuery("ExchangeRate.findByProduct", ExchangeRate.class).setParameter("productId", productSourceId).getSingleResult();
@@ -1225,7 +1225,7 @@ public class APIOperations {
                 }
             } catch (Exception ex) {
 
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error loading products");
             }
             SendMailTherad sendMailTherad = new SendMailTherad("ES", productSource.getName(), productDestination.getName(), amountExchange, emailUser, conceptTransaction, emailUser, Integer.valueOf("10"));
             sendMailTherad.run();
@@ -1235,9 +1235,9 @@ public class APIOperations {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+            return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
         }
-        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
+        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.SUCCESS, "EXITO", products);
         transactionResponse.setIdTransaction(exchange.getId().toString());
         transactionResponse.setProducts(products);
         return transactionResponse;
@@ -1351,7 +1351,7 @@ public class APIOperations {
         try {
             provider = getProviderById(1L);
         } catch (Exception ex) {
-            return new TopUpInfoListResponse(ResponseCode.ERROR_INTERNO, "Error al buscar el proveedor");
+            return new TopUpInfoListResponse(ResponseCode.INTERNAL_ERROR, "Error al buscar el proveedor");
         }
         Float percentAditional = provider.getAditionalPercent();
 
@@ -1359,7 +1359,7 @@ public class APIOperations {
 
         List<TopUpInfo> topUpInfos = new ArrayList<TopUpInfo>();
         if (receiverNumber == null) {
-            return new TopUpInfoListResponse(ResponseCode.ERROR_INTERNO, "Error parametro receiver null");
+            return new TopUpInfoListResponse(ResponseCode.INTERNAL_ERROR, "Error parametro receiver null");
         }
         try {
             inf = RequestManager.getMsisdn_ingo(receiverNumber);
@@ -1440,9 +1440,9 @@ public class APIOperations {
             }
 
         } catch (Exception ex) {
-            return new TopUpInfoListResponse(ResponseCode.ERROR_INTERNO, "Error en el metodo getTopUpInfs");
+            return new TopUpInfoListResponse(ResponseCode.INTERNAL_ERROR, "Error en el metodo getTopUpInfs");
         }
-        return new TopUpInfoListResponse(ResponseCode.EXITO, "", topUpInfos);
+        return new TopUpInfoListResponse(ResponseCode.SUCCESS, "", topUpInfos);
     }
 
     private TransactionResponse executeTopUp(String skuidIdRequest, Float amount, String destinationNumber, String senderNumber, String emailUser) {
@@ -1469,30 +1469,30 @@ public class APIOperations {
                     StringBuilder errorBuilder = new StringBuilder(TopUpResponseConstants.TRANSFER_TO_CODES.get(code));
                     errorBuilder.append("Integrator = ").append("TransferTo").append("ProductId = ").append(response1.getOperatorId()).append("phoneNumber = ").append(destinationNumber);
                     if (code.equals("301") || topUpResponseExecute.getErrorText().equals("Denomination not available")) {
-                        transaction.setCodigoRespuesta(ResponseCode.DENOMINATION_NOT_AVAILABLE.getCodigo());
+                        transaction.setCodigoRespuesta(ResponseCode.DENOMINATION_NOT_AVAILABLE.getCode());
                         transaction.setMensajeRespuesta("DENOMINATION NOT AVAILABLE");
                     } else if (code.equals("101") || topUpResponseExecute.getErrorText().equals("Destination MSISDN out of range")) {
-                        transaction.setCodigoRespuesta(ResponseCode.DESTINATION_MSISDN_OUT_OF_RANGE.getCodigo());
+                        transaction.setCodigoRespuesta(ResponseCode.DESTINATION_MSISDN_OUT_OF_RANGE.getCode());
                         transaction.setMensajeRespuesta("DESTINATION MSISDN OUT OF RANGE");
                     } else if (code.equals("204")) {
-                        transaction.setCodigoRespuesta(ResponseCode.DESTINATION_NOT_PREPAID.getCodigo());
+                        transaction.setCodigoRespuesta(ResponseCode.DESTINATION_NOT_PREPAID.getCode());
                         transaction.setMensajeRespuesta("DESTINATION NOT PREPAID");
                     } else {
-                        transaction.setCodigoRespuesta(ResponseCode.ERROR_TRANSACTION_TOP_UP.getCodigo());
+                        transaction.setCodigoRespuesta(ResponseCode.ERROR_TRANSACTION_TOP_UP.getCode());
                         transaction.setMensajeRespuesta("ERROR TRANSACTION TOP UP");
                     }
                 } else {
 
-                    transaction.setCodigoRespuesta(ResponseCode.EXITO.getCodigo());
+                    transaction.setCodigoRespuesta(ResponseCode.SUCCESS.getCode());
                     transaction.setMensajeRespuesta("TOPUP TRANSACTION SUCCESSFUL");
 
                 }
             } else {
-                transaction.setCodigoRespuesta(ResponseCode.DENOMINATION_NOT_AVAILABLE.getCodigo());
+                transaction.setCodigoRespuesta(ResponseCode.DENOMINATION_NOT_AVAILABLE.getCode());
                 transaction.setMensajeRespuesta("DENOMINATION NOT AVAILABLE");
             }
         } catch (Exception ex) {
-            transaction.setCodigoRespuesta(ResponseCode.ERROR_TRANSACTION_TOP_UP.getCodigo());
+            transaction.setCodigoRespuesta(ResponseCode.ERROR_TRANSACTION_TOP_UP.getCode());
             transaction.setMensajeRespuesta("TOPUP TRANSACTION FAILED");
         }
 
@@ -1513,7 +1513,7 @@ public class APIOperations {
             return new TransactionListResponse(ResponseCode.TRANSACTION_LIST_NOT_FOUND_EXCEPTION, "El usuario no tiene transacciones asociadas");
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionListResponse(ResponseCode.ERROR_INTERNO, "error interno");
+            return new TransactionListResponse(ResponseCode.INTERNAL_ERROR, "error interno");
         }
 
         APIRegistroUnificadoProxy api = new APIRegistroUnificadoProxy();
@@ -1528,10 +1528,10 @@ public class APIOperations {
                 usuarioRespuesta = api.getUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId));
                 t.setDestinationUser(usuarioRespuesta.getDatosRespuesta().getEmail() + " / " + usuarioRespuesta.getDatosRespuesta().getMovil() + " / " + usuarioRespuesta.getDatosRespuesta().getNombre());
             } catch (RemoteException ex) {
-                return new TransactionListResponse(ResponseCode.ERROR_INTERNO, "No se logro comunicacion entre alodiga wallet y RU");
+                return new TransactionListResponse(ResponseCode.INTERNAL_ERROR, "No se logro comunicacion entre alodiga wallet y RU");
             }
         }
-        return new TransactionListResponse(ResponseCode.EXITO, "", transactions);
+        return new TransactionListResponse(ResponseCode.SUCCESS, "", transactions);
     }
 
     public TransactionResponse manualWithdrawals(Long bankId, String emailUser, String accountBank,
@@ -1718,7 +1718,7 @@ public class APIOperations {
                 entityManager.persist(commissionItem);
             } catch (NoResultException e) {
                 e.printStackTrace();
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
             }
 
             BankOperation manualWithdrawal = new BankOperation();
@@ -1745,7 +1745,7 @@ public class APIOperations {
                 TransactionApproveRequestResponse transactionApproveRequestResponse = saveTransactionApproveRequest(userId, product.getId(), withdrawal.getId(), bankId, documentTypeId, originApplicationId, 0L);
             } catch (Exception e) {
                 e.printStackTrace();
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error saving transaction Aprrove Request");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error saving transaction Aprrove Request");
             }
             try {
                 products = getProductsListByUserId(userId);
@@ -1780,7 +1780,7 @@ public class APIOperations {
                 }
             } catch (Exception ex) {
 
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error loading products");
             }
             SendMailTherad sendMailTherad = new SendMailTherad("ES", accountBank, amountWithdrawal, conceptTransaction, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), emailUser, Integer.valueOf("4"));
             sendMailTherad.run();
@@ -1789,13 +1789,13 @@ public class APIOperations {
             sendSmsThread.run();
         } catch (ConnectException e) {
             e.printStackTrace();
-            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+            return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+            return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
         }
 
-        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
+        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.SUCCESS, "EXITO", products);
         transactionResponse.setIdTransaction(withdrawal.getId().toString());
         transactionResponse.setProducts(products);
         return transactionResponse;
@@ -1987,7 +1987,7 @@ public class APIOperations {
                 entityManager.persist(commissionItem);
             } catch (NoResultException e) {
                 e.printStackTrace();
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
             }
             BankOperation manualRecharge = new BankOperation();
             manualRecharge.setId(null);
@@ -2013,7 +2013,7 @@ public class APIOperations {
                 TransactionApproveRequestResponse transactionApproveRequestResponse = saveTransactionApproveRequest(userId, product.getId(), recharge.getId(), bankId, documentTypeId, originApplicationId, 0L);
             } catch (Exception e) {
                 e.printStackTrace();
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error saving transaction Aprrove Request");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error saving transaction Aprrove Request");
             }
             try {
                 products = getProductsListByUserId(userId);
@@ -2048,7 +2048,7 @@ public class APIOperations {
                 }
             } catch (Exception ex) {
 
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error loading products");
             }
             Usuario usuario = new Usuario();
             usuario.setEmail(emailUser);
@@ -2059,9 +2059,9 @@ public class APIOperations {
             sendSmsThread.run();
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error interno");
+            return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error interno");
         }
-        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
+        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.SUCCESS, "EXITO", products);
         transactionResponse.setIdTransaction(recharge.getId().toString());
         transactionResponse.setProducts(products);
         return transactionResponse;
@@ -2102,10 +2102,10 @@ public class APIOperations {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return new ProductListResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
+            return new ProductListResponse(ResponseCode.INTERNAL_ERROR, "Error loading products");
         }
 
-        return new ProductListResponse(ResponseCode.EXITO, "", products);
+        return new ProductListResponse(ResponseCode.SUCCESS, "", products);
     }
 
     public CountryListResponse getCountriesHasBank(Long userId) {
@@ -2117,7 +2117,7 @@ public class APIOperations {
             countries = query.setHint("toplink.refresh", "true").getResultList();
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new CountryListResponse(ResponseCode.ERROR_INTERNO, "Error loading Countries");
+            return new CountryListResponse(ResponseCode.INTERNAL_ERROR, "Error loading Countries");
         }
         if (countries != null && countries.size() > 0) {
             for (int i = 0; i < countries.size(); i++) {
@@ -2130,7 +2130,7 @@ public class APIOperations {
 
             return new CountryListResponse(ResponseCode.EMPTY_LIST_COUNTRY, "Empty Countries List");
         }
-        return new CountryListResponse(ResponseCode.EXITO, "", countrys);
+        return new CountryListResponse(ResponseCode.SUCCESS, "", countrys);
     }
 
     public BalanceHistoryResponse getBalanceHistoryByUserAndProduct(Long userId, Long productId) {
@@ -2160,9 +2160,9 @@ public class APIOperations {
             return new BalanceHistoryResponse(ResponseCode.SOCKECT_TIMEOUT_EXCEPTION, "SOCKECT TIMEOUT EXCEPTION");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new BalanceHistoryResponse(ResponseCode.ERROR_INTERNO, "Error loading BalanceHistory");
+            return new BalanceHistoryResponse(ResponseCode.INTERNAL_ERROR, "Error loading BalanceHistory");
         }
-        return new BalanceHistoryResponse(ResponseCode.EXITO, "", balanceHistory);
+        return new BalanceHistoryResponse(ResponseCode.SUCCESS, "", balanceHistory);
     }
 
     public BalanceHistory loadLastBalanceHistoryByAccount_(Long userId, Long productId) throws NoResultException {
@@ -2403,7 +2403,7 @@ public class APIOperations {
                 entityManager.persist(commissionItem);
             } catch (NoResultException e) {
                 e.printStackTrace();
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
             }
 
             amountPayment = amountRecharge + amountCommission;
@@ -2429,7 +2429,7 @@ public class APIOperations {
             entityManager.merge(recharge);
 
             response = this.executeTopUp(skudId, amountRecharge, destinationNumber, senderNumber, emailUser);
-            if (response.getCodigoRespuesta().equals(ResponseCode.EXITO.getCodigo())) {
+            if (response.getCodigoRespuesta().equals(ResponseCode.SUCCESS.getCode())) {
 
                 recharge.setTransactionStatus(TransactionStatus.COMPLETED.name());
                 entityManager.merge(recharge);
@@ -2464,7 +2464,7 @@ public class APIOperations {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction saveRechargeTopUp");
+            return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction saveRechargeTopUp");
         }
 
         ArrayList<Product> productResponses = new ArrayList<Product>();
@@ -2503,7 +2503,7 @@ public class APIOperations {
 
         } catch (Exception ex) {
 
-            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
+            return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error loading products");
         }
 
         response.setProducts(productResponses);
@@ -2516,9 +2516,9 @@ public class APIOperations {
             topUpCountrys = entityManager.createNamedQuery("TopUpCountry.findAll", TopUpCountry.class).getResultList();
 
         } catch (Exception e) {
-            return new TopUpCountryListResponse(ResponseCode.ERROR_INTERNO, "Error loading countries");
+            return new TopUpCountryListResponse(ResponseCode.INTERNAL_ERROR, "Error loading countries");
         }
-        return new TopUpCountryListResponse(ResponseCode.EXITO, "", topUpCountrys);
+        return new TopUpCountryListResponse(ResponseCode.SUCCESS, "", topUpCountrys);
     }
 
     public LanguageListResponse getLanguage() {
@@ -2527,9 +2527,9 @@ public class APIOperations {
             languages = entityManager.createNamedQuery("Language.findAll", Language.class).getResultList();
 
         } catch (Exception e) {
-            return new LanguageListResponse(ResponseCode.ERROR_INTERNO, "Error loading countries");
+            return new LanguageListResponse(ResponseCode.INTERNAL_ERROR, "Error loading countries");
         }
-        return new LanguageListResponse(ResponseCode.EXITO, "", languages);
+        return new LanguageListResponse(ResponseCode.SUCCESS, "", languages);
     }
 
     public ProductListResponse getProductsPayTopUpByUserId(Long userId) {
@@ -2556,10 +2556,10 @@ public class APIOperations {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new ProductListResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
+            return new ProductListResponse(ResponseCode.INTERNAL_ERROR, "Error loading products");
         }
 
-        return new ProductListResponse(ResponseCode.EXITO, "", productFinals);
+        return new ProductListResponse(ResponseCode.SUCCESS, "", productFinals);
     }
 
     public ProductListResponse getProductsIsExchangeProductUserId(Long userId) {
@@ -2586,10 +2586,10 @@ public class APIOperations {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new ProductListResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
+            return new ProductListResponse(ResponseCode.INTERNAL_ERROR, "Error loading products");
         }
 
-        return new ProductListResponse(ResponseCode.EXITO, "", productFinals);
+        return new ProductListResponse(ResponseCode.SUCCESS, "", productFinals);
     }
 
     public String sendSmsSimbox(String text, String phoneNumber, Long userId) {
@@ -2622,7 +2622,7 @@ public class APIOperations {
             e.printStackTrace();
             return new CumplimientResponse(ResponseCode.NOT_VALIDATE, "User Not Validate");
         }
-        return new CumplimientResponse(ResponseCode.EXITO, "", cumplimients);
+        return new CumplimientResponse(ResponseCode.SUCCESS, "", cumplimients);
     }
 
     public CollectionListResponse getValidateCollection(Long userId, String language) {
@@ -2637,10 +2637,10 @@ public class APIOperations {
 
         } catch (RemoteException ex) {
             ex.printStackTrace();
-            return new CollectionListResponse(ResponseCode.ERROR_INTERNO, "Error validating collections");
+            return new CollectionListResponse(ResponseCode.INTERNAL_ERROR, "Error validating collections");
         }
 
-        return new CollectionListResponse(ResponseCode.EXITO, "", validationCollections);
+        return new CollectionListResponse(ResponseCode.SUCCESS, "", validationCollections);
     }
 
     public Country getCountryCode(String strAni) {
@@ -2668,9 +2668,9 @@ public class APIOperations {
             languages = entityManager.createNamedQuery("Language.findByIso", Language.class).setParameter("iso", language).getResultList();
 
         } catch (Exception e) {
-            return new LanguageListResponse(ResponseCode.ERROR_INTERNO, "Error loading countries");
+            return new LanguageListResponse(ResponseCode.INTERNAL_ERROR, "Error loading countries");
         }
-        return new LanguageListResponse(ResponseCode.EXITO, "", languages);
+        return new LanguageListResponse(ResponseCode.SUCCESS, "", languages);
     }
 
     public Address saveAddress(Long userId, String estado, String ciudad, String zipCode, String addres1) throws RemoteException, Exception {
@@ -2731,13 +2731,13 @@ public class APIOperations {
             entityManager.persist(cumplimient);
         } catch (RemoteException ex) {
             ex.printStackTrace();
-            return new CollectionListResponse(ResponseCode.ERROR_INTERNO, "Error remote");
+            return new CollectionListResponse(ResponseCode.INTERNAL_ERROR, "Error remote");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new CollectionListResponse(ResponseCode.ERROR_INTERNO, "Error validating");
+            return new CollectionListResponse(ResponseCode.INTERNAL_ERROR, "Error validating");
         }
 
-        return new CollectionListResponse(ResponseCode.EXITO);
+        return new CollectionListResponse(ResponseCode.SUCCESS);
 
     }
 
@@ -2813,11 +2813,11 @@ public class APIOperations {
                     }
                 } catch (Exception ex) {
 
-                    return new ActivateCardResponses(ResponseCode.ERROR_INTERNO, "Error loading products");
+                    return new ActivateCardResponses(ResponseCode.INTERNAL_ERROR, "Error loading products");
                 }
 
                 ChangeStatusCredentialCard changeStatusCredentialcardResponse = new ChangeStatusCredentialCard(response.getInicio(), response.getFin(), response.getTiempo(), response.getCodigoRespuesta(), response.getDescripcion(), response.getTicketWS());
-                ActivateCardResponses activateCardResponses = new ActivateCardResponses(changeStatusCredentialcardResponse, ResponseCode.EXITO, "", products);
+                ActivateCardResponses activateCardResponses = new ActivateCardResponses(changeStatusCredentialcardResponse, ResponseCode.SUCCESS, "", products);
                 activateCardResponses.setProducts(products);
 
                 CardResponse respuestaTarjeta = getCardByUserId(userId);
@@ -2840,14 +2840,14 @@ public class APIOperations {
             } else if (response.getCodigoRespuesta().equals("-160")) {
                 return new ActivateCardResponses(ResponseCode.THE_NUMBER_OF_ORDERS_ALLOWED_IS_EXCEEDED, "The Number of Orders Allowed is Exceeded");
             }
-            return new ActivateCardResponses(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
+            return new ActivateCardResponses(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
 
         } catch (RemoteException ex) {
             ex.printStackTrace();
-            return new ActivateCardResponses(ResponseCode.ERROR_INTERNO, "");
+            return new ActivateCardResponses(ResponseCode.INTERNAL_ERROR, "");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new ActivateCardResponses(ResponseCode.ERROR_INTERNO, "");
+            return new ActivateCardResponses(ResponseCode.INTERNAL_ERROR, "");
         }
     }
 
@@ -2866,7 +2866,7 @@ public class APIOperations {
             response.setCodigoRespuesta("00");
             if (response.getCodigoRespuesta().equals("00")) {
                 ChangeStatusCredentialCard changeStatusCredentialcardResponse = new ChangeStatusCredentialCard(response.getInicio(), response.getFin(), response.getTiempo(), response.getCodigoRespuesta(), response.getDescripcion(), response.getTicketWS());
-                return new DesactivateCardResponses(changeStatusCredentialcardResponse, ResponseCode.EXITO, "");
+                return new DesactivateCardResponses(changeStatusCredentialcardResponse, ResponseCode.SUCCESS, "");
             } else if (response.getCodigoRespuesta().equals("-024")) {
                 return new DesactivateCardResponses(ResponseCode.NOT_ALLOWED_TO_CHANGE_STATE, "NOT ALLOWED TO CHANGE STATE");
             } else if (response.getCodigoRespuesta().equals("-011")) {
@@ -2884,13 +2884,13 @@ public class APIOperations {
             } else if (response.getCodigoRespuesta().equals("-160")) {
                 return new DesactivateCardResponses(ResponseCode.THE_NUMBER_OF_ORDERS_ALLOWED_IS_EXCEEDED, "The Number of Orders Allowed is Exceeded");
             }
-            return new DesactivateCardResponses(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
+            return new DesactivateCardResponses(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
         } catch (RemoteException ex) {
             ex.printStackTrace();
-            return new DesactivateCardResponses(ResponseCode.ERROR_INTERNO, "");
+            return new DesactivateCardResponses(ResponseCode.INTERNAL_ERROR, "");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new DesactivateCardResponses(ResponseCode.ERROR_INTERNO, "");
+            return new DesactivateCardResponses(ResponseCode.INTERNAL_ERROR, "");
         }
     }
 
@@ -2907,7 +2907,7 @@ public class APIOperations {
             StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, encryptedString);
             if (statusCardResponse.getCodigo().equals("00")) {
                 CheckStatusCredentialCard checkStatusCredentialCard = new CheckStatusCredentialCard(statusCardResponse.getCodigo(), statusCardResponse.getDescripcion(), statusCardResponse.getTicketWS(), statusCardResponse.getInicio(), statusCardResponse.getFin(), statusCardResponse.getTiempo(), statusCardResponse.getNumero(), statusCardResponse.getCuenta(), statusCardResponse.getCodigoEntidad(), statusCardResponse.getDescripcionEntidad(), statusCardResponse.getSucursal(), statusCardResponse.getCodigoProducto(), statusCardResponse.getDescripcionProducto(), statusCardResponse.getCodigoEstado(), statusCardResponse.getDescripcionEstado(), statusCardResponse.getActual(), statusCardResponse.getAnterior(), statusCardResponse.getDenominacion(), statusCardResponse.getTipo(), statusCardResponse.getIden(), statusCardResponse.getTelefono(), statusCardResponse.getDireccion(), statusCardResponse.getCodigoPostal(), statusCardResponse.getLocalidad(), statusCardResponse.getCodigoPais(), statusCardResponse.getDescripcionPais(), statusCardResponse.getMomentoUltimaActualizacion(), statusCardResponse.getMomentoUltimaOperacionAprobada(), statusCardResponse.getMomentoUltimaOperacionDenegada(), statusCardResponse.getMomentoUltimaBajaBoletin(), statusCardResponse.getContadorPinERR());
-                return new CheckStatusCardResponses(checkStatusCredentialCard, ResponseCode.EXITO, "");
+                return new CheckStatusCardResponses(checkStatusCredentialCard, ResponseCode.SUCCESS, "");
             } else if (statusCardResponse.getCodigo().equals("-024")) {
                 return new CheckStatusCardResponses(ResponseCode.NOT_ALLOWED_TO_CHANGE_STATE, "NOT ALLOWED TO CHANGE STATE");
             } else if (statusCardResponse.getCodigo().equals("-011")) {
@@ -2927,13 +2927,13 @@ public class APIOperations {
             } else if (statusCardResponse.getCodigo().equals("-030")) {
                 return new CheckStatusCardResponses(ResponseCode.NON_EXISTENT_ACCOUNT, "Non-existent account");
             }
-            return new CheckStatusCardResponses(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
+            return new CheckStatusCardResponses(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
         } catch (RemoteException ex) {
             ex.printStackTrace();
-            return new CheckStatusCardResponses(ResponseCode.ERROR_INTERNO, "");
+            return new CheckStatusCardResponses(ResponseCode.INTERNAL_ERROR, "");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new CheckStatusCardResponses(ResponseCode.ERROR_INTERNO, "");
+            return new CheckStatusCardResponses(ResponseCode.INTERNAL_ERROR, "");
         }
 
     }
@@ -2950,7 +2950,7 @@ public class APIOperations {
             accountResponse.setCodigo("00");
             if (accountResponse.getCodigo().equals("00")) {
                 CheckStatusCredentialAccount checkStatusCredentialAccount = new CheckStatusCredentialAccount(accountResponse.getCodigo(), accountResponse.getDescripcion(), accountResponse.getNumero(), accountResponse.getCodigoEstado(), accountResponse.getDescripcionEstado(), accountResponse.getCodigoEntidad(), accountResponse.getDescripcionEntidad(), accountResponse.getSucursal(), accountResponse.getCodigoProducto(), accountResponse.getDescripcionProducto(), accountResponse.getCodigoPais(), accountResponse.getDescripcionPais(), accountResponse.getCodigoMoneda(), accountResponse.getDescripcionMoneda(), accountResponse.getVIP(), accountResponse.getHCC(), accountResponse.getULC(), accountResponse.getMCC(), accountResponse.getMomentoRenewal(), accountResponse.getMomentoUltimaActualizacion(), accountResponse.getMomentoUltimaOperacionAprobada(), accountResponse.getMomentoUltimaOperacionDenegada(), accountResponse.getMomentoUltimoBloqueo(), accountResponse.getMomentoUltimoDesbloqueo(), accountResponse.getComprasDisponibles(), accountResponse.getCuotasDisponibles(), accountResponse.getAdelantosDisponibles(), accountResponse.getPrestamosDisponibles(), accountResponse.getComprasLimites(), accountResponse.getCuotasLimites(), accountResponse.getAdelantosLimites(), accountResponse.getPrestamosLimites(), accountResponse.getFechaVencimiento(), accountResponse.getSaldo(), accountResponse.getPagoMinimo(), accountResponse.getSaldoDolar());
-                return new CheckStatusAccountResponses(checkStatusCredentialAccount, ResponseCode.EXITO, "");
+                return new CheckStatusAccountResponses(checkStatusCredentialAccount, ResponseCode.SUCCESS, "");
             } else if (accountResponse.getCodigo().equals("-030")) {
                 return new CheckStatusAccountResponses(ResponseCode.NON_EXISTENT_ACCOUNT, "Non-existent account");
             } else if (accountResponse.getCodigo().equals("-024")) {
@@ -2970,13 +2970,13 @@ public class APIOperations {
             } else if (accountResponse.getCodigo().equals("-160")) {
                 return new CheckStatusAccountResponses(ResponseCode.THE_NUMBER_OF_ORDERS_ALLOWED_IS_EXCEEDED, "The Number of Orders Allowed is Exceeded");
             }
-            return new CheckStatusAccountResponses(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
+            return new CheckStatusAccountResponses(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
         } catch (RemoteException ex) {
             ex.printStackTrace();
-            return new CheckStatusAccountResponses(ResponseCode.ERROR_INTERNO, "");
+            return new CheckStatusAccountResponses(ResponseCode.INTERNAL_ERROR, "");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new CheckStatusAccountResponses(ResponseCode.ERROR_INTERNO, "");
+            return new CheckStatusAccountResponses(ResponseCode.INTERNAL_ERROR, "");
         }
 
     }
@@ -3132,7 +3132,7 @@ public class APIOperations {
                     }
                 } catch (Exception ex) {
 
-                    return new TransferCardToCardResponses(ResponseCode.ERROR_INTERNO, "Error loading products");
+                    return new TransferCardToCardResponses(ResponseCode.INTERNAL_ERROR, "Error loading products");
                 }
                 System.out.println("date16" + new Date().getTime());
                 SendMailTherad sendMailTherad = new SendMailTherad("ES", Float.valueOf(balance), conceptTransaction, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), responseUser.getDatosRespuesta().getEmail(), Integer.valueOf("11"));
@@ -3148,7 +3148,7 @@ public class APIOperations {
 //                sendSmsThread1.run();
 
                 System.out.println("date15" + new Date().getTime());
-                TransferCardToCardResponses cardResponses = new TransferCardToCardResponses(cardCredential, ResponseCode.EXITO, "", products);
+                TransferCardToCardResponses cardResponses = new TransferCardToCardResponses(cardCredential, ResponseCode.SUCCESS, "", products);
                 cardResponses.setIdTransaction(transfer.getId().toString());
                 cardResponses.setProducts(products);
                 return cardResponses;
@@ -3243,13 +3243,13 @@ public class APIOperations {
             } else if (cardToCardTransferResponse.getCodigoError().equals("250")) {
                 return new TransferCardToCardResponses(ResponseCode.ERROR_VALIDATING_THE_ITEM, " ERROR VALIDATING THE ITEM");
             }
-            return new TransferCardToCardResponses(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
+            return new TransferCardToCardResponses(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
         } catch (RemoteException ex) {
             ex.printStackTrace();
-            return new TransferCardToCardResponses(ResponseCode.ERROR_INTERNO, "");
+            return new TransferCardToCardResponses(ResponseCode.INTERNAL_ERROR, "");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new TransferCardToCardResponses(ResponseCode.ERROR_INTERNO, "");
+            return new TransferCardToCardResponses(ResponseCode.INTERNAL_ERROR, "");
         }
 
     }
@@ -3328,9 +3328,9 @@ public class APIOperations {
             return new CardResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
         } catch (Exception e) {
             e.printStackTrace();
-            return new CardResponse(ResponseCode.ERROR_INTERNO, "Error loading cards");
+            return new CardResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
         }
-        return new CardResponse(ResponseCode.EXITO, "", userHasCard.getCardId().getNumberCard());
+        return new CardResponse(ResponseCode.SUCCESS, "", userHasCard.getCardId().getNumberCard());
     }
 
     public CardListResponse getCardsListByUserId(Long userId) throws NoResultException, Exception {
@@ -3355,9 +3355,9 @@ public class APIOperations {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return new CardListResponse(ResponseCode.ERROR_INTERNO, "Error loading cards");
+            return new CardListResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
         }
-        return new CardListResponse(ResponseCode.EXITO, "", cards);
+        return new CardListResponse(ResponseCode.SUCCESS, "", cards);
     }
 
     public ProductListResponse getProductsRemettenceByUserId(Long userId) {
@@ -3384,10 +3384,10 @@ public class APIOperations {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new ProductListResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
+            return new ProductListResponse(ResponseCode.INTERNAL_ERROR, "Error loading products");
         }
 
-        return new ProductListResponse(ResponseCode.EXITO, "", productFinals);
+        return new ProductListResponse(ResponseCode.SUCCESS, "", productFinals);
     }
 
     public RemittanceResponse processRemettenceAccount(Long userId,
@@ -3474,7 +3474,7 @@ public class APIOperations {
                 }
             } catch (NoResultException e) {
                 e.printStackTrace();
-                return new RemittanceResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+                return new RemittanceResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
             }
             Float amountTransferTotal = totalAmount + amountCommission;
             if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < amountTransferTotal) {
@@ -3747,19 +3747,19 @@ public class APIOperations {
             if (addressId == 0) {
                 proxy.actualizarUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId), response.getRemittanceSingleResponse().getAddressId());
             }
-            RemittanceResponse remittanceResponse = new RemittanceResponse(response.getRemittanceSingleResponse().getId(), response.getRemittanceSingleResponse().getApplicationDate(), response.getRemittanceSingleResponse().getCommentary(), response.getRemittanceSingleResponse().getAmountOrigin(), response.getRemittanceSingleResponse().getTotalAmount(), response.getRemittanceSingleResponse().getSendingOptionSMS(), response.getRemittanceSingleResponse().getAmountDestiny(), response.getRemittanceSingleResponse().getBank(), response.getRemittanceSingleResponse().getPaymentServiceId(), response.getRemittanceSingleResponse().getSecondaryKey(), response.getRemittanceSingleResponse().getAdditionalChanges(), response.getRemittanceSingleResponse().getCreationDate(), response.getRemittanceSingleResponse().getCreationHour(), response.getRemittanceSingleResponse().getLocalSales(), response.getRemittanceSingleResponse().getReserveField1(), response.getRemittanceSingleResponse().getRemittent(), response.getRemittanceSingleResponse().getReceiver(), response.getRemittanceSingleResponse().getCorrespondent(), response.getRemittanceSingleResponse().getAddressReciever(), response.getRemittanceSingleResponse().getSalesType(), response.getRemittanceSingleResponse().getAddressRemittent(), response.getRemittanceSingleResponse().getExchangeRate(), response.getRemittanceSingleResponse().getRatePaymentNetwork(), response.getRemittanceSingleResponse().getLanguage(), response.getRemittanceSingleResponse().getOriginCurrent(), response.getRemittanceSingleResponse().getDestinyCurrent(), response.getRemittanceSingleResponse().getPaymentMethod(), response.getRemittanceSingleResponse().getServiceType(), response.getRemittanceSingleResponse().getPaymentNetwork(), response.getRemittanceSingleResponse().getPaymentNetworkPoint(), response.getRemittanceSingleResponse().getCashBox(), response.getRemittanceSingleResponse().getCashier(), response.getRemittanceSingleResponse().getStatus(), response.getRemittanceSingleResponse().getRemittanceNumber(), response.getRemittanceSingleResponse().getPaymentKey(), response.getRemittanceSingleResponse().getCorrelative(), response.getRemittanceSingleResponse().getDeliveryForm(), ResponseCode.EXITO, "");
+            RemittanceResponse remittanceResponse = new RemittanceResponse(response.getRemittanceSingleResponse().getId(), response.getRemittanceSingleResponse().getApplicationDate(), response.getRemittanceSingleResponse().getCommentary(), response.getRemittanceSingleResponse().getAmountOrigin(), response.getRemittanceSingleResponse().getTotalAmount(), response.getRemittanceSingleResponse().getSendingOptionSMS(), response.getRemittanceSingleResponse().getAmountDestiny(), response.getRemittanceSingleResponse().getBank(), response.getRemittanceSingleResponse().getPaymentServiceId(), response.getRemittanceSingleResponse().getSecondaryKey(), response.getRemittanceSingleResponse().getAdditionalChanges(), response.getRemittanceSingleResponse().getCreationDate(), response.getRemittanceSingleResponse().getCreationHour(), response.getRemittanceSingleResponse().getLocalSales(), response.getRemittanceSingleResponse().getReserveField1(), response.getRemittanceSingleResponse().getRemittent(), response.getRemittanceSingleResponse().getReceiver(), response.getRemittanceSingleResponse().getCorrespondent(), response.getRemittanceSingleResponse().getAddressReciever(), response.getRemittanceSingleResponse().getSalesType(), response.getRemittanceSingleResponse().getAddressRemittent(), response.getRemittanceSingleResponse().getExchangeRate(), response.getRemittanceSingleResponse().getRatePaymentNetwork(), response.getRemittanceSingleResponse().getLanguage(), response.getRemittanceSingleResponse().getOriginCurrent(), response.getRemittanceSingleResponse().getDestinyCurrent(), response.getRemittanceSingleResponse().getPaymentMethod(), response.getRemittanceSingleResponse().getServiceType(), response.getRemittanceSingleResponse().getPaymentNetwork(), response.getRemittanceSingleResponse().getPaymentNetworkPoint(), response.getRemittanceSingleResponse().getCashBox(), response.getRemittanceSingleResponse().getCashier(), response.getRemittanceSingleResponse().getStatus(), response.getRemittanceSingleResponse().getRemittanceNumber(), response.getRemittanceSingleResponse().getPaymentKey(), response.getRemittanceSingleResponse().getCorrelative(), response.getRemittanceSingleResponse().getDeliveryForm(), ResponseCode.SUCCESS, "");
             remittanceResponse.setAmountTransferTotal(String.valueOf(amountTransferTotal));
             return remittanceResponse;
 
         } catch (RemoteException ex) {
             ex.printStackTrace();
-            return new RemittanceResponse(ResponseCode.ERROR_INTERNO, "");
+            return new RemittanceResponse(ResponseCode.INTERNAL_ERROR, "");
         } catch (NullPointerException ex) {
             ex.printStackTrace();
-            return new RemittanceResponse(ResponseCode.ERROR_INTERNO, "");
+            return new RemittanceResponse(ResponseCode.INTERNAL_ERROR, "");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new RemittanceResponse(ResponseCode.ERROR_INTERNO, "");
+            return new RemittanceResponse(ResponseCode.INTERNAL_ERROR, "");
         }
 
     }
@@ -3959,7 +3959,7 @@ public class APIOperations {
                 entityManager.persist(commissionItem);
             } catch (NoResultException e) {
                 e.printStackTrace();
-                return new RechargeAfinitasResponses(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+                return new RechargeAfinitasResponses(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
             }
             //Se actualiza el estatus de la transaccion a IN_PROCESS
             transaction.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
@@ -4214,9 +4214,9 @@ public class APIOperations {
             return new RechargeAfinitasResponses(ResponseCode.NOT_AUTHORIZED, "NOT AUTHORIZED");
         } catch (Exception e) {
             e.printStackTrace();
-            return new RechargeAfinitasResponses(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
+            return new RechargeAfinitasResponses(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
         }
-        RechargeAfinitasResponses rechargeAfinitasResponses = new RechargeAfinitasResponses(chargeResponse, ResponseCode.EXITO, "EXITO", products);
+        RechargeAfinitasResponses rechargeAfinitasResponses = new RechargeAfinitasResponses(chargeResponse, ResponseCode.SUCCESS, "EXITO", products);
         rechargeAfinitasResponses.setProducts(products);
         rechargeAfinitasResponses.setIdTransaction(transaction.getId().toString());
         return rechargeAfinitasResponses;
@@ -4231,13 +4231,13 @@ public class APIOperations {
                     return new PaymentInfoListResponse(ResponseCode.NOT_ASSOCIATED_PAYMENT_INFO, "Not associated payment info");
                 }
             } else {
-                return new PaymentInfoListResponse(ResponseCode.ERROR_INTERNO, "Error loading Payment Info");
+                return new PaymentInfoListResponse(ResponseCode.INTERNAL_ERROR, "Error loading Payment Info");
             }
 
         } catch (Exception e) {
-            return new PaymentInfoListResponse(ResponseCode.ERROR_INTERNO, "Error loading Payment Info");
+            return new PaymentInfoListResponse(ResponseCode.INTERNAL_ERROR, "Error loading Payment Info");
         }
-        return new PaymentInfoListResponse(ResponseCode.EXITO, "", paymentInfos);
+        return new PaymentInfoListResponse(ResponseCode.SUCCESS, "", paymentInfos);
     }
 
     public CreditCardListResponse getCreditCardType(String userApi, String passwordApi) {
@@ -4246,13 +4246,13 @@ public class APIOperations {
             if (validateUser(userApi, passwordApi)) {
                 creditcardTypes = entityManager.createNamedQuery("CreditcardType.findByEnabledTrue", CreditcardType.class).getResultList();
             } else {
-                return new CreditCardListResponse(ResponseCode.ERROR_INTERNO, "Error loading Credit Card");
+                return new CreditCardListResponse(ResponseCode.INTERNAL_ERROR, "Error loading Credit Card");
             }
 
         } catch (Exception e) {
-            return new CreditCardListResponse(ResponseCode.ERROR_INTERNO, "Error loading Payment Info");
+            return new CreditCardListResponse(ResponseCode.INTERNAL_ERROR, "Error loading Payment Info");
         }
-        return new CreditCardListResponse(ResponseCode.EXITO, "", creditcardTypes);
+        return new CreditCardListResponse(ResponseCode.SUCCESS, "", creditcardTypes);
     }
 
     public PaymentInfoResponse savePaymentInfo(String userApi, String passwordApi, Long userId, String estado, String ciudad, String zipCode, String addres1, Long paymentPatnerId, Long paymentTypeId, Long creditCardTypeId, String creditCardName, String creditCardNumber, String creditCardCVV, String creditCardDate) throws RemoteException, Exception {
@@ -4284,7 +4284,7 @@ public class APIOperations {
                 entityManager.persist(paymentInfo);
 
             } else {
-                return new PaymentInfoResponse(ResponseCode.ERROR_INTERNO, "Error in process saving payment info");
+                return new PaymentInfoResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving payment info");
             }
         } catch (RemoteException ex) {
             ex.printStackTrace();
@@ -4293,7 +4293,7 @@ public class APIOperations {
             ex.printStackTrace();
             throw new Exception(ex.getMessage());
         }
-        return new PaymentInfoResponse(ResponseCode.EXITO);
+        return new PaymentInfoResponse(ResponseCode.SUCCESS);
 
     }
 
@@ -4314,13 +4314,13 @@ public class APIOperations {
                 paymentInfo.setEnabled(status);
                 entityManager.merge(paymentInfo);
             } else {
-                return new PaymentInfoResponse(ResponseCode.ERROR_INTERNO, "Error loading Payment Info");
+                return new PaymentInfoResponse(ResponseCode.INTERNAL_ERROR, "Error loading Payment Info");
             }
 
         } catch (Exception e) {
-            return new PaymentInfoResponse(ResponseCode.ERROR_INTERNO, "Error loading Payment Info");
+            return new PaymentInfoResponse(ResponseCode.INTERNAL_ERROR, "Error loading Payment Info");
         }
-        return new PaymentInfoResponse(ResponseCode.EXITO, "", paymentInfo);
+        return new PaymentInfoResponse(ResponseCode.SUCCESS, "", paymentInfo);
     }
 
     public ProductListResponse getProductsRechargePaymentByUserId(Long userId) {
@@ -4346,10 +4346,10 @@ public class APIOperations {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new ProductListResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
+            return new ProductListResponse(ResponseCode.INTERNAL_ERROR, "Error loading products");
         }
 
-        return new ProductListResponse(ResponseCode.EXITO, "", productFinals);
+        return new ProductListResponse(ResponseCode.SUCCESS, "", productFinals);
     }
 
     public ProductListResponse generarCodigoMovilSMS(String movil, String codigo) {
@@ -4360,10 +4360,10 @@ public class APIOperations {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new ProductListResponse(ResponseCode.ERROR_INTERNO, "ERROR SEND SMS");
+            return new ProductListResponse(ResponseCode.INTERNAL_ERROR, "ERROR SEND SMS");
         }
 
-        return new ProductListResponse(ResponseCode.EXITO, "ENVIO DE SMS EXITOSO");
+        return new ProductListResponse(ResponseCode.SUCCESS, "ENVIO DE SMS EXITOSO");
     }
 
     public void sendSMS(String movil, String message) {
@@ -4409,19 +4409,19 @@ public class APIOperations {
 
             tokenResponse = plaidClientIntegration.plaidCreateItem(methods);
             exchangeTokenResponse = plaidClientIntegration.plaidExchangeToken(tokenResponse.getPublic_token());
-            ExchangeTokenPlaidResponses exchangeTokenPlaidResponses = new ExchangeTokenPlaidResponses(exchangeTokenResponse, ResponseCode.EXITO, "");
+            ExchangeTokenPlaidResponses exchangeTokenPlaidResponses = new ExchangeTokenPlaidResponses(exchangeTokenResponse, ResponseCode.SUCCESS, "");
             exchangeTokenPlaidResponses.setTokenResponse(tokenResponse.getPublic_token());
             return exchangeTokenPlaidResponses;
 
         } catch (RemoteException ex) {
             ex.printStackTrace();
-            return new ExchangeTokenPlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR BALANCE");
+            return new ExchangeTokenPlaidResponses(ResponseCode.INTERNAL_ERROR, "ERROR BALANCE");
         } catch (IOException ex) {
             ex.printStackTrace();
-            return new ExchangeTokenPlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR token");
+            return new ExchangeTokenPlaidResponses(ResponseCode.INTERNAL_ERROR, "ERROR token");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new ExchangeTokenPlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR token");
+            return new ExchangeTokenPlaidResponses(ResponseCode.INTERNAL_ERROR, "ERROR token");
         }
 
     }
@@ -4435,18 +4435,18 @@ public class APIOperations {
             PlaidClientIntegration plaidClientIntegration = new PlaidClientIntegration();
 
             retriveAuthResponse = plaidClientIntegration.plaidRetrieveAuth(clientId, secret);
-            RetriveAuthPlaidResponses retriveAuthPlaidResponses = new RetriveAuthPlaidResponses(retriveAuthResponse, ResponseCode.EXITO, "EXITO");
+            RetriveAuthPlaidResponses retriveAuthPlaidResponses = new RetriveAuthPlaidResponses(retriveAuthResponse, ResponseCode.SUCCESS, "EXITO");
             return retriveAuthPlaidResponses;
 
         } catch (RemoteException ex) {
             ex.printStackTrace();
-            return new RetriveAuthPlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR Auth");
+            return new RetriveAuthPlaidResponses(ResponseCode.INTERNAL_ERROR, "ERROR Auth");
         } catch (IOException ex) {
             ex.printStackTrace();
-            return new RetriveAuthPlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR Auth");
+            return new RetriveAuthPlaidResponses(ResponseCode.INTERNAL_ERROR, "ERROR Auth");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new RetriveAuthPlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR Auth");
+            return new RetriveAuthPlaidResponses(ResponseCode.INTERNAL_ERROR, "ERROR Auth");
         }
 
     }
@@ -4460,18 +4460,18 @@ public class APIOperations {
             PlaidClientIntegration plaidClientIntegration = new PlaidClientIntegration();
 
             retriveTransactionResponse = plaidClientIntegration.plaidRetrieveTransaction(clientId, secret);
-            RetriveTransactionPlaidResponses retriveTransactionPlaidResponses = new RetriveTransactionPlaidResponses(retriveTransactionResponse, ResponseCode.EXITO, "EXITO");
+            RetriveTransactionPlaidResponses retriveTransactionPlaidResponses = new RetriveTransactionPlaidResponses(retriveTransactionResponse, ResponseCode.SUCCESS, "EXITO");
             return retriveTransactionPlaidResponses;
 
         } catch (RemoteException ex) {
             ex.printStackTrace();
-            return new RetriveTransactionPlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR TRANSACTION");
+            return new RetriveTransactionPlaidResponses(ResponseCode.INTERNAL_ERROR, "ERROR TRANSACTION");
         } catch (IOException ex) {
             ex.printStackTrace();
-            return new RetriveTransactionPlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR TRANSACTION");
+            return new RetriveTransactionPlaidResponses(ResponseCode.INTERNAL_ERROR, "ERROR TRANSACTION");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new RetriveTransactionPlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR TRANSACTION");
+            return new RetriveTransactionPlaidResponses(ResponseCode.INTERNAL_ERROR, "ERROR TRANSACTION");
         }
 
     }
@@ -4485,18 +4485,18 @@ public class APIOperations {
             PlaidClientIntegration plaidClientIntegration = new PlaidClientIntegration();
 
             retriveBalanceResponse = plaidClientIntegration.plaidRetrieveBalance(clientId, secret);
-            RetriveBalancePlaidResponses retriveBalancePlaidResponses = new RetriveBalancePlaidResponses(retriveBalanceResponse, ResponseCode.EXITO, "EXITO");
+            RetriveBalancePlaidResponses retriveBalancePlaidResponses = new RetriveBalancePlaidResponses(retriveBalanceResponse, ResponseCode.SUCCESS, "EXITO");
             return retriveBalancePlaidResponses;
 
         } catch (RemoteException ex) {
             ex.printStackTrace();
-            return new RetriveBalancePlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR BALANCE");
+            return new RetriveBalancePlaidResponses(ResponseCode.INTERNAL_ERROR, "ERROR BALANCE");
         } catch (IOException ex) {
             ex.printStackTrace();
-            return new RetriveBalancePlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR BALANCE");
+            return new RetriveBalancePlaidResponses(ResponseCode.INTERNAL_ERROR, "ERROR BALANCE");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new RetriveBalancePlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR BALANCE");
+            return new RetriveBalancePlaidResponses(ResponseCode.INTERNAL_ERROR, "ERROR BALANCE");
         }
 
     }
@@ -4510,18 +4510,18 @@ public class APIOperations {
             PlaidClientIntegration plaidClientIntegration = new PlaidClientIntegration();
 
             retriveIdentityResponse = plaidClientIntegration.plaidRetrieveIdentity(clientId, secret);
-            RetriveIdentityPlaidResponses retriveIdentityPlaidResponses = new RetriveIdentityPlaidResponses(retriveIdentityResponse, ResponseCode.EXITO, "EXITO");
+            RetriveIdentityPlaidResponses retriveIdentityPlaidResponses = new RetriveIdentityPlaidResponses(retriveIdentityResponse, ResponseCode.SUCCESS, "EXITO");
             return retriveIdentityPlaidResponses;
 
         } catch (RemoteException ex) {
             ex.printStackTrace();
-            return new RetriveIdentityPlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR IDENTITY");
+            return new RetriveIdentityPlaidResponses(ResponseCode.INTERNAL_ERROR, "ERROR IDENTITY");
         } catch (IOException ex) {
             ex.printStackTrace();
-            return new RetriveIdentityPlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR IDENTITY");
+            return new RetriveIdentityPlaidResponses(ResponseCode.INTERNAL_ERROR, "ERROR IDENTITY");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new RetriveIdentityPlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR IDENTITY");
+            return new RetriveIdentityPlaidResponses(ResponseCode.INTERNAL_ERROR, "ERROR IDENTITY");
         }
 
     }
@@ -4535,18 +4535,18 @@ public class APIOperations {
             PlaidClientIntegration plaidClientIntegration = new PlaidClientIntegration();
 
             retriveIncomeResponse = plaidClientIntegration.plaidRetrieveIncome(clientId, secret);
-            RetriveIncomePlaidResponses retriveIncomePlaidResponses = new RetriveIncomePlaidResponses(retriveIncomeResponse, ResponseCode.EXITO, "EXITO");
+            RetriveIncomePlaidResponses retriveIncomePlaidResponses = new RetriveIncomePlaidResponses(retriveIncomeResponse, ResponseCode.SUCCESS, "EXITO");
             return retriveIncomePlaidResponses;
 
         } catch (RemoteException ex) {
             ex.printStackTrace();
-            return new RetriveIncomePlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR INCOME");
+            return new RetriveIncomePlaidResponses(ResponseCode.INTERNAL_ERROR, "ERROR INCOME");
         } catch (IOException ex) {
             ex.printStackTrace();
-            return new RetriveIncomePlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR INCOME");
+            return new RetriveIncomePlaidResponses(ResponseCode.INTERNAL_ERROR, "ERROR INCOME");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new RetriveIncomePlaidResponses(ResponseCode.ERROR_INTERNO, "ERROR INCOME");
+            return new RetriveIncomePlaidResponses(ResponseCode.INTERNAL_ERROR, "ERROR INCOME");
         }
 
     }
@@ -4595,10 +4595,10 @@ public class APIOperations {
             accountBank.setAccountTypeBankId(accountTypeBank);
             accountBank.setCreateDate(new Timestamp(new Date().getTime()));
             entityManager.persist(accountBank);
-            return new AccountBankResponse(ResponseCode.EXITO, "", accountBank);
+            return new AccountBankResponse(ResponseCode.SUCCESS, "", accountBank);
         } catch (Exception e) {
             e.printStackTrace();
-            return new AccountBankResponse(ResponseCode.ERROR_INTERNO, "Error");
+            return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "Error");
         }
 
     }
@@ -4633,10 +4633,10 @@ public class APIOperations {
             transactionApproveRequest.setStatusTransactionApproveRequestId(statusTransactionApproveRequest);
             entityManager.flush();
             entityManager.persist(transactionApproveRequest);
-            return new TransactionApproveRequestResponse(ResponseCode.EXITO, "", transactionApproveRequest);
+            return new TransactionApproveRequestResponse(ResponseCode.SUCCESS, "", transactionApproveRequest);
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionApproveRequestResponse(ResponseCode.ERROR_INTERNO, "Error");
+            return new TransactionApproveRequestResponse(ResponseCode.INTERNAL_ERROR, "Error");
         }
     }
 
@@ -4646,14 +4646,14 @@ public class APIOperations {
         try {
             accountBanks = (List<AccountBank>) entityManager.createNamedQuery("AccountBank.findByUnifiedRegistryId", AccountBank.class).setParameter("unifiedRegistryId", unifiedRegistryId).getResultList();
             if (accountBanks.size() <= 0) {
-                return new AccountBankListResponse(ResponseCode.ERROR_INTERNO, "Error loading account bank");
+                return new AccountBankListResponse(ResponseCode.INTERNAL_ERROR, "Error loading account bank");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return new AccountBankListResponse(ResponseCode.ERROR_INTERNO, "Error loading account bank");
+            return new AccountBankListResponse(ResponseCode.INTERNAL_ERROR, "Error loading account bank");
         }
 
-        return new AccountBankListResponse(ResponseCode.EXITO, "", accountBanks);
+        return new AccountBankListResponse(ResponseCode.SUCCESS, "", accountBanks);
     }
 
     public AccountBankResponse updateAccountBankByAccountNumber(Long unifiedRegistryId, String accountNumberOld, String accountNumberCurrent, Long bankId) {
@@ -4663,10 +4663,10 @@ public class APIOperations {
             accountBanks.setAccountNumber(accountNumberCurrent);
             accountBanks.setUpdateDate(new Timestamp(new Date().getTime()));
             entityManager.merge(accountBanks);
-            return new AccountBankResponse(ResponseCode.EXITO, "", accountBanks);
+            return new AccountBankResponse(ResponseCode.SUCCESS, "", accountBanks);
         } catch (Exception e) {
             e.printStackTrace();
-            return new AccountBankResponse(ResponseCode.ERROR_INTERNO, "Error");
+            return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "Error");
         }
 
     }
@@ -4734,9 +4734,9 @@ public class APIOperations {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new BusinessHasProductResponse(ResponseCode.ERROR_INTERNO, "Error in process saving product_has_business");
+            return new BusinessHasProductResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving product_has_business");
         }
-        return new BusinessHasProductResponse(ResponseCode.EXITO);
+        return new BusinessHasProductResponse(ResponseCode.SUCCESS);
     }
 
     public ProductListResponse getProductsByBusinessId(Long businessId) {
@@ -4757,10 +4757,10 @@ public class APIOperations {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return new ProductListResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
+            return new ProductListResponse(ResponseCode.INTERNAL_ERROR, "Error loading products");
         }
 
-        return new ProductListResponse(ResponseCode.EXITO, "", products);
+        return new ProductListResponse(ResponseCode.SUCCESS, "", products);
     }
 
     public BalanceHistoryResponse getBalanceHistoryByBusinessAndProduct(Long businessId, Long productId) {
@@ -4772,9 +4772,9 @@ public class APIOperations {
             return new BalanceHistoryResponse(ResponseCode.BALANCE_HISTORY_NOT_FOUND_EXCEPTION, "Error loading BalanceHistory");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new BalanceHistoryResponse(ResponseCode.ERROR_INTERNO, "Error loading BalanceHistory");
+            return new BalanceHistoryResponse(ResponseCode.INTERNAL_ERROR, "Error loading BalanceHistory");
         }
-        return new BalanceHistoryResponse(ResponseCode.EXITO, "", balanceHistory);
+        return new BalanceHistoryResponse(ResponseCode.SUCCESS, "", balanceHistory);
     }
 
     public BalanceHistory loadLastBalanceHistoryByBusiness_(Long businessId, Long productId) throws NoResultException {
@@ -4969,7 +4969,7 @@ public class APIOperations {
                 entityManager.persist(commissionItem);
             } catch (NoResultException e) {
                 e.printStackTrace();
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
             }
 
             BankOperation manualWithdrawal = new BankOperation();
@@ -5001,7 +5001,7 @@ public class APIOperations {
                 saveTransactionApproveRequest(0L, product.getId(), withdrawal.getId(), manualWithdrawal.getId(), Constante.sDocumentTypeBusinessManualWithdrawal, Constante.sOriginApplicationPortalBusiness, businessId);
             } catch (Exception e) {
                 e.printStackTrace();
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error saving transaction Aprrove Request");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error saving transaction Aprrove Request");
             }
             try {
                 products = getProductsListByBusinessId(businessId);
@@ -5016,14 +5016,14 @@ public class APIOperations {
                 }
             } catch (Exception ex) {
 
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error loading products");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+            return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
         }
 
-        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
+        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.SUCCESS, "EXITO", products);
         transactionResponse.setIdTransaction(withdrawal.getId().toString());
         transactionResponse.setProducts(products);
         return transactionResponse;
@@ -5090,7 +5090,7 @@ public class APIOperations {
                 }
             } catch (NoResultException e) {
                 e.printStackTrace();
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
             }
             Float amountTransferTotal = amountTransfer + amountCommission;
             if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < amountTransferTotal) {
@@ -5300,10 +5300,10 @@ public class APIOperations {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
+            return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
         }
 
-        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
+        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.SUCCESS, "EXITO", products);
         transactionResponse.setIdTransaction(transfer.getId().toString());
         transactionResponse.setProducts(products);
         return transactionResponse;
@@ -5413,7 +5413,7 @@ public class APIOperations {
                 }
             } catch (NoResultException e) {
                 e.printStackTrace();
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
             }
             Float amountTransferTotal = amountTransfer + amountCommission;
             if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < amountTransferTotal) {
@@ -5621,10 +5621,10 @@ public class APIOperations {
 //            sendSmsThread1.run();
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
+            return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
         }
 
-        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
+        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.SUCCESS, "EXITO", products);
         transactionResponse.setIdTransaction(transfer.getId().toString());
         transactionResponse.setProducts(products);
         return transactionResponse;
@@ -5644,7 +5644,7 @@ public class APIOperations {
             return new TransactionListResponse(ResponseCode.TRANSACTION_LIST_NOT_FOUND_EXCEPTION, "El negocio no tiene transacciones asociadas");
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionListResponse(ResponseCode.ERROR_INTERNO, "error interno");
+            return new TransactionListResponse(ResponseCode.INTERNAL_ERROR, "error interno");
         }
 
         for (Transaction t : transactions) {
@@ -5653,7 +5653,7 @@ public class APIOperations {
             t.setTransactionType(t.getTransactionTypeId().getId().toString());
             t.setId(t.getId());
         }
-        return new TransactionListResponse(ResponseCode.EXITO, "", transactions);
+        return new TransactionListResponse(ResponseCode.SUCCESS, "", transactions);
     }
 
     public TransactionListResponse getTransactionsByBusinessIdBetweenDate(Long businessId, String from, String to) {
@@ -5669,7 +5669,7 @@ public class APIOperations {
             return new TransactionListResponse(ResponseCode.TRANSACTION_LIST_NOT_FOUND_EXCEPTION, "El negocio no tiene transacciones asociadas");
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionListResponse(ResponseCode.ERROR_INTERNO, "error interno");
+            return new TransactionListResponse(ResponseCode.INTERNAL_ERROR, "error interno");
         }
 
         for (Transaction t : transactions) {
@@ -5678,7 +5678,7 @@ public class APIOperations {
             t.setTransactionType(t.getTransactionTypeId().getId().toString());
             t.setId(t.getId());
         }
-        return new TransactionListResponse(ResponseCode.EXITO, "", transactions);
+        return new TransactionListResponse(ResponseCode.SUCCESS, "", transactions);
     }
 
     public BusinessShopResponse getBusinessInfoByCryptogram(String cryptogram) {
@@ -5686,13 +5686,13 @@ public class APIOperations {
 
         try {
             BpBusinessInfoResponse response = aPIBusinessPortalWSProxy.getBusinessInfoByCryptogram(cryptogram);
-            BusinessShopResponse answer = new BusinessShopResponse(ResponseCode.EXITO, "", response.getCommercialDenomination(), response.getBusinessRif(), response.getStoreName());
+            BusinessShopResponse answer = new BusinessShopResponse(ResponseCode.SUCCESS, "", response.getCommercialDenomination(), response.getBusinessRif(), response.getStoreName());
             answer.setPosCode(response.getPosCode());
             return answer;
         } catch (BusinessPortalWSException ex) {
-            return new BusinessShopResponse(ResponseCode.ERROR_INTERNO, ex.getErrorMessage().getErrorMessageValue());
+            return new BusinessShopResponse(ResponseCode.INTERNAL_ERROR, ex.getErrorMessage().getErrorMessageValue());
         } catch (RemoteException ex) {
-            return new BusinessShopResponse(ResponseCode.ERROR_INTERNO, "Error processing businessInfo");
+            return new BusinessShopResponse(ResponseCode.INTERNAL_ERROR, "Error processing businessInfo");
         }
     }
 

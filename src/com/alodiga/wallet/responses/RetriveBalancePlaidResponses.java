@@ -26,21 +26,21 @@ public class RetriveBalancePlaidResponses extends Response implements Serializab
     }
 
     public RetriveBalancePlaidResponses(RetriveBalanceResponse retriveBalanceResponse) {
-        super(ResponseCode.EXITO);
+        super(ResponseCode.SUCCESS);
         this.retriveBalanceResponse = retriveBalanceResponse;
     }
 
 
     
     public RetriveBalancePlaidResponses(RetriveBalanceResponse retriveBalanceResponse, ResponseCode codigo, String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.retriveBalanceResponse = retriveBalanceResponse;
         
     }
 
     public RetriveBalancePlaidResponses(ResponseCode codigo,
             String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
     }
 
     public RetriveBalanceResponse getRetriveBalanceResponse() {

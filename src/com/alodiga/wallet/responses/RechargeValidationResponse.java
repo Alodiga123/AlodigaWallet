@@ -28,11 +28,11 @@ public class RechargeValidationResponse extends Response implements Serializable
     }
 
     public RechargeValidationResponse(ResponseCode code, String message) {
-        super(new Date(), code.getCodigo(), message);
+        super(new Date(), code.getCode(), message);
     }
 
     public RechargeValidationResponse(Double amountBeforeFee, Double totalFee, Double totalAmount) {
-        this(ResponseCode.EXITO);
+        this(ResponseCode.SUCCESS);
         this.amountBeforeFee = amountBeforeFee;
         this.totalFee = totalFee;
         this.totalAmount = totalAmount;

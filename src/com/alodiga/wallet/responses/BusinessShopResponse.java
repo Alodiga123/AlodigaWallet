@@ -26,21 +26,21 @@ public class BusinessShopResponse extends Response {
     }
 
     public BusinessShopResponse(ResponseCode code) {
-        super(new Date(), code.getCodigo(), code.name());
+        super(new Date(), code.getCode(), code.name());
         this.businessName = null;
         this.businessRif = null;
         this.storeName = null;
     }
 
     public BusinessShopResponse(ResponseCode code, String mensaje) {
-        super(new Date(), code.getCodigo(), mensaje);
+        super(new Date(), code.getCode(), mensaje);
         this.businessName = null;
         this.businessRif = null;
         this.storeName = null;
     }
 
     public BusinessShopResponse(ResponseCode code, String mensaje, String businessName, String businessRif, String storeName) {
-        super(new Date(), code.getCodigo(), mensaje);
+        super(new Date(), code.getCode(), mensaje);
         this.businessName = businessName;
         this.businessRif = businessRif;
         this.storeName = storeName;

@@ -22,17 +22,17 @@ public class CardResponse extends Response {
 	}
 	
 	public CardResponse(ResponseCode code) {
-		super(new Date(), code.getCodigo(), code.name());
+		super(new Date(), code.getCode(), code.name());
 		this.card = null;
 	}
 	
 	public CardResponse(ResponseCode code, String mensaje) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.card = null;
 	}
 
     public CardResponse(ResponseCode code, String mensaje, String numberCard) {
-        super(new Date(), code.getCodigo(), mensaje);
+        super(new Date(), code.getCode(), mensaje);
         this.numberCard = numberCard;
     }
 

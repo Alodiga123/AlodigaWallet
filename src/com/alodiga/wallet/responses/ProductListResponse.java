@@ -20,17 +20,17 @@ public class ProductListResponse extends Response {
 	}
 	
 	public ProductListResponse(ResponseCode code) {
-		super(new Date(), code.getCodigo(), code.name());
+		super(new Date(), code.getCode(), code.name());
 		this.products = null;
 	}
 	
 	public ProductListResponse(ResponseCode code, String mensaje) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.products = null;
 	}
 
 	public ProductListResponse(ResponseCode code, String mensaje, List<Product> products) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.products = products;
 	}
         

@@ -23,17 +23,17 @@ public class CountryResponse extends Response implements Serializable {
 	}
 
 	public CountryResponse(ResponseCode codigo) {
-		super(new Date(), codigo.getCodigo(), codigo.name());
+		super(new Date(), codigo.getCode(), codigo.name());
 		this.response = null;
 	}
 
 	public CountryResponse(ResponseCode codigo,String mensajeRespuesta) {
-		super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+		super(new Date(), codigo.getCode(), mensajeRespuesta);
 		this.response = null;
 	}
 
 	public CountryResponse(ResponseCode codigo,String mensajeRespuesta, Country countryId) {
-		super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+		super(new Date(), codigo.getCode(), mensajeRespuesta);
 		this.response = countryId;
 	}
         

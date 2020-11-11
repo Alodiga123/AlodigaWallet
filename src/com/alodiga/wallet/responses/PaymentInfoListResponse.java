@@ -21,17 +21,17 @@ public class PaymentInfoListResponse extends Response {
 	}
 	
 	public PaymentInfoListResponse(ResponseCode code) {
-		super(new Date(), code.getCodigo(), code.name());
+		super(new Date(), code.getCode(), code.name());
 		this.paymentInfos = null;
 	}
 	
 	public PaymentInfoListResponse(ResponseCode code, String mensaje) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.paymentInfos = null;
 	}
 
 	public PaymentInfoListResponse(ResponseCode code, String mensaje, List<PaymentInfo> paymentInfos) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.paymentInfos = paymentInfos;
 	}
         

@@ -21,17 +21,17 @@ public class PersonTypeListResponse extends Response {
 	}
 	
 	public PersonTypeListResponse(ResponseCode code) {
-		super(new Date(), code.getCodigo(), code.name());
+		super(new Date(), code.getCode(), code.name());
 		this.personTypes = null;
 	}
 	
 	public PersonTypeListResponse(ResponseCode code, String mensaje) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.personTypes = null;
 	}
 
 	public PersonTypeListResponse(ResponseCode code, String mensaje, List<PersonType> personTypes) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.personTypes = personTypes;
 	}
         

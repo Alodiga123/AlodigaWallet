@@ -22,19 +22,19 @@ public class UserHasProductResponse extends Response implements Serializable {
 	}
 
 	public UserHasProductResponse(ResponseCode codigo) {
-		super(new Date(), codigo.getCodigo(), codigo.name());
+		super(new Date(), codigo.getCode(), codigo.name());
 		this.response = null;
 	}
 
 	public UserHasProductResponse(ResponseCode codigo,
 			String mensajeRespuesta) {
-		super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+		super(new Date(), codigo.getCode(), mensajeRespuesta);
 		this.response = null;
 	}
 
 	public UserHasProductResponse(ResponseCode codigo,
 			String mensajeRespuesta, Product productId) {
-		super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+		super(new Date(), codigo.getCode(), mensajeRespuesta);
 		this.response = productId;
 	}
 

@@ -22,17 +22,17 @@ public class BalanceHistoryResponse extends Response implements Serializable {
 	}
 
 	public BalanceHistoryResponse(ResponseCode codigo) {
-		super(new Date(), codigo.getCodigo(), codigo.name());
+		super(new Date(), codigo.getCode(), codigo.name());
 		this.response = null;
 	}
 
 	public BalanceHistoryResponse(ResponseCode codigo,String mensajeRespuesta) {
-		super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+		super(new Date(), codigo.getCode(), mensajeRespuesta);
 		this.response = null;
 	}
 
 	public BalanceHistoryResponse(ResponseCode codigo,String mensajeRespuesta, BalanceHistory balanceHistory) {
-		super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+		super(new Date(), codigo.getCode(), mensajeRespuesta);
 		this.response = balanceHistory;
 	}
 

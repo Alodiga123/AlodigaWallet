@@ -26,21 +26,21 @@ public class RetriveIdentityPlaidResponses extends Response implements Serializa
     }
 
     public RetriveIdentityPlaidResponses(RetriveIdentityResponse retriveIdentityResponse) {
-        super(ResponseCode.EXITO);
+        super(ResponseCode.SUCCESS);
         this.retriveIdentityResponse = retriveIdentityResponse;
     }
 
 
     
     public RetriveIdentityPlaidResponses(RetriveIdentityResponse retriveIdentityResponse, ResponseCode codigo, String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.retriveIdentityResponse = retriveIdentityResponse;
         
     }
 
     public RetriveIdentityPlaidResponses(ResponseCode codigo,
             String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
     }
 
     public RetriveIdentityResponse getRetriveIdentityResponse() {

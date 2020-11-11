@@ -21,17 +21,17 @@ public class StatusTransactionAproveListResponse extends Response {
 	}
 	
 	public StatusTransactionAproveListResponse(ResponseCode code) {
-		super(new Date(), code.getCodigo(), code.name());
+		super(new Date(), code.getCode(), code.name());
 		this.statusTransactionApproveRequests = null;
 	}
 	
 	public StatusTransactionAproveListResponse(ResponseCode code, String mensaje) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.statusTransactionApproveRequests = null;
 	}
 
 	public StatusTransactionAproveListResponse(ResponseCode code, String mensaje, List<StatusTransactionApproveRequest> statusTransactionApproveRequests) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.statusTransactionApproveRequests = statusTransactionApproveRequests;
 	}
         

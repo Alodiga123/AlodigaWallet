@@ -26,19 +26,19 @@ public class ActivateCardResponses extends Response implements Serializable {
     }
 
     public ActivateCardResponses(ChangeStatusCredentialCard credentialResponse) {
-        super(ResponseCode.EXITO);
+        super(ResponseCode.SUCCESS);
         this.credentialResponse = credentialResponse;
     }
 
     public ActivateCardResponses(ChangeStatusCredentialCard credentialResponse, ResponseCode codigo, String mensajeRespuesta, ArrayList<Product> products) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.credentialResponse = credentialResponse;
         this.products = products;
     }
 
     public ActivateCardResponses(ResponseCode codigo,
             String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
     }
 
     public ChangeStatusCredentialCard getCredentialResponse() {
