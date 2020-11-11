@@ -22,19 +22,19 @@ public class AddressResponse extends Response implements Serializable {
 	}
 
 	public AddressResponse(ResponseCode codigo) {
-		super(new Date(), codigo.getCodigo(), codigo.name());
+		super(new Date(), codigo.getCode(), codigo.name());
 		this.response = null;
 	}
 
 	public AddressResponse(ResponseCode codigo,
 			String mensajeRespuesta) {
-		super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+		super(new Date(), codigo.getCode(), mensajeRespuesta);
 		this.response = null;
 	}
 
 	public AddressResponse(ResponseCode codigo,
 			String mensajeRespuesta, Address addressId) {
-		super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+		super(new Date(), codigo.getCode(), mensajeRespuesta);
 		this.response = addressId;
 	}
 

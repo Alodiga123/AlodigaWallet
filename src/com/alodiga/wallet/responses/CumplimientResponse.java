@@ -23,17 +23,17 @@ public class CumplimientResponse extends Response {
 	}
 	
 	public CumplimientResponse(ResponseCode code) {
-		super(new Date(), code.getCodigo(), code.name());
+		super(new Date(), code.getCode(), code.name());
 		this.cumplimients = null;
 	}
 	
 	public CumplimientResponse(ResponseCode code, String mensaje) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.cumplimients = null;
 	}
 
 	public CumplimientResponse(ResponseCode code, String mensaje, Cumplimient cumplimients) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.cumplimients = cumplimients;
 	}
         

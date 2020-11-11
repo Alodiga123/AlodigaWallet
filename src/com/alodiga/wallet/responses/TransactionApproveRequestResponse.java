@@ -22,19 +22,19 @@ public class TransactionApproveRequestResponse extends Response{
 	}
 
 	public TransactionApproveRequestResponse(ResponseCode codigo) {
-		super(new Date(), codigo.getCodigo(), codigo.name());
+		super(new Date(), codigo.getCode(), codigo.name());
 		this.transactionApproveRequest = null;
 	}
 
 	public TransactionApproveRequestResponse(ResponseCode codigo,
 			String mensajeRespuesta) {
-		super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+		super(new Date(), codigo.getCode(), mensajeRespuesta);
 		this.transactionApproveRequest = null;
 	}
 
 	public TransactionApproveRequestResponse(ResponseCode codigo,
 			String mensajeRespuesta, TransactionApproveRequest transactionApproveRequest) {
-		super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+		super(new Date(), codigo.getCode(), mensajeRespuesta);
 		this.transactionApproveRequest = transactionApproveRequest;
 	}
 

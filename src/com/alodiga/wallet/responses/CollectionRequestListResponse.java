@@ -21,17 +21,17 @@ public class CollectionRequestListResponse extends Response {
 	}
 	
 	public CollectionRequestListResponse(ResponseCode code) {
-		super(new Date(), code.getCodigo(), code.name());
+		super(new Date(), code.getCode(), code.name());
 		this.collectionsRequests = null;
 	}
 	
 	public CollectionRequestListResponse(ResponseCode code, String mensaje) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.collectionsRequests = null;
 	}
 
 	public CollectionRequestListResponse(ResponseCode code, String mensaje, List<CollectionsRequest> collectionsRequests) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.collectionsRequests = collectionsRequests;
 	}
         

@@ -27,19 +27,19 @@ public class AccountBankResponse extends Response implements Serializable {
 	}
 
 	public AccountBankResponse(ResponseCode codigo) {
-		super(new Date(), codigo.getCodigo(), codigo.name());
+		super(new Date(), codigo.getCode(), codigo.name());
 		this.accountBank = null;
 	}
 
 	public AccountBankResponse(ResponseCode codigo,
 			String mensajeRespuesta) {
-		super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+		super(new Date(), codigo.getCode(), mensajeRespuesta);
 		this.accountBank = null;
 	}
 
 	public AccountBankResponse(ResponseCode codigo,
 			String mensajeRespuesta, AccountBank accountBank) {
-		super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+		super(new Date(), codigo.getCode(), mensajeRespuesta);
 		this.accountBank = accountBank;
 	}
 

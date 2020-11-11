@@ -727,19 +727,19 @@ public class APIAlodigaWallet {
     }
     
     @WebMethod
-    public CardResponse getCardByPhone(
+    public CardListResponse getCardByPhone(
             @WebParam(name = "phone") String phone){
         return operations.getCardByPhone(phone);
     }
     
     @WebMethod
-    public CardResponse getCardByEmail(
+    public CardListResponse getCardByEmail(
             @WebParam(name = "email") String email){
         return operations.getCardByEmail(email);
     }
     
     @WebMethod
-    public CardResponse getCardByIdentificationNumber(
+    public CardListResponse getCardByIdentificationNumber(
             @WebParam(name = "numberIdentification") String numberIdentification){
         return operations.getCardByIdentificationNumber(numberIdentification);
     }

@@ -21,17 +21,17 @@ public class CityListResponse extends Response {
 	}
 	
 	public CityListResponse(ResponseCode code) {
-		super(new Date(), code.getCodigo(), code.name());
+		super(new Date(), code.getCode(), code.name());
 		this.citys = null;
 	}
 	
 	public CityListResponse(ResponseCode code, String mensaje) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.citys = null;
 	}
 
 	public CityListResponse(ResponseCode code, String mensaje, List<City> citys) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.citys = citys;
 	}
         

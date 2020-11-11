@@ -2,25 +2,25 @@ package com.alodiga.wallet.responses;
 
 public enum ResponseCode {
 
-    EXITO("00"),
-    DATOS_INVALIDOS("01"),
-    CONTRASENIA_EXPIRADA("03"),
-    IP_NO_CONFIANZA("04"),
-    CREDENCIALES_INVALIDAS("05"),
-    USUARIO_BLOQUEADO("06"),
-    CODIGO_VALIDACION_INVALIDO("07"),
-    NUMERO_TELEFONO_YA_EXISTE("08"),
-    ENVIO_CORREO_FALLIDO("09"),
-    CORREO_YA_EXISTE("10"),
-    DATOS_NULOS("11"),
-    PRIMER_INGRESO("12"),
-    EIN_YA_EXISTE("14"),
-    FEDERAL_TAX_YA_EXISTE("15"),
-    CUENTA_BANCARIA_YA_EXISTE("17"),
-    GENERAR_CODIGO("18"),
-    TOKEN_EXPIRADO("19"),
-    SOLICITUD_TARJETA_ACTIVA("20"),
-    AFILIACIONES_MAXIMAS_ALCANZADAS("21"),
+    SUCCESS("00"),
+    INVALID_DATA("01"),
+    EXPIRED_PASSWORD("03"),
+    NO_TRUST_IP("04"),
+    INVALID_CREDENTIALS("05"),
+    BLOCKED_USER("06"),
+    INVALID_VALIDATION_CODE("07"),
+    PHONE_NUMBER_ALREADY_EXISTS("08"),
+    SEND_MAIL_FAILED("09"),
+    EMAIL_ALREADY_EXISTS("10"),
+    NULL_DATA("11"),
+    FIRST_LOGIN("12"),
+    EIN_ALREADY_EXISTS("14"),
+    FEDERAL_TAX_ALREADY_EXISTS("15"),
+    BANK_ACCOUNT_ALREADY_EXISTS("17"),
+    GENERATE_CODE("18"),
+    EXPIRED_TOKEN("19"),
+    CARD_REQUEST_ACTIVATE("20"),
+    MAX_AFFILIATIONS_REACH("21"),
     USER_NOT_HAS_PHONE_NUMBER("22"),
     USER_NOT_HAS_PRODUCT("23"),
     TRANSACTION_LIST_NOT_FOUND_EXCEPTION("24"),
@@ -32,12 +32,12 @@ public enum ResponseCode {
     EMPTY_LIST_HAS_CARD("28"),
     USER_NOT_HAS_CARD("29"),
     DOES_NOT_HAVE_AN_ASSOCIATED_COMPANION_CARD("30"),
-    APLICACION_NO_EXISTE("94"),
-    USUARIO_SOSPECHOSO("95"),
-    USUARIO_PENDIENTE("96"),
-    USUARIO_NO_EXISTE("97"),
-    ERROR_CREDENCIALES("98"),
-    ERROR_INTERNO("99"),
+    APPLICATION_DOESNT_EXISTS("94"),
+    SUSPECT_USER("95"),
+    PENDING_USER("96"),
+    USER_NO_EXISTS("97"),
+    ERROR_CREDENTIALS("98"),
+    INTERNAL_ERROR("99"),
     
     //Mensajeria TopUp
     DENOMINATION_NOT_AVAILABLE("301"),
@@ -78,7 +78,6 @@ public enum ResponseCode {
     
     //Mensajes transferencia cardtocard credencial servicio autorizacion
     NON_EXISTENT_CARD("100"),
-    
     EXPIRATION_DATE_DIFFERS("102"),
     EXPIRED_CARD("103"),
     LOCKED_CARD("104"),
@@ -91,7 +90,7 @@ public enum ResponseCode {
     ERROR_PROCESSING_THE_TRANSACTION("111"),
     INVALID_TRANSACTION("112"),
     ERROR_VALIDATION_THE_TERMINAL("113"),
-    DESTINATION_CARD_LOCKED("114"),    
+    DESTINATION_CARD_LOCKED("114"),
     DESTINATION_ACCOUNT_LOCKED("115"),
     INVALID_DESTINATION_CARD("116"),
     INVALID_DESTINATION_ACCOUNT("117"),
@@ -127,7 +126,7 @@ public enum ResponseCode {
     INVALID_TRADE("152"),
     RETAIN_CARD("153"),
     INVALID_TRANSACTION_AFINITAS("154"),
-    RETRY_AFINITAS("155"),    
+    RETRY_AFINITAS("155"),
     TRANSACTION_NOT_PERMITTED("156"),
     INVALID_CARD("157"),
     FORMAT_ERROR("158"),
@@ -172,7 +171,6 @@ public enum ResponseCode {
     CREDENTIALS_WS_INAVAILABLE("143"),
     THE_SERVICE_NOT_AVAILABLE("144"),
     
-    
     //MENSAJE METODO DE PAGO
     NOT_ASSOCIATED_PAYMENT_INFO("220"),
     
@@ -181,16 +179,15 @@ public enum ResponseCode {
     NOT_DOCUMENTS_PERSON_TYPE("301"),
     NOT_COLLECTION_TYPE("302"),
     NOT_COLLECTION_REQUEST("303");
-   
-    private String codigo; 
-	
 
-private ResponseCode(String codigo){
-		this.codigo = codigo;
-	}
-	
-	public String getCodigo(){
-		return codigo;
-	}
+    private final String code;
+
+    private ResponseCode(String code) {
+        this.code = code;
+    }
+
+    public String getCode() {
+        return code;
+    }
 
 }

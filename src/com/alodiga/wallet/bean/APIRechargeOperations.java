@@ -36,7 +36,7 @@ import javax.persistence.PersistenceContext;
 @TransactionManagement(TransactionManagementType.CONTAINER)
 public class APIRechargeOperations {
 
-    @PersistenceContext(unitName = "AlodigaWalletPU")
+    
     private EntityManager entityManager;
 
     private Double truncDouble(Double in) {
@@ -51,7 +51,7 @@ public class APIRechargeOperations {
 
             Commission commission = TransactionDAO.getCommision(product, transactionType, entityManager);
             if (commission == null) {
-                return new RechargeValidationResponse(ResponseCode.ERROR_INTERNO, "No comission");
+                return new RechargeValidationResponse(ResponseCode.INTERNAL_ERROR, "No comission");
             }
 
             AmountFee amountFee = new AmountFee(commission, amountToRecharge, includeFee);
@@ -59,7 +59,7 @@ public class APIRechargeOperations {
             return new RechargeValidationResponse(amountFee.amountBefore, amountFee.fee, amountFee.totalAmount);
         } catch (Exception e) {
             e.printStackTrace();
-            return new RechargeValidationResponse(ResponseCode.ERROR_INTERNO, e.getMessage());
+            return new RechargeValidationResponse(ResponseCode.INTERNAL_ERROR, e.getMessage());
         }
     }
 
@@ -71,7 +71,7 @@ public class APIRechargeOperations {
 
             Commission commission = TransactionDAO.getCommision(product, transactionType, entityManager);
             if (commission == null) {
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "No comission");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "No comission");
             }
             AmountFee amountFee = new AmountFee(commission, amountToRecharge, includeFee);
 
@@ -106,7 +106,7 @@ public class APIRechargeOperations {
             if (newBalance == null) {
                 recharge.setTransactionStatus(TransactionStatus.FAILED.name());
                 entityManager.merge(recharge);
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Balance Problem");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Balance Problem");
             }
 
             recharge.setTransactionStatus(TransactionStatus.COMPLETED.name());
@@ -125,12 +125,12 @@ public class APIRechargeOperations {
                     Long.valueOf(user.getDatosRespuesta().getUsuarioID()),
                     entityManager).start();
 
-            TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", recharge);
+            TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.SUCCESS, "EXITO", recharge);
             return transactionResponse;
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process recharge wallet");
+            return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process recharge wallet");
         }
     }
 
@@ -141,7 +141,7 @@ public class APIRechargeOperations {
 
             Commission commission = TransactionDAO.getCommision(product, transactionType, entityManager);
             if (commission == null) {
-                return new RechargeValidationResponse(ResponseCode.ERROR_INTERNO, "No comission");
+                return new RechargeValidationResponse(ResponseCode.INTERNAL_ERROR, "No comission");
             }
 
             AmountFee amountFee = new AmountFee(commission, amountToRecharge, includeFee);
@@ -149,7 +149,7 @@ public class APIRechargeOperations {
             return new RechargeValidationResponse(amountFee.amountBefore, amountFee.fee, amountFee.totalAmount);
         } catch (Exception e) {
             e.printStackTrace();
-            return new RechargeValidationResponse(ResponseCode.ERROR_INTERNO, e.getMessage());
+            return new RechargeValidationResponse(ResponseCode.INTERNAL_ERROR, e.getMessage());
         }
     }
 
@@ -160,7 +160,7 @@ public class APIRechargeOperations {
 
             Commission commission = TransactionDAO.getCommision(product, transactionType, entityManager);
             if (commission == null) {
-                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "No comission");
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "No comission");
             }
             AmountFee amountFee = new AmountFee(commission, amountToRecharge, includeFee);
 
@@ -192,12 +192,12 @@ public class APIRechargeOperations {
             recharge.setTransactionStatus(TransactionStatus.COMPLETED.name());
             entityManager.merge(recharge);
 
-            TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", recharge);
+            TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.SUCCESS, "EXITO", recharge);
             return transactionResponse;
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process recharge wallet");
+            return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process recharge wallet");
         }
     }
 

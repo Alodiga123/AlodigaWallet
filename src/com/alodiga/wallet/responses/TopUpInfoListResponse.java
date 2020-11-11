@@ -20,17 +20,17 @@ public class TopUpInfoListResponse extends Response {
 	}
 	
 	public TopUpInfoListResponse(ResponseCode code) {
-		super(new Date(), code.getCodigo(), code.name());
+		super(new Date(), code.getCode(), code.name());
 		this.topUpInfos = null;
 	}
 	
 	public TopUpInfoListResponse(ResponseCode code, String mensaje) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.topUpInfos = null;
 	}
 
 	public TopUpInfoListResponse(ResponseCode code, String mensaje, List<TopUpInfo> topUpInfos) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.topUpInfos = topUpInfos;
 	}
         
