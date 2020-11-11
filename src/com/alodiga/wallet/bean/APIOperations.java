@@ -5698,9 +5698,9 @@ public class APIOperations {
            return new CardListResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
        } catch (Exception e) {
            e.printStackTrace();
-           return new CardListResponse(ResponseCode.ERROR_INTERNO, "Error loading cards");
+           return new CardListResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
        }
-       return new CardListResponse(ResponseCode.EXITO, "", cards);
+       return new CardListResponse(ResponseCode.SUCCESS, "", cards);
    }
 
     
@@ -5716,9 +5716,9 @@ public class APIOperations {
            return new CardListResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
        } catch (Exception e) {
            e.printStackTrace();
-           return new CardListResponse(ResponseCode.ERROR_INTERNO, "Error loading cards");
+           return new CardListResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
        }
-       return new CardListResponse(ResponseCode.EXITO, "", cards);
+       return new CardListResponse(ResponseCode.SUCCESS, "", cards);
    }
     
     
@@ -5733,9 +5733,9 @@ public class APIOperations {
            return new CardListResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
        } catch (Exception e) {
            e.printStackTrace();
-           return new CardListResponse(ResponseCode.ERROR_INTERNO, "Error loading cards");
+           return new CardListResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
        }
-       return new CardListResponse(ResponseCode.EXITO, "", cards);
+       return new CardListResponse(ResponseCode.SUCCESS, "", cards);
    }
     
 }
