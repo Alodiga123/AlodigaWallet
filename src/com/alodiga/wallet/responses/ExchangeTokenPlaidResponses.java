@@ -30,21 +30,21 @@ public class ExchangeTokenPlaidResponses extends Response implements Serializabl
     }
 
     public ExchangeTokenPlaidResponses(ExchangeTokenResponse exchangeTokenResponse) {
-        super(ResponseCode.EXITO);
+        super(ResponseCode.SUCCESS);
         this.exchangeTokenResponse = exchangeTokenResponse;
     }
 
 
     
     public ExchangeTokenPlaidResponses(ExchangeTokenResponse exchangeTokenResponse, ResponseCode codigo, String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.exchangeTokenResponse = exchangeTokenResponse;
         
     }
 
     public ExchangeTokenPlaidResponses(ResponseCode codigo,
             String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
     }
 
     public ExchangeTokenResponse getExchangeTokenResponse() {

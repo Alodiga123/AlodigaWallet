@@ -27,21 +27,21 @@ public class PublicTokenPlaidResponses extends Response implements Serializable 
     }
 
     public PublicTokenPlaidResponses(TokenResponse tokenResponse) {
-        super(ResponseCode.EXITO);
+        super(ResponseCode.SUCCESS);
         this.tokenResponse = tokenResponse;
     }
 
 
     
     public PublicTokenPlaidResponses(TokenResponse tokenResponse, ResponseCode codigo, String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.tokenResponse = tokenResponse;
         
     }
 
     public PublicTokenPlaidResponses(ResponseCode codigo,
             String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
     }
 
     public TokenResponse getTokenResponse() {

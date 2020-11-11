@@ -25,21 +25,21 @@ public class RetriveIncomePlaidResponses extends Response implements Serializabl
     }
 
     public RetriveIncomePlaidResponses(RetriveIncomeResponse retriveIncomeResponse) {
-        super(ResponseCode.EXITO);
+        super(ResponseCode.SUCCESS);
         this.retriveIncomeResponse = retriveIncomeResponse;
     }
 
 
     
     public RetriveIncomePlaidResponses(RetriveIncomeResponse retriveIncomeResponse, ResponseCode codigo, String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.retriveIncomeResponse = retriveIncomeResponse;
         
     }
 
     public RetriveIncomePlaidResponses(ResponseCode codigo,
             String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
     }
 
     public RetriveIncomeResponse getRetriveIncomeResponse() {

@@ -22,13 +22,13 @@ public class CheckStatusCardResponses extends Response implements Serializable {
     
 
     public CheckStatusCardResponses(CheckStatusCredentialCard checkStatusCredentialCard, ResponseCode codigo, String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.checkStatusCredentialCard = checkStatusCredentialCard;
     }
     
     public CheckStatusCardResponses(ResponseCode codigo,
 			String mensajeRespuesta) {
-	   super(new Date(), codigo.getCodigo(), mensajeRespuesta);	
+	   super(new Date(), codigo.getCode(), mensajeRespuesta);	
     }
 
     public CheckStatusCredentialCard getCheckStatusCredentialCard() {

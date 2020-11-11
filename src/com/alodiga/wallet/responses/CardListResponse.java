@@ -21,17 +21,17 @@ public class CardListResponse extends Response {
 	}
 	
 	public CardListResponse(ResponseCode code) {
-		super(new Date(), code.getCodigo(), code.name());
+		super(new Date(), code.getCode(), code.name());
 		this.cards = null;
 	}
 	
 	public CardListResponse(ResponseCode code, String mensaje) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.cards = null;
 	}
 
 	public CardListResponse(ResponseCode code, String mensaje, List<Card> cards) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.cards = cards;
 	}
         

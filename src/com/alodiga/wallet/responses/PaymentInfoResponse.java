@@ -23,19 +23,19 @@ public class PaymentInfoResponse extends Response implements Serializable {
 	}
 
 	public PaymentInfoResponse(ResponseCode codigo) {
-		super(new Date(), codigo.getCodigo(), codigo.name());
+		super(new Date(), codigo.getCode(), codigo.name());
 		this.paymentInfo = null;
 	}
 
 	public PaymentInfoResponse(ResponseCode codigo,
 			String mensajeRespuesta) {
-		super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+		super(new Date(), codigo.getCode(), mensajeRespuesta);
 		this.paymentInfo = null;
 	}
 
 	public PaymentInfoResponse(ResponseCode codigo,
 			String mensajeRespuesta, PaymentInfo paymentInfo) {
-		super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+		super(new Date(), codigo.getCode(), mensajeRespuesta);
 		this.paymentInfo = paymentInfo;
 	}
 

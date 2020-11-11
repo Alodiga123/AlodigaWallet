@@ -22,17 +22,17 @@ public class AccountBankListResponse extends Response {
 	}
 	
 	public AccountBankListResponse(ResponseCode code) {
-		super(new Date(), code.getCodigo(), code.name());
+		super(new Date(), code.getCode(), code.name());
 		this.accountBanks = null;
 	}
 	
 	public AccountBankListResponse(ResponseCode code, String mensaje) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.accountBanks = null;
 	}
 
 	public AccountBankListResponse(ResponseCode code, String mensaje, List<AccountBank> accountBanks) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.accountBanks = accountBanks;
 	}
         

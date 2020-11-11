@@ -23,13 +23,13 @@ public class CheckStatusAccountResponses extends Response implements Serializabl
     
 
     public CheckStatusAccountResponses(CheckStatusCredentialAccount checkStatusCredentialAccount, ResponseCode codigo, String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.checkStatusCredentialAccount = checkStatusCredentialAccount;
     }
     
     public CheckStatusAccountResponses(ResponseCode codigo,
 			String mensajeRespuesta) {
-	   super(new Date(), codigo.getCodigo(), mensajeRespuesta);	
+	   super(new Date(), codigo.getCode(), mensajeRespuesta);	
     }
 
     public CheckStatusCredentialAccount getCheckStatusCredentialAccount() {

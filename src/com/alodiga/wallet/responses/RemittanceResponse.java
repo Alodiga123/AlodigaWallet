@@ -61,7 +61,7 @@ public class RemittanceResponse extends Response {
     
 
     public RemittanceResponse(String id, String applicationDate, String commentary, String amountOrigin, String totalAmount, String sendingOptionSMS, String amountDestiny, String bank, String paymentServiceId, String secondaryKey, String additionalChanges, String creationDate, String CreationHour, String localSales, String reserveField1, String remittent, String receiver, String Correspondent, String addressReciever, String salesType, String addressRemittent, String exchangeRate, String ratePaymentNetwork, String language, String originCurrent, String destinyCurrent, String paymentMethod, String serviceType, String paymentNetwork, String paymentNetworkPoint, String cashBox, String cashier, String status, String remittanceNumber, String paymentKey, String correlative, String deliveryForm, ResponseCode code, String mensajeRespuesta) {
-        super(new Date(), code.getCodigo(), mensajeRespuesta);
+        super(new Date(), code.getCode(), mensajeRespuesta);
         this.id = id;
         this.applicationDate = applicationDate;
         this.commentary = commentary;
@@ -107,7 +107,7 @@ public class RemittanceResponse extends Response {
     }
 
     public RemittanceResponse(ResponseCode code, String mensaje) {
-        super(new Date(), code.getCodigo(), mensaje);
+        super(new Date(), code.getCode(), mensaje);
 
     }
 

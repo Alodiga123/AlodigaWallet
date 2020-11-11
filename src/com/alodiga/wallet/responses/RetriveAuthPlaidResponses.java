@@ -27,21 +27,21 @@ public class RetriveAuthPlaidResponses extends Response implements Serializable 
     }
 
     public RetriveAuthPlaidResponses(RetriveAuthResponse retriveAuthResponse) {
-        super(ResponseCode.EXITO);
+        super(ResponseCode.SUCCESS);
         this.retriveAuthResponse = retriveAuthResponse;
     }
 
 
     
     public RetriveAuthPlaidResponses(RetriveAuthResponse retriveAuthResponse, ResponseCode codigo, String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.retriveAuthResponse = retriveAuthResponse;
         
     }
 
     public RetriveAuthPlaidResponses(ResponseCode codigo,
             String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
     }
 
     public RetriveAuthResponse getRetriveAuthResponse() {

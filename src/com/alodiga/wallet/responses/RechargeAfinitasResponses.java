@@ -29,20 +29,20 @@ public class RechargeAfinitasResponses extends Response implements Serializable 
     
 
     public RechargeAfinitasResponses(ChargeResponse chargeResponse, ResponseCode codigo, String mensajeRespuesta, ArrayList<Product> products) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.chargeResponse = chargeResponse;
         this.products = products;
     }
     
     public RechargeAfinitasResponses(ResponseCode codigo,
 			String mensajeRespuesta) {
-	   super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+	   super(new Date(), codigo.getCode(), mensajeRespuesta);
            
     }
     
     public RechargeAfinitasResponses(ResponseCode codigo,
             String mensajeRespuesta, ArrayList<Product> products, RechargeAfinitas rechargeAfinitas) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.rechargeAfinitas = rechargeAfinitas;
         this.products = products;
     }

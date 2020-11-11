@@ -111,14 +111,14 @@ public class APICardOperations {
                 case "-160":
                     return new ActivateCardResponses(ResponseCode.THE_NUMBER_OF_ORDERS_ALLOWED_IS_EXCEEDED, "The Number of Orders Allowed is Exceeded");
                 default:
-                    return new ActivateCardResponses(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
+                    return new ActivateCardResponses(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
             }
         } catch (RemoteException ex) {
             ex.printStackTrace();
-            return new ActivateCardResponses(ResponseCode.ERROR_INTERNO, "");
+            return new ActivateCardResponses(ResponseCode.INTERNAL_ERROR, "");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new ActivateCardResponses(ResponseCode.ERROR_INTERNO, "");
+            return new ActivateCardResponses(ResponseCode.INTERNAL_ERROR, "");
         }
     }
 
@@ -156,14 +156,14 @@ public class APICardOperations {
                 case "-160":
                     return new DesactivateCardResponses(ResponseCode.THE_NUMBER_OF_ORDERS_ALLOWED_IS_EXCEEDED, "The Number of Orders Allowed is Exceeded");
                 default:
-                    return new DesactivateCardResponses(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
+                    return new DesactivateCardResponses(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
             }
         } catch (RemoteException ex) {
             ex.printStackTrace();
-            return new DesactivateCardResponses(ResponseCode.ERROR_INTERNO, "");
+            return new DesactivateCardResponses(ResponseCode.INTERNAL_ERROR, "");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new DesactivateCardResponses(ResponseCode.ERROR_INTERNO, "");
+            return new DesactivateCardResponses(ResponseCode.INTERNAL_ERROR, "");
         }
     }
 
@@ -181,7 +181,7 @@ public class APICardOperations {
             switch (statusCardResponse.getCodigo()) {
                 case "00":
                     CheckStatusCredentialCard checkStatusCredentialCard = new CheckStatusCredentialCard(statusCardResponse.getCodigo(), statusCardResponse.getDescripcion(), statusCardResponse.getTicketWS(), statusCardResponse.getInicio(), statusCardResponse.getFin(), statusCardResponse.getTiempo(), statusCardResponse.getNumero(), statusCardResponse.getCuenta(), statusCardResponse.getCodigoEntidad(), statusCardResponse.getDescripcionEntidad(), statusCardResponse.getSucursal(), statusCardResponse.getCodigoProducto(), statusCardResponse.getDescripcionProducto(), statusCardResponse.getCodigoEstado(), statusCardResponse.getDescripcionEstado(), statusCardResponse.getActual(), statusCardResponse.getAnterior(), statusCardResponse.getDenominacion(), statusCardResponse.getTipo(), statusCardResponse.getIden(), statusCardResponse.getTelefono(), statusCardResponse.getDireccion(), statusCardResponse.getCodigoPostal(), statusCardResponse.getLocalidad(), statusCardResponse.getCodigoPais(), statusCardResponse.getDescripcionPais(), statusCardResponse.getMomentoUltimaActualizacion(), statusCardResponse.getMomentoUltimaOperacionAprobada(), statusCardResponse.getMomentoUltimaOperacionDenegada(), statusCardResponse.getMomentoUltimaBajaBoletin(), statusCardResponse.getContadorPinERR());
-                    return new CheckStatusCardResponses(checkStatusCredentialCard, ResponseCode.EXITO, "");
+                    return new CheckStatusCardResponses(checkStatusCredentialCard, ResponseCode.SUCCESS, "");
                 case "-024":
                     return new CheckStatusCardResponses(ResponseCode.NOT_ALLOWED_TO_CHANGE_STATE, "NOT ALLOWED TO CHANGE STATE");
                 case "-011":
@@ -203,13 +203,13 @@ public class APICardOperations {
                 case "-02":
                     if (credentialsRetries > 3) {
                         credentialsRetries = 0;
-                        return new CheckStatusCardResponses(ResponseCode.ERROR_INTERNO, "ERROR -02");
+                        return new CheckStatusCardResponses(ResponseCode.INTERNAL_ERROR, "ERROR -02");
                     }
                     ++credentialsRetries;
                     Thread.sleep(2000);
                     return checkStatusCard(encriptedCard, timeZone);
                 default:
-                    return new CheckStatusCardResponses(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
+                    return new CheckStatusCardResponses(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
             }
         } catch (RemoteException ex) {
             ex.printStackTrace();
@@ -219,7 +219,7 @@ public class APICardOperations {
             return new CheckStatusCardResponses(ResponseCode.CREDENTIALS_WS_INAVAILABLE, "Credentials Web Service Inavailable");
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new CheckStatusCardResponses(ResponseCode.ERROR_INTERNO, "");
+            return new CheckStatusCardResponses(ResponseCode.INTERNAL_ERROR, "");
         }
 
     }

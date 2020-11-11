@@ -21,17 +21,17 @@ public class CollectionListResponse extends Response {
 	}
 	
 	public CollectionListResponse(ResponseCode code) {
-		super(new Date(), code.getCodigo(), code.name());
+		super(new Date(), code.getCode(), code.name());
 		this.validationCollections = null;
 	}
 	
 	public CollectionListResponse(ResponseCode code, String mensaje) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.validationCollections = null;
 	}
 
 	public CollectionListResponse(ResponseCode code, String mensaje, List<ValidationCollection> validationCollections) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.validationCollections = validationCollections;
 	}
         

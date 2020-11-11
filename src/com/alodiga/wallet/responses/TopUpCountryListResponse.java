@@ -21,17 +21,17 @@ public class TopUpCountryListResponse extends Response {
 	}
 	
 	public TopUpCountryListResponse(ResponseCode code) {
-		super(new Date(), code.getCodigo(), code.name());
+		super(new Date(), code.getCode(), code.name());
 		this.topUpCountrys = null;
 	}
 	
 	public TopUpCountryListResponse(ResponseCode code, String mensaje) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.topUpCountrys = null;
 	}
 
 	public TopUpCountryListResponse(ResponseCode code, String mensaje, List<TopUpCountry> topUpCountrys) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.topUpCountrys = topUpCountrys;
 	}
         

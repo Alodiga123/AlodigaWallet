@@ -26,21 +26,21 @@ public class RetriveTransactionPlaidResponses extends Response implements Serial
     }
 
     public RetriveTransactionPlaidResponses(RetriveTransactionResponse retriveTransactionResponse) {
-        super(ResponseCode.EXITO);
+        super(ResponseCode.SUCCESS);
         this.retriveTransactionResponse = retriveTransactionResponse;
     }
 
 
     
     public RetriveTransactionPlaidResponses(RetriveTransactionResponse retriveTransactionResponse, ResponseCode codigo, String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.retriveTransactionResponse = retriveTransactionResponse;
         
     }
 
     public RetriveTransactionPlaidResponses(ResponseCode codigo,
             String mensajeRespuesta) {
-        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        super(new Date(), codigo.getCode(), mensajeRespuesta);
     }
 
     public RetriveTransactionResponse getRetriveTransactionResponse() {

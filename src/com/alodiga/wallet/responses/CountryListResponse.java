@@ -20,17 +20,17 @@ public class CountryListResponse extends Response {
 	}
 	
 	public CountryListResponse(ResponseCode code) {
-		super(new Date(), code.getCodigo(), code.name());
+		super(new Date(), code.getCode(), code.name());
 		this.countries = null;
 	}
 	
 	public CountryListResponse(ResponseCode code, String mensaje) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.countries = null;
 	}
 
 	public CountryListResponse(ResponseCode code, String mensaje, List<Country> countries) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.countries = countries;
 	}
         

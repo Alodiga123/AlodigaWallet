@@ -22,17 +22,17 @@ public class CreditCardListResponse extends Response {
 	}
 	
 	public CreditCardListResponse(ResponseCode code) {
-		super(new Date(), code.getCodigo(), code.name());
+		super(new Date(), code.getCode(), code.name());
 		this.creditcardTypes = null;
 	}
 	
 	public CreditCardListResponse(ResponseCode code, String mensaje) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.creditcardTypes = null;
 	}
 
 	public CreditCardListResponse(ResponseCode code, String mensaje, List<CreditcardType> creditcardTypes) {
-		super(new Date(), code.getCodigo(), mensaje);
+		super(new Date(), code.getCode(), mensaje);
 		this.creditcardTypes = creditcardTypes;
 	}
         
