@@ -176,10 +176,9 @@ import plaidclientintegration.PlaidClientIntegration;
 @Stateless(name = "FsProcessorWallet", mappedName = "ejb/FsProcessorWallet")
 @TransactionManagement(TransactionManagementType.CONTAINER)
 public class APIOperations {
-
     
+    @PersistenceContext(unitName = "AlodigaWalletPU")
     private EntityManager entityManager;
-
 
     public ProductResponse saveProduct(Long enterpriseId, Long categoryId, Long productIntegrationTypeId, String name, boolean taxInclude, boolean status, String referenceCode, String rateUrl, String accesNumberURL, boolean isFree, boolean isAlocashProduct, String symbol) {
         try {

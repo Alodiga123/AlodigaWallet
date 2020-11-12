@@ -32,11 +32,11 @@ import javax.persistence.PersistenceContext;
  * @author hvarona
  */
 @Stateless(name = "FsProcessorRechargeWallet",
-        mappedName = "ejb/FsProcessorRechargeWallet")
+mappedName = "ejb/FsProcessorRechargeWallet")
 @TransactionManagement(TransactionManagementType.CONTAINER)
 public class APIRechargeOperations {
 
-    
+    @PersistenceContext(unitName = "AlodigaWalletPU")
     private EntityManager entityManager;
 
     private Double truncDouble(Double in) {
