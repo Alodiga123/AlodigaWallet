@@ -34,16 +34,14 @@ import javax.persistence.PersistenceContext;
 import org.apache.commons.codec.binary.Base64;
 
 @Stateless(name = "FsProcessorCardWallet",
-        mappedName = "ejb/FsProcessorCardWallet")
+mappedName = "ejb/FsProcessorCardWallet")
 @TransactionManagement(TransactionManagementType.CONTAINER)
 public class APICardOperations {
 
     private static final String CARD_ACTIVE_STATUS = "01";
     private static final String CARD_DEACTIVE_STATUS = "24";
-
-    @PersistenceContext(unitName = "AlodigaWalletPU")
+    @PersistenceContext(unitName = "AlodigaWalletPU")    
     private EntityManager entityManager;
-
     private int credentialsRetries = 0;
 
     private void saveCardFromBusinessTransaction(Long businessId, TransactionType type) {

@@ -180,7 +180,7 @@ import plaidclientintegration.PlaidClientIntegration;
 @Stateless(name = "FsProcessorWallet", mappedName = "ejb/FsProcessorWallet")
 @TransactionManagement(TransactionManagementType.CONTAINER)
 public class APIOperations {
-
+    
     @PersistenceContext(unitName = "AlodigaWalletPU")
     private EntityManager entityManager;
 
@@ -5691,66 +5691,52 @@ public class APIOperations {
 
     public CardListResponse getCardByIdentificationNumber(String numberIdentification) {
 
-        List<Card> cards = new ArrayList<Card>();
-        CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
-        try {
-            cards = cardEJB.getCardByIdentificationNumber(numberIdentification);
-        } catch (NoResultException e) {
-            e.printStackTrace();
-            return new CardListResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new CardListResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
-        }
-        return new CardListResponse(ResponseCode.SUCCESS, "", cards);
-    }
+       List<Card> cards = new ArrayList<Card>();
+       CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
+       try {
+           cards = cardEJB.getCardByIdentificationNumber(numberIdentification);
+       } catch (NoResultException e) {
+           e.printStackTrace();
+           return new CardListResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
+       } catch (Exception e) {
+           e.printStackTrace();
+           return new CardListResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
+       }
+       return new CardListResponse(ResponseCode.SUCCESS, "", cards);
+   }
 
     public CardListResponse getCardByEmail(String email) {
 
-        List<Card> cards = new ArrayList<Card>();
-        CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
-        try {
-            cards = cardEJB.getCardByEmail(email);
-            System.out.println("cards " + cards.toString());
-        } catch (NoResultException e) {
-            e.printStackTrace();
-            return new CardListResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new CardListResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
-        }
-        return new CardListResponse(ResponseCode.SUCCESS, "", cards);
-    }
+       List<Card> cards = new ArrayList<Card>();
+       CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);       
+       try {
+           cards = cardEJB.getCardByEmail(email);
+              System.out.println("cards " + cards.toString());
+       } catch (NoResultException e) {
+           e.printStackTrace();
+           return new CardListResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
+       } catch (Exception e) {
+           e.printStackTrace();
+           return new CardListResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
+       }
+       return new CardListResponse(ResponseCode.SUCCESS, "", cards);
+   }
+    
+    
+    public CardListResponse getCardByPhone (String phone) {
 
-    public CardListResponse getCardByPhone(String phone) {
-
-        List<Card> cards = new ArrayList<Card>();
-        CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
-        PersonEJB personEJB = (PersonEJB) EJBServiceLocator.getInstance().get(EjbConstants.PERSON_EJB);
-        List<PhonePerson> phonePersonList = null;
-        try {
-            cards = cardEJB.getCardByPhone(phone);
-            for (Card card : cards) {
-
-                EJBRequest request1 = new EJBRequest();
-                Map params = new HashMap();
-                params.put(com.cms.commons.util.Constants.PERSON_KEY, card.getPersonCustomerId());
-                request1.setParams(params);
-                phonePersonList = personEJB.getPhoneByPerson(request1);
-                card.getAlias();
-                card.getPersonCustomerId().getEmail();
-                System.out.println("phone " + phonePersonList.toString());
-                card.getPersonCustomerId().getNaturalCustomer().getFirstNames();
-                card.getPersonCustomerId().getNaturalCustomer().getLastNames();
-            }
-        } catch (NoResultException e) {
-            e.printStackTrace();
-            return new CardListResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new CardListResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
-        }
-        return new CardListResponse(ResponseCode.SUCCESS, "", cards);
-    }
-
+       List<Card> cards = new ArrayList<Card>();
+       CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
+       try {
+           cards = cardEJB.getCardByPhone(phone);
+       } catch (NoResultException e) {
+           e.printStackTrace();
+           return new CardListResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
+       } catch (Exception e) {
+           e.printStackTrace();
+           return new CardListResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
+       }
+       return new CardListResponse(ResponseCode.SUCCESS, "", cards);
+   }
+    
 }
