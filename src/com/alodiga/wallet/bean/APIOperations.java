@@ -180,7 +180,7 @@ import plaidclientintegration.PlaidClientIntegration;
 @Stateless(name = "FsProcessorWallet", mappedName = "ejb/FsProcessorWallet")
 @TransactionManagement(TransactionManagementType.CONTAINER)
 public class APIOperations {
-    
+
     @PersistenceContext(unitName = "AlodigaWalletPU")
     private EntityManager entityManager;
 
@@ -5689,54 +5689,127 @@ public class APIOperations {
         }
     }
 
-    public CardListResponse getCardByIdentificationNumber(String numberIdentification) {
+    public CardResponse getCardByIdentificationNumber(String numberIdentification) {
 
-       List<Card> cards = new ArrayList<Card>();
-       CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
-       try {
-           cards = cardEJB.getCardByIdentificationNumber(numberIdentification);
-       } catch (NoResultException e) {
-           e.printStackTrace();
-           return new CardListResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
-       } catch (Exception e) {
-           e.printStackTrace();
-           return new CardListResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
-       }
-       return new CardListResponse(ResponseCode.SUCCESS, "", cards);
-   }
+        List<Card> cards = new ArrayList<Card>();
+        CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
+        PersonEJB personEJB = (PersonEJB) EJBServiceLocator.getInstance().get(EjbConstants.PERSON_EJB);
+        List<PhonePerson> phonePersonList = null;
+        String alias = "";
+        String name = "";
+        String emailPerson = "";
+        String numberPhone = "";
+        try {
+            cards = cardEJB.getCardByIdentificationNumber(numberIdentification);
+            for (Card card : cards) {
+                EJBRequest request1 = new EJBRequest();
+                Map params = new HashMap();
+                params.put(com.cms.commons.util.Constants.PERSON_KEY, card.getPersonCustomerId().getId());
+                request1.setParams(params);
+                phonePersonList = personEJB.getPhoneByPerson(request1);
+                for (PhonePerson p : phonePersonList) {
+                    if (p.getPhoneTypeId().getId() == com.cms.commons.util.Constants.PHONE_TYPE_MOBILE) {
+                        String area = p.getAreaCode();
+                        String phoneNumber = p.getNumberPhone();
+                        numberPhone = area + phoneNumber;
+                    }
+                }
 
-    public CardListResponse getCardByEmail(String email) {
+                alias = card.getAlias();
+                emailPerson = card.getPersonCustomerId().getEmail();
+                name = card.getPersonCustomerId().getNaturalCustomer().getFirstNames() + " " + card.getPersonCustomerId().getNaturalCustomer().getLastNames();
+            }
+        } catch (NoResultException e) {
+            e.printStackTrace();
+            return new CardResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new CardResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
+        }
+        return new CardResponse(ResponseCode.SUCCESS, "", alias, name, emailPerson, numberPhone);
+    }
 
-       List<Card> cards = new ArrayList<Card>();
-       CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);       
-       try {
-           cards = cardEJB.getCardByEmail(email);
-              System.out.println("cards " + cards.toString());
-       } catch (NoResultException e) {
-           e.printStackTrace();
-           return new CardListResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
-       } catch (Exception e) {
-           e.printStackTrace();
-           return new CardListResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
-       }
-       return new CardListResponse(ResponseCode.SUCCESS, "", cards);
-   }
-    
-    
-    public CardListResponse getCardByPhone (String phone) {
+    public CardResponse getCardByEmail(String email) {
 
-       List<Card> cards = new ArrayList<Card>();
-       CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
-       try {
-           cards = cardEJB.getCardByPhone(phone);
-       } catch (NoResultException e) {
-           e.printStackTrace();
-           return new CardListResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
-       } catch (Exception e) {
-           e.printStackTrace();
-           return new CardListResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
-       }
-       return new CardListResponse(ResponseCode.SUCCESS, "", cards);
-   }
-    
+        List<Card> cards = new ArrayList<Card>();
+        CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
+        PersonEJB personEJB = (PersonEJB) EJBServiceLocator.getInstance().get(EjbConstants.PERSON_EJB);
+        List<PhonePerson> phonePersonList = null;
+        String alias = "";
+        String name = "";
+        String emailPerson = "";
+        String numberPhone = "";
+        try {
+            cards = cardEJB.getCardByEmail(email);
+            System.out.println("cards " + cards.toString());
+            for (Card card : cards) {
+
+                EJBRequest request1 = new EJBRequest();
+                Map params = new HashMap();
+                params.put(com.cms.commons.util.Constants.PERSON_KEY, card.getPersonCustomerId().getId());
+                request1.setParams(params);
+                phonePersonList = personEJB.getPhoneByPerson(request1);
+                for (PhonePerson p : phonePersonList) {
+                    if (p.getPhoneTypeId().getId() == com.cms.commons.util.Constants.PHONE_TYPE_MOBILE) {
+                        String area = p.getAreaCode();
+                        String phoneNumber = p.getNumberPhone();
+                        numberPhone = area + phoneNumber;
+                    }
+                }
+
+                alias = card.getAlias();
+                emailPerson = card.getPersonCustomerId().getEmail();
+                name = card.getPersonCustomerId().getNaturalCustomer().getFirstNames() + " " + card.getPersonCustomerId().getNaturalCustomer().getLastNames();
+            }
+        } catch (NoResultException e) {
+            e.printStackTrace();
+            return new CardResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new CardResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
+        }
+        return new CardResponse(ResponseCode.SUCCESS, "", alias, name, emailPerson, numberPhone);
+    }
+
+    public CardResponse getCardByPhone(String phone) {
+
+        List<Card> cards = new ArrayList<Card>();
+        CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
+        PersonEJB personEJB = (PersonEJB) EJBServiceLocator.getInstance().get(EjbConstants.PERSON_EJB);
+        List<PhonePerson> phonePersonList = null;
+        String alias = "";
+        String name = "";
+        String emailPerson = "";
+        String numberPhone = "";
+        try {
+            cards = cardEJB.getCardByPhone(phone);
+            for (Card card : cards) {
+
+                EJBRequest request1 = new EJBRequest();
+                Map params = new HashMap();
+                params.put(com.cms.commons.util.Constants.PERSON_KEY, card.getPersonCustomerId().getId());
+                request1.setParams(params);
+                phonePersonList = personEJB.getPhoneByPerson(request1);
+                for (PhonePerson p : phonePersonList) {
+                    if (p.getPhoneTypeId().getId() == com.cms.commons.util.Constants.PHONE_TYPE_MOBILE) {
+                        String area = p.getAreaCode();
+                        String phoneNumber = p.getNumberPhone();
+                        numberPhone = area + phoneNumber;
+                    }
+                }
+
+                alias = card.getAlias();
+                emailPerson = card.getPersonCustomerId().getEmail();
+                name = card.getPersonCustomerId().getNaturalCustomer().getFirstNames() + " " + card.getPersonCustomerId().getNaturalCustomer().getLastNames();
+            }
+        } catch (NoResultException e) {
+            e.printStackTrace();
+            return new CardResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new CardResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
+        }
+        return new CardResponse(ResponseCode.SUCCESS, "", alias, name, emailPerson, numberPhone);
+    }
+
 }
