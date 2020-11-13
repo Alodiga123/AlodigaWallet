@@ -40,7 +40,8 @@ public class APICardOperations {
 
     private static final String CARD_ACTIVE_STATUS = "01";
     private static final String CARD_DEACTIVE_STATUS = "24";
-    @PersistenceContext(unitName = "AlodigaWalletPU")    
+    
+    @PersistenceContext(unitName = "AlodigaWalletPU")
     private EntityManager entityManager;
     private int credentialsRetries = 0;
 
