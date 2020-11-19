@@ -151,9 +151,9 @@ import com.alodiga.wallet.responses.TransferCardToCardCredential;
 import com.alodiga.wallet.responses.TransferCardToCardResponses;
 import com.alodiga.wallet.responses.UserHasProductResponse;
 import com.alodiga.wallet.topup.TopUpInfo;
-import com.alodiga.ws.cumpliments.services.OFACMethodWSProxy;
-import com.alodiga.ws.cumpliments.services.WsExcludeListResponse;
-import com.alodiga.ws.cumpliments.services.WsLoginResponse;
+import com.alodiga.ws.remittance.services.WSOFACMethodProxy;
+import com.alodiga.ws.remittance.services.WsExcludeListResponse;
+import com.alodiga.ws.remittance.services.WsLoginResponse;
 import com.alodiga.ws.remittance.services.WSRemittenceMobileProxy;
 import com.alodiga.ws.remittance.services.WsAddressListResponse;
 import com.alodiga.ws.remittance.services.WsRemittenceResponse;
@@ -2714,7 +2714,7 @@ public class APIOperations {
             responseUser = proxy.getUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId));
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
             Address address = saveAddress(userId, estado, ciudad, zipCode, addres1);
-            OFACMethodWSProxy oFACMethodWSProxy = new OFACMethodWSProxy();
+            WSOFACMethodProxy oFACMethodWSProxy = new WSOFACMethodProxy();
 
             WsLoginResponse response;
             WsExcludeListResponse response2;
@@ -5730,7 +5730,6 @@ public class APIOperations {
     }
 
     public CardResponse getCardByEmail(String email) {
-
         List<Card> cards = new ArrayList<Card>();
         CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
         PersonEJB personEJB = (PersonEJB) EJBServiceLocator.getInstance().get(EjbConstants.PERSON_EJB);
@@ -5743,22 +5742,27 @@ public class APIOperations {
             cards = cardEJB.getCardByEmail(email);
             System.out.println("cards " + cards.toString());
             for (Card card : cards) {
-
-                EJBRequest request1 = new EJBRequest();
-                Map params = new HashMap();
-                params.put(com.cms.commons.util.Constants.PERSON_KEY, card.getPersonCustomerId().getId());
-                request1.setParams(params);
-                phonePersonList = personEJB.getPhoneByPerson(request1);
-                for (PhonePerson p : phonePersonList) {
-                    if (p.getPhoneTypeId().getId() == com.cms.commons.util.Constants.PHONE_TYPE_MOBILE) {
-                        String area = p.getAreaCode();
-                        String phoneNumber = p.getNumberPhone();
-                        numberPhone = area + phoneNumber;
+                Long havePhone = personEJB.havePhonesByPerson(card.getPersonCustomerId().getId()); 
+                if (havePhone > 0) {
+                    EJBRequest request1 = new EJBRequest();
+                    Map params = new HashMap();
+                    params.put(com.cms.commons.util.Constants.PERSON_KEY, card.getPersonCustomerId().getId());
+                    request1.setParams(params);
+                    phonePersonList = personEJB.getPhoneByPerson(request1);
+                    for (PhonePerson p : phonePersonList) {
+                        if (p.getPhoneTypeId().getId() == com.cms.commons.util.Constants.PHONE_TYPE_MOBILE) {
+                            String area = p.getAreaCode();
+                            String phoneNumber = p.getNumberPhone();
+                            numberPhone = area + phoneNumber;
+                        }
                     }
+                } else {
+                    numberPhone = "cliente sin número de teléfono registrado en BD";
                 }
-
                 alias = card.getAlias();
-                emailPerson = card.getPersonCustomerId().getEmail();
+                if (card.getPersonCustomerId().getEmail() != null) {
+                    emailPerson = card.getPersonCustomerId().getEmail();
+                }                
                 name = card.getPersonCustomerId().getNaturalCustomer().getFirstNames() + " " + card.getPersonCustomerId().getNaturalCustomer().getLastNames();
             }
         } catch (NoResultException e) {
@@ -5768,7 +5772,7 @@ public class APIOperations {
             e.printStackTrace();
             return new CardResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
         }
-        return new CardResponse(ResponseCode.SUCCESS, "", alias, name, emailPerson, numberPhone);
+        return new CardResponse(ResponseCode.SUCCESS, "Card registered in BD", alias, name, emailPerson, numberPhone);
     }
 
     public CardResponse getCardByPhone(String phone) {
