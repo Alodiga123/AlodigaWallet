@@ -1,7 +1,7 @@
 package com.alodiga.wallet.responses;
 
 
-import com.alodiga.wallet.response.generic.BankGeneric;
+import com.alodiga.wallet.common.model.Bank;
 import java.util.Date;
 import java.util.List;
 
@@ -14,7 +14,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class BankListResponse extends Response {
 
-	public List<BankGeneric> banks;
+	public List<Bank> banks;
 	
 	public BankListResponse() {
 		super();
@@ -30,7 +30,7 @@ public class BankListResponse extends Response {
 		this.banks = null;
 	}
 
-	public BankListResponse(ResponseCode code, String mensaje, List<BankGeneric> banks_) {
+	public BankListResponse(ResponseCode code, String mensaje, List<Bank> banks_) {
 		super(new Date(), code.getCode(), mensaje);
 		this.banks = banks_;
 	}
