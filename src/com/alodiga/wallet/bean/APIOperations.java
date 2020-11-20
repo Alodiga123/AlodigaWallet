@@ -1830,15 +1830,10 @@ public class APIOperations {
 
             //Validar preferencias
             totalTransactionsByUserDaily = TransactionsByUserCurrentDate(userId, EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
-
             totalAmountByUserDaily = AmountMaxByUserCurrentDate(userId, EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
-
             totalTransactionsByUserMonthly = TransactionsByUserCurrentDate(userId, EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
-
             totalAmountByUserMonthly = AmountMaxByBusinessCurrentDate(userId, EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
-
             totalTransactionsByUserYearly = TransactionsByBusinessCurrentDate(userId, EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
-
             totalAmountByUserYearly = AmountMaxByBusinessCurrentDate(userId, EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
 
             List<Preference> preferences = getPreferences();
@@ -1999,12 +1994,10 @@ public class APIOperations {
             Bank bank = entityManager.find(Bank.class, bankId);
             manualRecharge.setBankId(bank);
             manualRecharge.setBankOperationNumber(referenceNumberOperation);
-
             entityManager.persist(manualRecharge);
-
             recharge.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
-
             entityManager.merge(recharge);
+            
             try {
                 System.out.println("" + recharge.getId());
                 TransactionApproveRequestResponse transactionApproveRequestResponse = saveTransactionApproveRequest(userId, product.getId(), recharge.getId(), bankId, documentTypeId, originApplicationId, 0L);
