@@ -1,7 +1,6 @@
 package com.alodiga.wallet.ws;
 
 
-
 import javax.ejb.EJB;
 import javax.jws.WebMethod;
 import javax.jws.WebParam;
@@ -112,6 +111,12 @@ public class APIAlodigaWallet {
     @WebMethod
     public BankListResponse getBankApp() {
         return operations.getBankApp();
+    }
+    
+    @WebMethod
+    public BankListResponse getBankByUser(
+        @WebParam(name = "userId") Long userId) {
+        return operations.getBankByUser(userId);
     }
 
     @WebMethod
