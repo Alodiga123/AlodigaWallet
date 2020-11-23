@@ -15,7 +15,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class CardResponse extends Response {
 
 	public Card card;
-        private String numberCard;
+        private String aliasCard;
         private String name;
         private String email;
         private String numberPhone;
@@ -34,14 +34,14 @@ public class CardResponse extends Response {
 		this.card = null;
 	}
 
-    public CardResponse(ResponseCode code, String mensaje, String numberCard) {
+    public CardResponse(ResponseCode code, String mensaje, String aliasCard) {
         super(new Date(), code.getCode(), mensaje);
-        this.numberCard = numberCard;
+        this.aliasCard = aliasCard;
     }
     
-    public CardResponse(ResponseCode code, String mensaje, String numberCard, String name, String email, String numberPhone) {
+    public CardResponse(ResponseCode code, String mensaje, String numberCard, String name, String email, String aliasCard) {
         super(new Date(), code.getCode(), mensaje);
-        this.numberCard = numberCard;
+        this.aliasCard = aliasCard;
         this.name = name;
         this.email = email;
         this.numberPhone = numberPhone;
@@ -55,12 +55,12 @@ public class CardResponse extends Response {
         this.card = card;
     }
 
-    public String getNumberCard() {
-        return numberCard;
+    public String getaliasCard() {
+        return aliasCard;
     }
 
-    public void setNumberCard(String numberCard) {
-        this.numberCard = numberCard;
+    public void setaliasCard(String aliasCard) {
+        this.aliasCard = aliasCard;
     }
 
     public String getName() {
