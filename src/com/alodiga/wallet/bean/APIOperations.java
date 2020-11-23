@@ -96,6 +96,7 @@ import com.alodiga.wallet.common.model.TransactionStatus;
 import com.alodiga.wallet.common.model.TransactionType;
 import com.alodiga.wallet.common.model.UserHasCard;
 import com.alodiga.wallet.common.model.UserHasProduct;
+import com.alodiga.wallet.common.model.UserHasBank;
 import com.alodiga.wallet.common.model.UserWS;
 import com.alodiga.wallet.common.model.ValidationCollection;
 import com.alodiga.wallet.common.utils.AmazonSESSendMail;
@@ -272,7 +273,7 @@ public class APIOperations {
     }
 
     public CountryListResponse getCountries() {
-        List< Country> countries = null;
+        List<Country> countries = null;
         try {
             countries = entityManager.createNamedQuery("Country.findAll", Country.class).getResultList();
 
@@ -286,23 +287,18 @@ public class APIOperations {
         List<Bank> banks = null;
         try {
             banks = entityManager.createNamedQuery("Bank.findAll", Bank.class).getResultList();
+        
         } catch (Exception e) {
             return new BankListResponse(ResponseCode.INTERNAL_ERROR, "Error loading bank");
         }
-        ArrayList<BankGeneric> bankGenerics = new ArrayList<BankGeneric>();
-        for (Bank b : banks) {
-            BankGeneric bankGeneric = new BankGeneric(b.getId().toString(), b.getName(), b.getAbaCode());
-            bankGenerics.add(bankGeneric);
-        }
 
-        return new BankListResponse(ResponseCode.SUCCESS, "", bankGenerics);
+        return new BankListResponse(ResponseCode.SUCCESS, "", banks);
 
     }
 
     public BankListResponse getBankByCountryApp(Long countryId) {
         List<Bank> banks = new ArrayList<Bank>();
         List<Country> countrys = new ArrayList<Country>();
-        List<BankGeneric> bankGenerics = new ArrayList<BankGeneric>();
         try {
             banks = (List<Bank>) entityManager.createNamedQuery("Bank.findByCountryId", Bank.class).setParameter("countryId", countryId).getResultList();
 
@@ -310,17 +306,12 @@ public class APIOperations {
                 return new BankListResponse(ResponseCode.INTERNAL_ERROR, "Lista de banco vacia");
             }
 
-            for (Bank b : banks) {
-                BankGeneric bankGeneric = new BankGeneric(b.getId().toString(), b.getName(), b.getAbaCode());
-                bankGenerics.add(bankGeneric);
-            }
-
         } catch (Exception e) {
             e.printStackTrace();
             return new BankListResponse(ResponseCode.INTERNAL_ERROR, "Error loading bank");
         }
 
-        return new BankListResponse(ResponseCode.SUCCESS, "", bankGenerics);
+        return new BankListResponse(ResponseCode.SUCCESS, "", banks);
     }
 
     public TransactionResponse savePaymentShop(String cryptogramShop, String emailUser, Long productId, Float amountPayment,
@@ -1845,15 +1836,10 @@ public class APIOperations {
 
             //Validar preferencias
             totalTransactionsByUserDaily = TransactionsByUserCurrentDate(userId, EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
-
             totalAmountByUserDaily = AmountMaxByUserCurrentDate(userId, EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
-
             totalTransactionsByUserMonthly = TransactionsByUserCurrentDate(userId, EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
-
             totalAmountByUserMonthly = AmountMaxByBusinessCurrentDate(userId, EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
-
             totalTransactionsByUserYearly = TransactionsByBusinessCurrentDate(userId, EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
-
             totalAmountByUserYearly = AmountMaxByBusinessCurrentDate(userId, EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
 
             List<Preference> preferences = getPreferences();
@@ -2014,12 +2000,10 @@ public class APIOperations {
             Bank bank = entityManager.find(Bank.class, bankId);
             manualRecharge.setBankId(bank);
             manualRecharge.setBankOperationNumber(referenceNumberOperation);
-
             entityManager.persist(manualRecharge);
-
             recharge.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
-
             entityManager.merge(recharge);
+            
             try {
                 System.out.println("" + recharge.getId());
                 TransactionApproveRequestResponse transactionApproveRequestResponse = saveTransactionApproveRequest(userId, product.getId(), recharge.getId(), bankId, documentTypeId, originApplicationId, 0L);
@@ -5820,6 +5804,30 @@ public class APIOperations {
             return new CardResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
         }
         return new CardResponse(ResponseCode.SUCCESS, "", alias, name, emailPerson, numberPhone);
+    }
+    
+    public BankListResponse getBankByUser(Long userId){
+        List<UserHasBank> userHasBank = new ArrayList<UserHasBank>();
+        List<Bank> banks = new ArrayList<Bank>();
+        try {
+             userHasBank = (List<UserHasBank>) entityManager.createNamedQuery("UserHasBank.findByUserSourceIdAllBank", UserHasBank.class).setParameter("userSourceId", userId).getResultList();
+             
+             if (userHasBank.size() <= 0){
+                 return new BankListResponse(ResponseCode.USER_NOT_HAS_BANK, "They are not banks asociated");
+             }
+
+             for (UserHasBank uhb : userHasBank){
+                 Bank bank = new Bank();
+                 bank = entityManager.find(Bank.class, uhb.getBankId().getId());
+                 banks.add(bank);
+             }
+        
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new BankListResponse(ResponseCode.INTERNAL_ERROR, "Error loading banks");
+        }
+        
+        return new BankListResponse(ResponseCode.SUCCESS, "", banks);
     }
 
     public DispertionTransferResponses dispertionTransfer(String email, Float balance, Long productId) {
