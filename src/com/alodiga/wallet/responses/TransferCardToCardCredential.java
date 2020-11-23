@@ -24,6 +24,7 @@ public class TransferCardToCardCredential extends Response implements Serializab
     private String balance;   
     private String rearBalanceAccountDestination;
     private String destinationAccountBalance;
+       
     
     public TransferCardToCardCredential() {
     }
