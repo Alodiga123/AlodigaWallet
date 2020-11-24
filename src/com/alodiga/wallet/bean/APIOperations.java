@@ -6258,4 +6258,29 @@ public class APIOperations {
             return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "Error");
         }
     }
+    
+    public ProductResponse getProductPrepaidCardByUser(Long userId){
+        Product product = new Product();
+        try{
+            //Se buscan los productos asociados al usuario
+            ProductListResponse productsResponse = getProductsByUserId(userId);
+            
+            if(productsResponse == null){
+                return new ProductResponse(ResponseCode.USER_NOT_HAS_PRODUCT, "They are not products asociated");
+            }
+           
+            //Se verificar que el producto del usuario tiene activado el indicador isUsePrepaidCard 
+            List<Product> productsList = productsResponse.products;
+            for(Product pr : productsList){
+                if(pr.getIsUsePrepaidCard() == true){
+                   product = entityManager.find(Product.class, pr.getId());
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ProductResponse(ResponseCode.INTERNAL_ERROR, "Error loading products");
+        }
+        return new ProductResponse(ResponseCode.SUCCESS, "", product);
+    }
 }
