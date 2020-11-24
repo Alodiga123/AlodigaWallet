@@ -6162,24 +6162,36 @@ public class APIOperations {
     public AccountBankResponse saveAccountBankUser(Long bankId, Long unifiedRegistryId, String accountNumber, Integer accountTypeBankId){
         String statusAccountBankCode = StatusAccountBankE.ACTIVA.getStatusAccountCode();
         try {
+
+            //Se consulta si el bank existe
+            Bank bank = entityManager.find(Bank.class, bankId);
+            if(bank == null){
+               return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "The Bank is not registered in the BD"); 
+            }
+            
+            //Se consulta si el AccountTypeBank existe
+            AccountTypeBank accountTypeBank = entityManager.find(AccountTypeBank.class, accountTypeBankId);   
+            if(accountTypeBank == null){
+               return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "The Account Type Bank is not registered in the BD"); 
+            }
+            
+            //Se busca el status Activo para la cuente bancaria
+            StatusAccountBank statusAccountBank = (StatusAccountBank) entityManager.createNamedQuery(QueryConstants.STATUS_ACCOUNT_BANK_BY_CODE, StatusAccountBank.class).setParameter("code", statusAccountBankCode).getSingleResult();
+            
+            //Se guarda la cuenta bancaria del usuario en la BD
             AccountBank accountBank = new AccountBank();
             accountBank.setUnifiedRegistryId(unifiedRegistryId);
             accountBank.setAccountNumber(accountNumber);
-            
-            //Verificar si existe el bank el ID 
-            Bank bank = entityManager.find(Bank.class, bankId);
             accountBank.setBankId(bank);
-            StatusAccountBank statusAccountBank = (StatusAccountBank) entityManager.createNamedQuery(QueryConstants.STATUS_ACCOUNT_BANK_BY_CODE, StatusAccountBank.class).setParameter("code", statusAccountBankCode).getSingleResult();
             accountBank.setStatusAccountBankId(statusAccountBank);
-            AccountTypeBank accountTypeBank = entityManager.find(AccountTypeBank.class, accountTypeBankId);
             accountBank.setAccountTypeBankId(accountTypeBank);
             accountBank.setCreateDate(new Timestamp(new Date().getTime()));
             entityManager.persist(accountBank);
             return new AccountBankResponse(ResponseCode.SUCCESS, "", accountBank);
+        
         }catch (Exception e) {
             e.printStackTrace();
             return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "Error");
         }
-        
     }
 }
