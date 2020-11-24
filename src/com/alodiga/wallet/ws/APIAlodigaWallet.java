@@ -642,6 +642,16 @@ public class APIAlodigaWallet {
     }
     
     @WebMethod
+    public AccountBankResponse saveAccountBankUser(
+    @WebParam(name = "bankId") Long bankId,
+            @WebParam(name = "unifiedRegistryId") Long unifiedRegistryId,
+            @WebParam(name = "accountNumber") String accountNumber,
+            @WebParam(name = "accountTypeBankId") Integer accountTypeBankId) {
+        return operations.saveAccountBankUser(bankId,unifiedRegistryId,accountNumber,accountTypeBankId);
+
+    }
+    
+    @WebMethod
     public TransactionApproveRequestResponse saveTransactionApproveRequest(
     @WebParam(name = "unifiedRegistryId") Long unifiedRegistryId,
             @WebParam(name = "productId") Long productId,

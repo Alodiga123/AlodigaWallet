@@ -5831,8 +5831,7 @@ public class APIOperations {
     }
 
     public DispertionTransferResponses dispertionTransfer(String email, Float balance, Long productId) {
-
-        APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+         APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
         ArrayList<Product> products = new ArrayList<Product>();
         CredentialAutorizationClient credentialAutorizationClient = new CredentialAutorizationClient();
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
@@ -5944,7 +5943,7 @@ public class APIOperations {
             String sequence = transactionTypeE + yearSequence + Numbersequence;
 
             DispertionResponse dispertionResponse = credentialAutorizationClient.dispertionTransfer(date, hour, alias, String.valueOf(balance), sequence);
-            
+
 
             if (dispertionResponse.getCodigoError().equals("-1")) {
                 DispertionTransferCredential dispertionTransferCredential = new DispertionTransferCredential(dispertionResponse.getCodigoError(), dispertionResponse.getMensajeError(), dispertionResponse.getCodigoRespuesta(), dispertionResponse.getMensajeRespuesta(), dispertionResponse.getCodigoAutorizacion());
@@ -5987,7 +5986,7 @@ public class APIOperations {
                 Timestamp balanceHistoryDate = new Timestamp(balanceDate.getTime());
                 balanceHistory.setDate(balanceHistoryDate);
                 entityManager.persist(balanceHistory);
-                
+
                 try {
                     products = getProductsListByUserId(userId);
                     for (Product p : products) {
@@ -6023,11 +6022,11 @@ public class APIOperations {
 
                     return new DispertionTransferResponses(ResponseCode.INTERNAL_ERROR, "Error loading products");
                 }
-                
+
                 DispertionTransferResponses dispertionTransferResponses = new DispertionTransferResponses(dispertionTransferCredential, ResponseCode.SUCCESS, "SUCCESS", products);
                 dispertionTransferResponses.setIdTransaction(transaction.getId().toString());
                 dispertionTransferResponses.setProducts(products);
-                
+
                 return dispertionTransferResponses;
             } else if (dispertionResponse.getCodigoError().equals("204")) {
                 return new DispertionTransferResponses(ResponseCode.NON_EXISTENT_CARD, "NON EXISTENT CARD");
@@ -6128,7 +6127,6 @@ public class APIOperations {
             ex.printStackTrace();
             return new DispertionTransferResponses(ResponseCode.INTERNAL_ERROR, "");
         }
-
     }
     
     
@@ -6160,5 +6158,28 @@ public class APIOperations {
 
         return new ProductListResponse(ResponseCode.SUCCESS, "", productFinals);
     }
-
+    
+    public AccountBankResponse saveAccountBankUser(Long bankId, Long unifiedRegistryId, String accountNumber, Integer accountTypeBankId){
+        String statusAccountBankCode = StatusAccountBankE.ACTIVA.getStatusAccountCode();
+        try {
+            AccountBank accountBank = new AccountBank();
+            accountBank.setUnifiedRegistryId(unifiedRegistryId);
+            accountBank.setAccountNumber(accountNumber);
+            
+            //Verificar si existe el bank el ID 
+            Bank bank = entityManager.find(Bank.class, bankId);
+            accountBank.setBankId(bank);
+            StatusAccountBank statusAccountBank = (StatusAccountBank) entityManager.createNamedQuery(QueryConstants.STATUS_ACCOUNT_BANK_BY_CODE, StatusAccountBank.class).setParameter("code", statusAccountBankCode).getSingleResult();
+            accountBank.setStatusAccountBankId(statusAccountBank);
+            AccountTypeBank accountTypeBank = entityManager.find(AccountTypeBank.class, accountTypeBankId);
+            accountBank.setAccountTypeBankId(accountTypeBank);
+            accountBank.setCreateDate(new Timestamp(new Date().getTime()));
+            entityManager.persist(accountBank);
+            return new AccountBankResponse(ResponseCode.SUCCESS, "", accountBank);
+        }catch (Exception e) {
+            e.printStackTrace();
+            return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "Error");
+        }
+        
+    }
 }
