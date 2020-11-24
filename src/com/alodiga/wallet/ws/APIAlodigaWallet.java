@@ -83,6 +83,12 @@ public class APIAlodigaWallet {
             @WebParam(name = "symbol") String symbol) {
         return operations.saveProduct(Long.valueOf(enterpriseId), Long.valueOf(categoryId), Long.valueOf(productIntegrationTypeId), name, taxInclude, status, referenceCode, rateUrl, accesNumberUrl, isFree, isAlocashproduct, symbol);
     }
+    
+    @WebMethod
+    public ProductResponse getProductPrepaidCardByUser(
+            @WebParam(name = "userId") Long userId) {
+        return operations.getProductPrepaidCardByUser(userId);
+    }
 
     @WebMethod
     public UserHasProductResponse saveUserHasProduct(
@@ -102,7 +108,7 @@ public class APIAlodigaWallet {
             @WebParam(name = "userId") String userId) {
         return operations.getProductsByUserId(Long.valueOf(userId));
     }
-
+    
     @WebMethod
     public CountryListResponse getCountries() {
         return operations.getCountries();
