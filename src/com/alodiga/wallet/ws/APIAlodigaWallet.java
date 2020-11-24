@@ -29,6 +29,7 @@ import com.alodiga.wallet.responses.CountryListResponse;
 import com.alodiga.wallet.responses.CreditCardListResponse;
 import com.alodiga.wallet.responses.CumplimientResponse;
 import com.alodiga.wallet.responses.DesactivateCardResponses;
+import com.alodiga.wallet.responses.DispertionTransferResponses;
 import com.alodiga.wallet.responses.ExchangeTokenPlaidResponses;
 import com.alodiga.wallet.responses.LanguageListResponse;
 import com.alodiga.wallet.responses.PaymentInfoListResponse;
@@ -642,6 +643,16 @@ public class APIAlodigaWallet {
     }
     
     @WebMethod
+    public AccountBankResponse saveAccountBankUser(
+    @WebParam(name = "bankId") Long bankId,
+            @WebParam(name = "unifiedRegistryId") Long unifiedRegistryId,
+            @WebParam(name = "accountNumber") String accountNumber,
+            @WebParam(name = "accountTypeBankId") Integer accountTypeBankId) {
+        return operations.saveAccountBankUser(bankId,unifiedRegistryId,accountNumber,accountTypeBankId);
+
+    }
+    
+    @WebMethod
     public TransactionApproveRequestResponse saveTransactionApproveRequest(
     @WebParam(name = "unifiedRegistryId") Long unifiedRegistryId,
             @WebParam(name = "productId") Long productId,
@@ -748,5 +759,20 @@ public class APIAlodigaWallet {
             @WebParam(name = "numberIdentification") String numberIdentification){
         return operations.getCardByIdentificationNumber(numberIdentification);
     }
+    
+    @WebMethod
+    public DispertionTransferResponses dispertionTransfer(
+            @WebParam(name = "email") String email,
+            @WebParam(name = "balance") Float balance,
+            @WebParam(name = "productId") Long productId){
+        return operations.dispertionTransfer(email,balance,productId);
+    }
+    
+    @WebMethod
+    public ProductListResponse getProductsUsePrepaidCardByUserId(
+            @WebParam(name = "userId") Long userId){
+        return operations.getProductsUsePrepaidCardByUserId(userId);
+    }
+    
     
 }
