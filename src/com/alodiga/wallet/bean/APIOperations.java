@@ -287,7 +287,7 @@ public class APIOperations {
         List<Bank> banks = null;
         try {
             banks = entityManager.createNamedQuery("Bank.findAll", Bank.class).getResultList();
-        
+
         } catch (Exception e) {
             return new BankListResponse(ResponseCode.INTERNAL_ERROR, "Error loading bank");
         }
@@ -2003,7 +2003,7 @@ public class APIOperations {
             entityManager.persist(manualRecharge);
             recharge.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(recharge);
-            
+
             try {
                 System.out.println("" + recharge.getId());
                 TransactionApproveRequestResponse transactionApproveRequestResponse = saveTransactionApproveRequest(userId, product.getId(), recharge.getId(), bankId, documentTypeId, originApplicationId, 0L);
@@ -4550,13 +4550,13 @@ public class APIOperations {
         try {
             Integer numberSequence = s.getCurrentValue() > 1 ? s.getCurrentValue() : s.getInitialValue();
             s.setCurrentValue(s.getCurrentValue() + 1);
-            //saveSequences(s);
             Calendar cal = Calendar.getInstance();
             int year = cal.get(Calendar.YEAR);
             secuence = ((s.getOriginApplicationId().getId().equals(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID)) ? "APP-" : (s.getOriginApplicationId().getId().equals(Constants.ORIGIN_APPLICATION_ADMIN_WALLET_ID)) ? "ADM-" : "PBW-")
                     .concat(s.getDocumentTypeId().getAcronym()).concat("-")
                     .concat(String.valueOf(year)).concat("-")
                     .concat(numberSequence.toString());
+            entityManager.persist(s);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -5805,28 +5805,28 @@ public class APIOperations {
         }
         return new CardResponse(ResponseCode.SUCCESS, "", alias, name, emailPerson, numberPhone);
     }
-    
-    public BankListResponse getBankByUser(Long userId){
+
+    public BankListResponse getBankByUser(Long userId) {
         List<UserHasBank> userHasBank = new ArrayList<UserHasBank>();
         List<Bank> banks = new ArrayList<Bank>();
         try {
-             userHasBank = (List<UserHasBank>) entityManager.createNamedQuery("UserHasBank.findByUserSourceIdAllBank", UserHasBank.class).setParameter("userSourceId", userId).getResultList();
-             
-             if (userHasBank.size() <= 0){
-                 return new BankListResponse(ResponseCode.USER_NOT_HAS_BANK, "They are not banks asociated");
-             }
+            userHasBank = (List<UserHasBank>) entityManager.createNamedQuery("UserHasBank.findByUserSourceIdAllBank", UserHasBank.class).setParameter("userSourceId", userId).getResultList();
 
-             for (UserHasBank uhb : userHasBank){
-                 Bank bank = new Bank();
-                 bank = entityManager.find(Bank.class, uhb.getBankId().getId());
-                 banks.add(bank);
-             }
-        
+            if (userHasBank.size() <= 0) {
+                return new BankListResponse(ResponseCode.USER_NOT_HAS_BANK, "They are not banks asociated");
+            }
+
+            for (UserHasBank uhb : userHasBank) {
+                Bank bank = new Bank();
+                bank = entityManager.find(Bank.class, uhb.getBankId().getId());
+                banks.add(bank);
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
             return new BankListResponse(ResponseCode.INTERNAL_ERROR, "Error loading banks");
         }
-        
+
         return new BankListResponse(ResponseCode.SUCCESS, "", banks);
     }
 
@@ -5836,36 +5836,150 @@ public class APIOperations {
         CredentialAutorizationClient credentialAutorizationClient = new CredentialAutorizationClient();
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         Transaction transaction = new Transaction();
+        SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
+        SimpleDateFormat sdg = new SimpleDateFormat("yyyyMMdd");
+        SimpleDateFormat year = new SimpleDateFormat("yyyy");
+        String hour = sdf.format(timestamp);
+        String date = sdg.format(timestamp);
+        String yearSequence = year.format(timestamp);
+        Integer recharge = DocumentTypeE.PROREC.getId();
+        Integer transactionTypeE = TransactionTypeE.PROREC.getId();
+        int totalTransactionsByUserDaily = 0;
+        int totalTransactionsByUserMonthly = 0;
+        int totalTransactionsByUserYearly = 0;
+        Double totalAmountByUserDaily = 0.00D;
+        Double totalAmountByUserMonthly = 0.00D;
+        Double totalAmountByUserYearly = 0.00D;
+        Timestamp begginingDateTime = new Timestamp(0);
+        Timestamp endingDateTime = new Timestamp(0);
+        Long idTransaction = 0L;
+        Long idPreferenceField = 0L;
+        List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
+        List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
+        List<Commission> commissions = new ArrayList<Commission>();
+        Float amountCommission = 0.00F;
+        short isPercentCommission = 0;
+        Commission commissionTransfer = new Commission();
         try {
             ignoreSSLAutorization();
+            //Se obtiene el usuario de registro unificado
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS", "passwordWS", email);
             Long userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
-            CardResponse cardResponse = getCardByEmail(email);
-            String alias = cardResponse.getaliasCard();
-            SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
-            SimpleDateFormat sdg = new SimpleDateFormat("yyyyMMdd");
-            SimpleDateFormat year = new SimpleDateFormat("yyyy");
-            String hour = sdf.format(timestamp);
-            String date = sdg.format(timestamp);
-            String yearSequence = year.format(timestamp);
-            Integer recharge = DocumentTypeE.PROREC.getId();
-            Integer transactionTypeE = TransactionTypeE.PROREC.getId();
-            int totalTransactionsByUser = 0;
-            Long totalTransactionsByProduct = 0L;
-            Double totalAmountByUser = 0.00D;
-            Timestamp begginingDateTime = new Timestamp(0);
-            Timestamp endingDateTime = new Timestamp(0);
-            Long idTransaction = 0L;
-            Long idPreferenceField = 0L;
-            List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
-            List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
-            List<Commission> commissions = new ArrayList<Commission>();
-            Float amountCommission = 0.00F;
-            short isPercentCommission = 0;
-            Commission commissionTransfer = new Commission();
 
+            //Se chequea el balance del producto 
             BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
             try {
+                //Se valida si tiene saldo disponible
+                if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < balance) {
+                    return new DispertionTransferResponses(ResponseCode.USER_HAS_NOT_BALANCE, "The user has no balance available to complete the transaction");
+                }
+
+                begginingDateTime = Utils.DateTransaction()[0];
+                endingDateTime = Utils.DateTransaction()[1];
+
+                //Validar preferencias
+                totalTransactionsByUserDaily = TransactionsByUserCurrentDate(userId, EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
+                totalAmountByUserDaily = AmountMaxByUserCurrentDate(userId, EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
+                totalTransactionsByUserMonthly = TransactionsByUserCurrentDate(userId, EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
+                totalAmountByUserMonthly = AmountMaxByBusinessCurrentDate(userId, EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
+                totalTransactionsByUserYearly = TransactionsByBusinessCurrentDate(userId, EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+                totalAmountByUserYearly = AmountMaxByBusinessCurrentDate(userId, EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
+                //Lista de preferencias
+                List<Preference> preferences = getPreferences();
+                for (Preference p : preferences) {
+                    if (p.getName().equals(Constante.sPreferenceTransaction)) {
+                        idTransaction = p.getId();
+                    }
+                }
+                preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
+                for (PreferenceField pf : preferencesField) {
+                    switch (pf.getName()) {
+                        case Constante.sValidatePreferenceTransaction11:
+                            if (pf.getEnabled() == 1) {
+                                preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+                                for (PreferenceValue pv : preferencesValue) {
+                                    if (pv.getValue().equals("0")) {
+                                        return new DispertionTransferResponses(ResponseCode.DISABLED_TRANSACTION, "Transactions disabled");
+                                    }
+                                }
+                            }
+                            break;
+                        case Constante.sValidatePreferenceTransaction4:
+                            if (pf.getEnabled() == 1) {
+                                preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+                                for (PreferenceValue pv : preferencesValue) {
+                                    if (balance >= Double.parseDouble(pv.getValue())) {
+                                        return new DispertionTransferResponses(ResponseCode.TRANSACTION_AMOUNT_LIMIT, "The user exceeded the maximum amount per transaction");
+                                    }
+                                }
+                            }
+                            break;
+
+                        case Constante.sValidatePreferenceTransaction5:
+                            if (pf.getEnabled() == 1) {
+                                preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+                                for (PreferenceValue pv : preferencesValue) {
+                                    if (totalTransactionsByUserDaily >= Integer.parseInt(pv.getValue())) {
+                                        return new DispertionTransferResponses(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY, "The user exceeded the maximum number of transactions per day");
+                                    }
+                                }
+                            }
+                            break;
+                        case Constante.sValidatePreferenceTransaction6:
+                            if (pf.getEnabled() == 1) {
+                                preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+                                for (PreferenceValue pv : preferencesValue) {
+                                    if (totalAmountByUserDaily >= Double.parseDouble(pv.getValue())) {
+                                        return new DispertionTransferResponses(ResponseCode.TRANSACTION_AMOUNT_LIMIT_DIALY, "The user exceeded the maximum amount per day");
+                                    }
+                                }
+                            }
+                            break;
+                        case Constante.sValidatePreferenceTransaction7:
+                            if (pf.getEnabled() == 1) {
+                                preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+                                for (PreferenceValue pv : preferencesValue) {
+                                    if (totalTransactionsByUserMonthly >= Integer.parseInt(pv.getValue())) {
+                                        return new DispertionTransferResponses(ResponseCode.TRANSACTION_QUANTITY_LIMIT_DIALY, "The user exceeded the maximum number of transactions per month");
+                                    }
+                                }
+                            }
+                            break;
+                        case Constante.sValidatePreferenceTransaction8:
+                            if (pf.getEnabled() == 1) {
+                                preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+                                for (PreferenceValue pv : preferencesValue) {
+                                    if (totalAmountByUserMonthly >= Double.parseDouble(pv.getValue())) {
+                                        return new DispertionTransferResponses(ResponseCode.TRANSACTION_AMOUNT_LIMIT_MONTHLY, "The user exceeded the maximum amount per month");
+                                    }
+                                }
+                            }
+                            break;
+                        case Constante.sValidatePreferenceTransaction9:
+                            if (pf.getEnabled() == 1) {
+                                preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+                                for (PreferenceValue pv : preferencesValue) {
+                                    if (totalTransactionsByUserYearly >= Integer.parseInt(pv.getValue())) {
+                                        return new DispertionTransferResponses(ResponseCode.TRANSACTION_QUANTITY_LIMIT_YEARLY, "The user exceeded the maximum number of transactions per year");
+                                    }
+                                }
+                            }
+                            break;
+                        case Constante.sValidatePreferenceTransaction10:
+                            if (pf.getEnabled() == 1) {
+                                preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
+                                for (PreferenceValue pv : preferencesValue) {
+
+                                    if (totalAmountByUserYearly >= Double.parseDouble(pv.getValue())) {
+                                        return new DispertionTransferResponses(ResponseCode.TRANSACTION_AMOUNT_LIMIT_YEARLY, "The user exceeded the maximum amount per year");
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                }
+
+                //Comisiones 
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransactionTypePR).getResultList();
                 if (commissions.size() < 1) {
                     throw new NoResultException(Constante.sProductNotCommission + " in productId:" + productId + " and userId: " + userId);
@@ -5881,72 +5995,23 @@ public class APIOperations {
                 }
             } catch (NoResultException e) {
                 e.printStackTrace();
-                return new DispertionTransferResponses(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
+                return new DispertionTransferResponses(ResponseCode.INTERNAL_ERROR, "Error in process commision");
             }
             Float amountTransferTotal = balance + amountCommission;
-
-            if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < amountTransferTotal) {
-                return new DispertionTransferResponses(ResponseCode.USER_HAS_NOT_BALANCE, "The user has no balance available to complete the transaction");
-            }
-            begginingDateTime = Utils.DateTransaction()[0];
-            endingDateTime = Utils.DateTransaction()[1];
-            totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
-
-            totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
-
-            totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
-
-            List<Preference> preferences = getPreferences();
-            for (Preference p : preferences) {
-                if (p.getName().equals(Constants.sPreferenceTransaction)) {
-                    idTransaction = p.getId();
-                }
-            }
-            preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
-            for (PreferenceField pf : preferencesField) {
-                switch (pf.getName()) {
-                    case Constants.sValidatePreferenceTransaction1:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalAmountByUser >= Double.parseDouble(pv.getValue())) {
-                                    return new DispertionTransferResponses(ResponseCode.TRANSACTION_AMOUNT_LIMIT, "The user exceeded the maximum amount per day");
-                                }
-                            }
-                        }
-                        break;
-                    case Constants.sValidatePreferenceTransaction2:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
-                                    return new DispertionTransferResponses(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT, "The user exceeded the maximum number of transactions per product");
-                                }
-                            }
-                        }
-                        break;
-                    case Constants.sValidatePreferenceTransaction3:
-                        if (pf.getEnabled() == 1) {
-                            preferencesValue = getPreferenceValuePayment(pf, Constants.preferenceClassficationUser);
-                            for (PreferenceValue pv : preferencesValue) {
-                                if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
-                                    return new DispertionTransferResponses(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER, "The user exceeded the maximum number of transactions per day");
-                                }
-                            }
-                        }
-                        break;
-                }
-            }
-
+            //Se busca por el email el alias que devuelve credencial
+            CardResponse cardResponse = getCardByEmail(email);
+            String alias = cardResponse.getaliasCard();
+            //Secuencia 
             Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Long.valueOf(recharge), Long.valueOf(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID));
             String Numbersequence = generateNumberSequence(sequences);
             String sequence = transactionTypeE + yearSequence + Numbersequence;
-
+            //llamado al servicio de dispersion
             DispertionResponse dispertionResponse = credentialAutorizationClient.dispertionTransfer(date, hour, alias, String.valueOf(balance), sequence);
 
 
             if (dispertionResponse.getCodigoError().equals("-1")) {
                 DispertionTransferCredential dispertionTransferCredential = new DispertionTransferCredential(dispertionResponse.getCodigoError(), dispertionResponse.getMensajeError(), dispertionResponse.getCodigoRespuesta(), dispertionResponse.getMensajeRespuesta(), dispertionResponse.getCodigoAutorizacion());
+                //Se guarda el objeto Transaction
                 transaction.setId(null);
                 transaction.setTransactionNumber(Numbersequence);
                 transaction.setTransactionSequence(sequence);
@@ -5966,7 +6031,7 @@ public class APIOperations {
                 transaction.setConcept(Constants.DISPERTION_CONCEPT_TRANSFER);
                 transaction.setTotalAmount(Float.valueOf(balance));
                 entityManager.persist(transaction);
-
+                //Se actualiza el balance history
                 balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
                 BalanceHistory balanceHistory = new BalanceHistory();
                 balanceHistory.setId(null);
@@ -5986,7 +6051,7 @@ public class APIOperations {
                 Timestamp balanceHistoryDate = new Timestamp(balanceDate.getTime());
                 balanceHistory.setDate(balanceHistoryDate);
                 entityManager.persist(balanceHistory);
-
+                //Se obtiene la lista de productos del usuario
                 try {
                     products = getProductsListByUserId(userId);
                     for (Product p : products) {
@@ -6128,8 +6193,7 @@ public class APIOperations {
             return new DispertionTransferResponses(ResponseCode.INTERNAL_ERROR, "");
         }
     }
-    
-    
+
     public ProductListResponse getProductsUsePrepaidCardByUserId(Long userId) {
         List<Product> products = new ArrayList<Product>();
         List<Product> productFinals = new ArrayList<Product>();
