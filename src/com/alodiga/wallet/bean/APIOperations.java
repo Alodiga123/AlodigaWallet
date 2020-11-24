@@ -5980,7 +5980,7 @@ public class APIOperations {
                 }
 
                 //Comisiones 
-                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransactionTypePR).getResultList();
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", TransactionTypeE.PROREC.getId()).getResultList();
                 if (commissions.size() < 1) {
                     throw new NoResultException(Constante.sProductNotCommission + " in productId:" + productId + " and userId: " + userId);
                 }
