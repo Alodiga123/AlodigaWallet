@@ -5831,8 +5831,7 @@ public class APIOperations {
     }
 
     public DispertionTransferResponses dispertionTransfer(String email, Float balance, Long productId) {
-
-        APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+         APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
         ArrayList<Product> products = new ArrayList<Product>();
         CredentialAutorizationClient credentialAutorizationClient = new CredentialAutorizationClient();
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
@@ -6008,6 +6007,7 @@ public class APIOperations {
             String sequence = transactionTypeE + yearSequence + Numbersequence;
             //llamado al servicio de dispersion
             DispertionResponse dispertionResponse = credentialAutorizationClient.dispertionTransfer(date, hour, alias, String.valueOf(balance), sequence);
+
 
             if (dispertionResponse.getCodigoError().equals("-1")) {
                 DispertionTransferCredential dispertionTransferCredential = new DispertionTransferCredential(dispertionResponse.getCodigoError(), dispertionResponse.getMensajeError(), dispertionResponse.getCodigoRespuesta(), dispertionResponse.getMensajeRespuesta(), dispertionResponse.getCodigoAutorizacion());
@@ -6192,7 +6192,6 @@ public class APIOperations {
             ex.printStackTrace();
             return new DispertionTransferResponses(ResponseCode.INTERNAL_ERROR, "");
         }
-
     }
 
     public ProductListResponse getProductsUsePrepaidCardByUserId(Long userId) {
@@ -6224,8 +6223,39 @@ public class APIOperations {
         return new ProductListResponse(ResponseCode.SUCCESS, "", productFinals);
     }
     
-    
-    
-    
+    public AccountBankResponse saveAccountBankUser(Long bankId, Long unifiedRegistryId, String accountNumber, Integer accountTypeBankId){
+        String statusAccountBankCode = StatusAccountBankE.ACTIVA.getStatusAccountCode();
+        try {
 
+            //Se consulta si el bank existe
+            Bank bank = entityManager.find(Bank.class, bankId);
+            if(bank == null){
+               return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "The Bank is not registered in the BD"); 
+            }
+            
+            //Se consulta si el AccountTypeBank existe
+            AccountTypeBank accountTypeBank = entityManager.find(AccountTypeBank.class, accountTypeBankId);   
+            if(accountTypeBank == null){
+               return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "The Account Type Bank is not registered in the BD"); 
+            }
+            
+            //Se busca el status Activo para la cuente bancaria
+            StatusAccountBank statusAccountBank = (StatusAccountBank) entityManager.createNamedQuery(QueryConstants.STATUS_ACCOUNT_BANK_BY_CODE, StatusAccountBank.class).setParameter("code", statusAccountBankCode).getSingleResult();
+            
+            //Se guarda la cuenta bancaria del usuario en la BD
+            AccountBank accountBank = new AccountBank();
+            accountBank.setUnifiedRegistryId(unifiedRegistryId);
+            accountBank.setAccountNumber(accountNumber);
+            accountBank.setBankId(bank);
+            accountBank.setStatusAccountBankId(statusAccountBank);
+            accountBank.setAccountTypeBankId(accountTypeBank);
+            accountBank.setCreateDate(new Timestamp(new Date().getTime()));
+            entityManager.persist(accountBank);
+            return new AccountBankResponse(ResponseCode.SUCCESS, "", accountBank);
+        
+        }catch (Exception e) {
+            e.printStackTrace();
+            return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "Error");
+        }
+    }
 }
