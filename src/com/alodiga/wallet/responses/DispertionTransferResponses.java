@@ -22,11 +22,8 @@ public class DispertionTransferResponses extends Response implements Serializabl
     public List<Product> products;
     
     public DispertionTransferResponses() {
-    }
-
+    }   
     
-    
-
     public DispertionTransferResponses(DispertionTransferCredential dispertionTransferCredential, ResponseCode codigo, String mensajeRespuesta,ArrayList<Product> products) {
         super(new Date(), codigo.getCode(), mensajeRespuesta);
         this.dispertionTransferCredential = dispertionTransferCredential;
