@@ -6276,6 +6276,11 @@ public class APIOperations {
                    product = entityManager.find(Product.class, pr.getId());
                 }
             }
+            
+            //Si el usuario no tiene ningun producto con el indicador isUsePrepaidCard se envia un mensaje
+            if(product.getId() == null){
+                return new ProductResponse(ResponseCode.INTERNAL_ERROR, "The user does not have a product for the prepaid card");
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
