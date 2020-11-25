@@ -228,19 +228,26 @@ public class APIOperations {
     }
 
     public UserHasProductResponse saveUserHasProductDefault(Long userId) {
+        List<Product> products = new ArrayList<Product>();
+        Boolean isDefaultProduct = true;
         try {
-            UserHasProduct userHasProduct = new UserHasProduct();
-            userHasProduct.setProductId(Product.ALOCOIN_PRODUCT);
-            userHasProduct.setUserSourceId(userId);
-            userHasProduct.setBeginningDate(new Timestamp(new Date().getTime()));
-            entityManager.persist(userHasProduct);
-
-            UserHasProduct userHasProduct1 = new UserHasProduct();
-            userHasProduct1.setProductId(Product.ALODIGA_BALANCE);
-            userHasProduct1.setUserSourceId(userId);
-            userHasProduct1.setBeginningDate(new Timestamp(new Date().getTime()));
-            entityManager.persist(userHasProduct1);
-
+            products = (List<Product>) entityManager.createNamedQuery("Product.findByIsDefaultProduct", Product.class).setParameter("isDefaultProduct", isDefaultProduct).getResultList();
+            
+            if(!products.isEmpty()){
+               for(Product pr : products){
+                    if(pr.getId() != null){
+                        UserHasProduct userHasProduct = new UserHasProduct();
+                        userHasProduct.setProductId(pr.getId());
+                        userHasProduct.setUserSourceId(userId);
+                        userHasProduct.setBeginningDate(new Timestamp(new Date().getTime()));
+                        entityManager.persist(userHasProduct);
+                    } 
+                } 
+            } else {
+                return new UserHasProductResponse(ResponseCode.INTERNAL_ERROR, "There is no default product active at the moment");
+            }
+            
+            
         } catch (Exception e) {
             e.printStackTrace();
             return new UserHasProductResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving product_has_response");
