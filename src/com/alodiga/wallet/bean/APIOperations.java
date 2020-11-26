@@ -168,6 +168,7 @@ import cardcredentialserviceclient.CardCredentialServiceClient;
 import com.alodiga.autorization.credential.response.BalanceInquiryWithMovementsResponse;
 import com.alodiga.autorization.credential.response.BalanceInquiryWithoutMovementsResponse;
 import com.alodiga.autorization.credential.response.DispertionResponse;
+import com.alodiga.autorization.credential.response.LimitAdvanceResponse;
 import com.alodiga.businessportal.ws.BpBusinessInfoResponse;
 import com.alodiga.businessportal.ws.BusinessPortalWSException;
 import com.alodiga.cms.commons.ejb.CardEJB;
@@ -236,18 +237,24 @@ public class APIOperations {
     }
 
     public UserHasProductResponse saveUserHasProductDefault(Long userId) {
+        List<Product> products = new ArrayList<Product>();
+        Boolean isDefaultProduct = true;
         try {
-            UserHasProduct userHasProduct = new UserHasProduct();
-            userHasProduct.setProductId(Product.ALOCOIN_PRODUCT);
-            userHasProduct.setUserSourceId(userId);
-            userHasProduct.setBeginningDate(new Timestamp(new Date().getTime()));
-            entityManager.persist(userHasProduct);
+            products = (List<Product>) entityManager.createNamedQuery("Product.findByIsDefaultProduct", Product.class).setParameter("isDefaultProduct", isDefaultProduct).getResultList();
 
-            UserHasProduct userHasProduct1 = new UserHasProduct();
-            userHasProduct1.setProductId(Product.ALODIGA_BALANCE);
-            userHasProduct1.setUserSourceId(userId);
-            userHasProduct1.setBeginningDate(new Timestamp(new Date().getTime()));
-            entityManager.persist(userHasProduct1);
+            if (!products.isEmpty()) {
+                for (Product pr : products) {
+                    if (pr.getId() != null) {
+                        UserHasProduct userHasProduct = new UserHasProduct();
+                        userHasProduct.setProductId(pr.getId());
+                        userHasProduct.setUserSourceId(userId);
+                        userHasProduct.setBeginningDate(new Timestamp(new Date().getTime()));
+                        entityManager.persist(userHasProduct);
+                    }
+                }
+            } else {
+                return new UserHasProductResponse(ResponseCode.INTERNAL_ERROR, "There is no default product active at the moment");
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -5839,11 +5846,12 @@ public class APIOperations {
     }
 
     public DispertionTransferResponses dispertionTransfer(String email, Float balance, Long productId) {
+
         APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
-        ArrayList<Product> products = new ArrayList<Product>();
         CredentialAutorizationClient credentialAutorizationClient = new CredentialAutorizationClient();
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        Transaction transaction = new Transaction();
+        Timestamp begginingDateTime = new Timestamp(0);
+        Timestamp endingDateTime = new Timestamp(0);
         SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
         SimpleDateFormat sdg = new SimpleDateFormat("yyyyMMdd");
         SimpleDateFormat year = new SimpleDateFormat("yyyy");
@@ -5855,44 +5863,64 @@ public class APIOperations {
         int totalTransactionsByUserDaily = 0;
         int totalTransactionsByUserMonthly = 0;
         int totalTransactionsByUserYearly = 0;
+        short isPercentCommission = 0;
         Double totalAmountByUserDaily = 0.00D;
         Double totalAmountByUserMonthly = 0.00D;
         Double totalAmountByUserYearly = 0.00D;
-        Timestamp begginingDateTime = new Timestamp(0);
-        Timestamp endingDateTime = new Timestamp(0);
+        Float amountCommission = 0.00F;
+        Float amountTransferTotal = 0.00F;
         Long idTransaction = 0L;
         Long idPreferenceField = 0L;
+        ArrayList<Product> products = new ArrayList<Product>();
         List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
         List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
         List<Commission> commissions = new ArrayList<Commission>();
-        Float amountCommission = 0.00F;
-        short isPercentCommission = 0;
+        BalanceHistory balanceUserSource = null;
         Commission commissionTransfer = new Commission();
+
         try {
             ignoreSSLAutorization();
+
             //Se obtiene el usuario de registro unificado
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS", "passwordWS", email);
             Long userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
 
-            //Se chequea el balance del producto 
-            BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
+            //Se obtiene el saldo disponible del usuario
+            balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
+
             try {
+                //Se calcula la comisión de la operación 
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransactionTypePR).getResultList();
+                if (commissions.size() < 1) {
+                    throw new NoResultException(Constante.sProductNotCommission + " in productId:" + productId + " and userId: " + userId);
+                }
+                for (Commission c : commissions) {
+                    commissionTransfer = (Commission) c;
+                    amountCommission = c.getValue();
+                    isPercentCommission = c.getIsPercentCommision();
+                    if (isPercentCommission == 1 && amountCommission > 0) {
+                        amountCommission = (balance * amountCommission) / 100;
+                    }
+                    amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
+                }
+
+                amountTransferTotal = balance + amountCommission;
                 //Se valida si tiene saldo disponible
-                if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < balance) {
+                if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < amountTransferTotal) {
                     return new DispertionTransferResponses(ResponseCode.USER_HAS_NOT_BALANCE, "The user has no balance available to complete the transaction");
                 }
 
+                //Validar preferencias
                 begginingDateTime = Utils.DateTransaction()[0];
                 endingDateTime = Utils.DateTransaction()[1];
-
-                //Validar preferencias
                 totalTransactionsByUserDaily = TransactionsByUserCurrentDate(userId, EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
                 totalAmountByUserDaily = AmountMaxByUserCurrentDate(userId, EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
                 totalTransactionsByUserMonthly = TransactionsByUserCurrentDate(userId, EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
                 totalAmountByUserMonthly = AmountMaxByBusinessCurrentDate(userId, EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
                 totalTransactionsByUserYearly = TransactionsByBusinessCurrentDate(userId, EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
                 totalAmountByUserYearly = AmountMaxByBusinessCurrentDate(userId, EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
-                //Lista de preferencias
+
+                //Validar las preferencias
                 List<Preference> preferences = getPreferences();
                 for (Preference p : preferences) {
                     if (p.getName().equals(Constante.sPreferenceTransaction)) {
@@ -5986,39 +6014,28 @@ public class APIOperations {
                             break;
                     }
                 }
-
-                //Comisiones 
-                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", TransactionTypeE.PROREC.getId()).getResultList();
-                if (commissions.size() < 1) {
-                    throw new NoResultException(Constante.sProductNotCommission + " in productId:" + productId + " and userId: " + userId);
-                }
-                for (Commission c : commissions) {
-                    commissionTransfer = (Commission) c;
-                    amountCommission = c.getValue();
-                    isPercentCommission = c.getIsPercentCommision();
-                    if (isPercentCommission == 1 && amountCommission > 0) {
-                        amountCommission = (balance * amountCommission) / 100;
-                    }
-                    amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
-                }
             } catch (NoResultException e) {
                 e.printStackTrace();
-                return new DispertionTransferResponses(ResponseCode.INTERNAL_ERROR, "Error in process commision");
+                return new DispertionTransferResponses(ResponseCode.INTERNAL_ERROR, "Error in validation process");
             }
-            Float amountTransferTotal = balance + amountCommission;
-            //Se busca por el email el alias que devuelve credencial
+
+            //Se obtiene la tarjeta asociada al usuario
             CardResponse cardResponse = getCardByEmail(email);
             String alias = cardResponse.getaliasCard();
-            //Secuencia 
+
+            //Se genera la secuencia de la transacción
             Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Long.valueOf(recharge), Long.valueOf(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID));
             String Numbersequence = generateNumberSequence(sequences);
             String sequence = transactionTypeE + yearSequence + Numbersequence;
-            //llamado al servicio de dispersion
+
+            //Se efectúa la recarga de la tarjeta
             DispertionResponse dispertionResponse = credentialAutorizationClient.dispertionTransfer(date, hour, alias, String.valueOf(balance), sequence);
 
             if (dispertionResponse.getCodigoError().equals("-1")) {
                 DispertionTransferCredential dispertionTransferCredential = new DispertionTransferCredential(dispertionResponse.getCodigoError(), dispertionResponse.getMensajeError(), dispertionResponse.getCodigoRespuesta(), dispertionResponse.getMensajeRespuesta(), dispertionResponse.getCodigoAutorizacion());
+
                 //Se guarda el objeto Transaction
+                Transaction transaction = new Transaction();
                 transaction.setId(null);
                 transaction.setTransactionNumber(Numbersequence);
                 transaction.setTransactionSequence(sequence);
@@ -6038,8 +6055,8 @@ public class APIOperations {
                 transaction.setConcept(Constants.DISPERTION_CONCEPT_TRANSFER);
                 transaction.setTotalAmount(Float.valueOf(balance));
                 entityManager.persist(transaction);
-                //Se actualiza el balance history
-                balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
+
+                //Se actualiza el saldo del usuario
                 BalanceHistory balanceHistory = new BalanceHistory();
                 balanceHistory.setId(null);
                 balanceHistory.setUserId(userId);
@@ -6058,6 +6075,7 @@ public class APIOperations {
                 Timestamp balanceHistoryDate = new Timestamp(balanceDate.getTime());
                 balanceHistory.setDate(balanceHistoryDate);
                 entityManager.persist(balanceHistory);
+
                 //Se obtiene la lista de productos del usuario
                 try {
                     products = getProductsListByUserId(userId);
@@ -6098,8 +6116,8 @@ public class APIOperations {
                 DispertionTransferResponses dispertionTransferResponses = new DispertionTransferResponses(dispertionTransferCredential, ResponseCode.SUCCESS, "SUCCESS", products);
                 dispertionTransferResponses.setIdTransaction(transaction.getId().toString());
                 dispertionTransferResponses.setProducts(products);
-
                 return dispertionTransferResponses;
+
             } else if (dispertionResponse.getCodigoError().equals("204")) {
                 return new DispertionTransferResponses(ResponseCode.NON_EXISTENT_CARD, "NON EXISTENT CARD");
             } else if (dispertionResponse.getCodigoError().equals("913")) {
@@ -6266,6 +6284,36 @@ public class APIOperations {
         }
     }
 
+    public ProductResponse getProductPrepaidCardByUser(Long userId) {
+        Product product = new Product();
+        try {
+            //Se buscan los productos asociados al usuario
+            ProductListResponse productsResponse = getProductsByUserId(userId);
+
+            if (productsResponse == null) {
+                return new ProductResponse(ResponseCode.USER_NOT_HAS_PRODUCT, "They are not products asociated");
+            }
+
+            //Se verificar que el producto del usuario tiene activado el indicador isUsePrepaidCard 
+            List<Product> productsList = productsResponse.products;
+            for (Product pr : productsList) {
+                if (pr.getIsUsePrepaidCard() == true) {
+                    product = entityManager.find(Product.class, pr.getId());
+                }
+            }
+
+            //Si el usuario no tiene ningun producto con el indicador isUsePrepaidCard se envia un mensaje
+            if (product.getId() == null) {
+                return new ProductResponse(ResponseCode.INTERNAL_ERROR, "The user does not have a product for the prepaid card");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ProductResponse(ResponseCode.INTERNAL_ERROR, "Error loading products");
+        }
+        return new ProductResponse(ResponseCode.SUCCESS, "", product);
+    }
+
     public BalanceInquiryWithMovementsResponses balanceInquiryWithMovements(String email) {
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
@@ -6386,8 +6434,6 @@ public class APIOperations {
         }
     }
 
-    
-    
     public BalanceInquiryWithoutMovementsResponses balanceInquiryWithoutMovements(String email) {
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
@@ -6507,6 +6553,7 @@ public class APIOperations {
             return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INTERNAL_ERROR, "");
         }
     }
+
     
-    
+
 }
