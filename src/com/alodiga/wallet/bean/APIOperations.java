@@ -165,6 +165,8 @@ import com.ericsson.alodiga.ws.Usuario;
 
 import afinitaspaymentintegration.AfinitasPaymentIntegration;
 import cardcredentialserviceclient.CardCredentialServiceClient;
+import com.alodiga.autorization.credential.response.BalanceInquiryWithMovementsResponse;
+import com.alodiga.autorization.credential.response.BalanceInquiryWithoutMovementsResponse;
 import com.alodiga.autorization.credential.response.DispertionResponse;
 import com.alodiga.businessportal.ws.BpBusinessInfoResponse;
 import com.alodiga.businessportal.ws.BusinessPortalWSException;
@@ -172,6 +174,10 @@ import com.alodiga.cms.commons.ejb.CardEJB;
 import com.alodiga.cms.commons.ejb.PersonEJB;
 import com.alodiga.wallet.common.enumeraciones.DocumentTypeE;
 import com.alodiga.wallet.common.enumeraciones.TransactionTypeE;
+import com.alodiga.wallet.responses.BalanceInquiryWithMovementsCredential;
+import com.alodiga.wallet.responses.BalanceInquiryWithMovementsResponses;
+import com.alodiga.wallet.responses.BalanceInquiryWithoutMovementsCredential;
+import com.alodiga.wallet.responses.BalanceInquiryWithoutMovementsResponses;
 import com.alodiga.wallet.responses.BusinessShopResponse;
 import com.alodiga.wallet.responses.DispertionTransferCredential;
 import com.alodiga.wallet.responses.DispertionTransferResponses;
@@ -183,6 +189,8 @@ import java.util.HashMap;
 import java.util.Map;
 import plaidclientintegration.PlaidClientIntegration;
 import credentialautorizationclient.CredentialAutorizationClient;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless(name = "FsProcessorWallet", mappedName = "ejb/FsProcessorWallet")
 @TransactionManagement(TransactionManagementType.CONTAINER)
@@ -3735,7 +3743,7 @@ public class APIOperations {
                     receiverAddress,
                     receiverZipCode);
             if (addressId == 0) {
-                proxy.actualizarUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId), response.getRemittanceSingleResponse().getAddressId());
+                //proxy.actualizarUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId), response.getRemittanceSingleResponse().getAddressId());
             }
             RemittanceResponse remittanceResponse = new RemittanceResponse(response.getRemittanceSingleResponse().getId(), response.getRemittanceSingleResponse().getApplicationDate(), response.getRemittanceSingleResponse().getCommentary(), response.getRemittanceSingleResponse().getAmountOrigin(), response.getRemittanceSingleResponse().getTotalAmount(), response.getRemittanceSingleResponse().getSendingOptionSMS(), response.getRemittanceSingleResponse().getAmountDestiny(), response.getRemittanceSingleResponse().getBank(), response.getRemittanceSingleResponse().getPaymentServiceId(), response.getRemittanceSingleResponse().getSecondaryKey(), response.getRemittanceSingleResponse().getAdditionalChanges(), response.getRemittanceSingleResponse().getCreationDate(), response.getRemittanceSingleResponse().getCreationHour(), response.getRemittanceSingleResponse().getLocalSales(), response.getRemittanceSingleResponse().getReserveField1(), response.getRemittanceSingleResponse().getRemittent(), response.getRemittanceSingleResponse().getReceiver(), response.getRemittanceSingleResponse().getCorrespondent(), response.getRemittanceSingleResponse().getAddressReciever(), response.getRemittanceSingleResponse().getSalesType(), response.getRemittanceSingleResponse().getAddressRemittent(), response.getRemittanceSingleResponse().getExchangeRate(), response.getRemittanceSingleResponse().getRatePaymentNetwork(), response.getRemittanceSingleResponse().getLanguage(), response.getRemittanceSingleResponse().getOriginCurrent(), response.getRemittanceSingleResponse().getDestinyCurrent(), response.getRemittanceSingleResponse().getPaymentMethod(), response.getRemittanceSingleResponse().getServiceType(), response.getRemittanceSingleResponse().getPaymentNetwork(), response.getRemittanceSingleResponse().getPaymentNetworkPoint(), response.getRemittanceSingleResponse().getCashBox(), response.getRemittanceSingleResponse().getCashier(), response.getRemittanceSingleResponse().getStatus(), response.getRemittanceSingleResponse().getRemittanceNumber(), response.getRemittanceSingleResponse().getPaymentKey(), response.getRemittanceSingleResponse().getCorrelative(), response.getRemittanceSingleResponse().getDeliveryForm(), ResponseCode.SUCCESS, "");
             remittanceResponse.setAmountTransferTotal(String.valueOf(amountTransferTotal));
@@ -6239,26 +6247,26 @@ public class APIOperations {
 
         return new ProductListResponse(ResponseCode.SUCCESS, "", productFinals);
     }
-    
-    public AccountBankResponse saveAccountBankUser(Long bankId, Long unifiedRegistryId, String accountNumber, Integer accountTypeBankId){
+
+    public AccountBankResponse saveAccountBankUser(Long bankId, Long unifiedRegistryId, String accountNumber, Integer accountTypeBankId) {
         String statusAccountBankCode = StatusAccountBankE.ACTIVA.getStatusAccountCode();
         try {
 
             //Se consulta si el bank existe
             Bank bank = entityManager.find(Bank.class, bankId);
-            if(bank == null){
-               return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "The Bank is not registered in the BD"); 
+            if (bank == null) {
+                return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "The Bank is not registered in the BD");
             }
-            
+
             //Se consulta si el AccountTypeBank existe
-            AccountTypeBank accountTypeBank = entityManager.find(AccountTypeBank.class, accountTypeBankId);   
-            if(accountTypeBank == null){
-               return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "The Account Type Bank is not registered in the BD"); 
+            AccountTypeBank accountTypeBank = entityManager.find(AccountTypeBank.class, accountTypeBankId);
+            if (accountTypeBank == null) {
+                return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "The Account Type Bank is not registered in the BD");
             }
-            
+
             //Se busca el status Activo para la cuente bancaria
             StatusAccountBank statusAccountBank = (StatusAccountBank) entityManager.createNamedQuery(QueryConstants.STATUS_ACCOUNT_BANK_BY_CODE, StatusAccountBank.class).setParameter("code", statusAccountBankCode).getSingleResult();
-            
+
             //Se guarda la cuenta bancaria del usuario en la BD
             AccountBank accountBank = new AccountBank();
             accountBank.setUnifiedRegistryId(unifiedRegistryId);
@@ -6269,8 +6277,8 @@ public class APIOperations {
             accountBank.setCreateDate(new Timestamp(new Date().getTime()));
             entityManager.persist(accountBank);
             return new AccountBankResponse(ResponseCode.SUCCESS, "", accountBank);
-        
-        }catch (Exception e) {
+
+        } catch (Exception e) {
             e.printStackTrace();
             return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "Error");
         }
