@@ -34,6 +34,7 @@ import com.alodiga.wallet.responses.DesactivateCardResponses;
 import com.alodiga.wallet.responses.DispertionTransferResponses;
 import com.alodiga.wallet.responses.ExchangeTokenPlaidResponses;
 import com.alodiga.wallet.responses.LanguageListResponse;
+import com.alodiga.wallet.responses.LimitAdvanceResponses;
 import com.alodiga.wallet.responses.PaymentInfoListResponse;
 import com.alodiga.wallet.responses.PaymentInfoResponse;
 import com.alodiga.wallet.responses.ProductListResponse;
@@ -793,6 +794,14 @@ public class APIAlodigaWallet {
     public BalanceInquiryWithMovementsResponses balanceInquiryWithMovements(
             @WebParam(name = "email") String email){
         return operations.balanceInquiryWithMovements(email);
+    }
+    
+    @WebMethod
+    public LimitAdvanceResponses limitAdvance(
+            @WebParam(name = "email") String email,
+            @WebParam(name = "balance") Float balance,
+            @WebParam(name = "productId") Long productId){
+        return operations.limitAdvance(email,balance,productId);
     }
     
 }
