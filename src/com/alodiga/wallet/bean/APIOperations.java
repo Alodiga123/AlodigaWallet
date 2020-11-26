@@ -165,6 +165,8 @@ import com.ericsson.alodiga.ws.Usuario;
 
 import afinitaspaymentintegration.AfinitasPaymentIntegration;
 import cardcredentialserviceclient.CardCredentialServiceClient;
+import com.alodiga.autorization.credential.response.BalanceInquiryWithMovementsResponse;
+import com.alodiga.autorization.credential.response.BalanceInquiryWithoutMovementsResponse;
 import com.alodiga.autorization.credential.response.DispertionResponse;
 import com.alodiga.businessportal.ws.BpBusinessInfoResponse;
 import com.alodiga.businessportal.ws.BusinessPortalWSException;
@@ -172,6 +174,10 @@ import com.alodiga.cms.commons.ejb.CardEJB;
 import com.alodiga.cms.commons.ejb.PersonEJB;
 import com.alodiga.wallet.common.enumeraciones.DocumentTypeE;
 import com.alodiga.wallet.common.enumeraciones.TransactionTypeE;
+import com.alodiga.wallet.responses.BalanceInquiryWithMovementsCredential;
+import com.alodiga.wallet.responses.BalanceInquiryWithMovementsResponses;
+import com.alodiga.wallet.responses.BalanceInquiryWithoutMovementsCredential;
+import com.alodiga.wallet.responses.BalanceInquiryWithoutMovementsResponses;
 import com.alodiga.wallet.responses.BusinessShopResponse;
 import com.alodiga.wallet.responses.DispertionTransferCredential;
 import com.alodiga.wallet.responses.DispertionTransferResponses;
@@ -183,6 +189,8 @@ import java.util.HashMap;
 import java.util.Map;
 import plaidclientintegration.PlaidClientIntegration;
 import credentialautorizationclient.CredentialAutorizationClient;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless(name = "FsProcessorWallet", mappedName = "ejb/FsProcessorWallet")
 @TransactionManagement(TransactionManagementType.CONTAINER)
@@ -3728,7 +3736,7 @@ public class APIOperations {
                     receiverAddress,
                     receiverZipCode);
             if (addressId == 0) {
-                proxy.actualizarUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId), response.getRemittanceSingleResponse().getAddressId());
+                //proxy.actualizarUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId), response.getRemittanceSingleResponse().getAddressId());
             }
             RemittanceResponse remittanceResponse = new RemittanceResponse(response.getRemittanceSingleResponse().getId(), response.getRemittanceSingleResponse().getApplicationDate(), response.getRemittanceSingleResponse().getCommentary(), response.getRemittanceSingleResponse().getAmountOrigin(), response.getRemittanceSingleResponse().getTotalAmount(), response.getRemittanceSingleResponse().getSendingOptionSMS(), response.getRemittanceSingleResponse().getAmountDestiny(), response.getRemittanceSingleResponse().getBank(), response.getRemittanceSingleResponse().getPaymentServiceId(), response.getRemittanceSingleResponse().getSecondaryKey(), response.getRemittanceSingleResponse().getAdditionalChanges(), response.getRemittanceSingleResponse().getCreationDate(), response.getRemittanceSingleResponse().getCreationHour(), response.getRemittanceSingleResponse().getLocalSales(), response.getRemittanceSingleResponse().getReserveField1(), response.getRemittanceSingleResponse().getRemittent(), response.getRemittanceSingleResponse().getReceiver(), response.getRemittanceSingleResponse().getCorrespondent(), response.getRemittanceSingleResponse().getAddressReciever(), response.getRemittanceSingleResponse().getSalesType(), response.getRemittanceSingleResponse().getAddressRemittent(), response.getRemittanceSingleResponse().getExchangeRate(), response.getRemittanceSingleResponse().getRatePaymentNetwork(), response.getRemittanceSingleResponse().getLanguage(), response.getRemittanceSingleResponse().getOriginCurrent(), response.getRemittanceSingleResponse().getDestinyCurrent(), response.getRemittanceSingleResponse().getPaymentMethod(), response.getRemittanceSingleResponse().getServiceType(), response.getRemittanceSingleResponse().getPaymentNetwork(), response.getRemittanceSingleResponse().getPaymentNetworkPoint(), response.getRemittanceSingleResponse().getCashBox(), response.getRemittanceSingleResponse().getCashier(), response.getRemittanceSingleResponse().getStatus(), response.getRemittanceSingleResponse().getRemittanceNumber(), response.getRemittanceSingleResponse().getPaymentKey(), response.getRemittanceSingleResponse().getCorrelative(), response.getRemittanceSingleResponse().getDeliveryForm(), ResponseCode.SUCCESS, "");
             remittanceResponse.setAmountTransferTotal(String.valueOf(amountTransferTotal));
@@ -5831,7 +5839,7 @@ public class APIOperations {
     }
 
     public DispertionTransferResponses dispertionTransfer(String email, Float balance, Long productId) {
-         APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+        APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
         ArrayList<Product> products = new ArrayList<Product>();
         CredentialAutorizationClient credentialAutorizationClient = new CredentialAutorizationClient();
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
@@ -6007,7 +6015,6 @@ public class APIOperations {
             String sequence = transactionTypeE + yearSequence + Numbersequence;
             //llamado al servicio de dispersion
             DispertionResponse dispertionResponse = credentialAutorizationClient.dispertionTransfer(date, hour, alias, String.valueOf(balance), sequence);
-
 
             if (dispertionResponse.getCodigoError().equals("-1")) {
                 DispertionTransferCredential dispertionTransferCredential = new DispertionTransferCredential(dispertionResponse.getCodigoError(), dispertionResponse.getMensajeError(), dispertionResponse.getCodigoRespuesta(), dispertionResponse.getMensajeRespuesta(), dispertionResponse.getCodigoAutorizacion());
@@ -6222,26 +6229,26 @@ public class APIOperations {
 
         return new ProductListResponse(ResponseCode.SUCCESS, "", productFinals);
     }
-    
-    public AccountBankResponse saveAccountBankUser(Long bankId, Long unifiedRegistryId, String accountNumber, Integer accountTypeBankId){
+
+    public AccountBankResponse saveAccountBankUser(Long bankId, Long unifiedRegistryId, String accountNumber, Integer accountTypeBankId) {
         String statusAccountBankCode = StatusAccountBankE.ACTIVA.getStatusAccountCode();
         try {
 
             //Se consulta si el bank existe
             Bank bank = entityManager.find(Bank.class, bankId);
-            if(bank == null){
-               return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "The Bank is not registered in the BD"); 
+            if (bank == null) {
+                return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "The Bank is not registered in the BD");
             }
-            
+
             //Se consulta si el AccountTypeBank existe
-            AccountTypeBank accountTypeBank = entityManager.find(AccountTypeBank.class, accountTypeBankId);   
-            if(accountTypeBank == null){
-               return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "The Account Type Bank is not registered in the BD"); 
+            AccountTypeBank accountTypeBank = entityManager.find(AccountTypeBank.class, accountTypeBankId);
+            if (accountTypeBank == null) {
+                return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "The Account Type Bank is not registered in the BD");
             }
-            
+
             //Se busca el status Activo para la cuente bancaria
             StatusAccountBank statusAccountBank = (StatusAccountBank) entityManager.createNamedQuery(QueryConstants.STATUS_ACCOUNT_BANK_BY_CODE, StatusAccountBank.class).setParameter("code", statusAccountBankCode).getSingleResult();
-            
+
             //Se guarda la cuenta bancaria del usuario en la BD
             AccountBank accountBank = new AccountBank();
             accountBank.setUnifiedRegistryId(unifiedRegistryId);
@@ -6252,10 +6259,254 @@ public class APIOperations {
             accountBank.setCreateDate(new Timestamp(new Date().getTime()));
             entityManager.persist(accountBank);
             return new AccountBankResponse(ResponseCode.SUCCESS, "", accountBank);
-        
-        }catch (Exception e) {
+
+        } catch (Exception e) {
             e.printStackTrace();
             return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "Error");
         }
     }
+
+    public BalanceInquiryWithMovementsResponses balanceInquiryWithMovements(String email) {
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
+        SimpleDateFormat sdg = new SimpleDateFormat("yyyyMMdd");
+        String hour = sdf.format(timestamp);
+        String date = sdg.format(timestamp);
+        CredentialAutorizationClient credentialAutorizationClient = new CredentialAutorizationClient();
+        try {
+            //Se busca por el email el alias que devuelve credencial
+            CardResponse cardResponse = getCardByEmail(email);
+            String alias = cardResponse.getaliasCard();
+            //llamado al servicio de consulta de saldo con movimientos
+            BalanceInquiryWithMovementsResponse balanceInquiryWithMovementsResponse = credentialAutorizationClient.balanceInquiryWithMovements(date, hour, alias);
+            if (balanceInquiryWithMovementsResponse.getCodigoError().equals("-1")) {
+                BalanceInquiryWithMovementsCredential balanceInquiryWithMovementsCredential = new BalanceInquiryWithMovementsCredential(balanceInquiryWithMovementsResponse.getCodigoError(), balanceInquiryWithMovementsResponse.getMensajeError(), balanceInquiryWithMovementsResponse.getCodigoRespuesta(), balanceInquiryWithMovementsResponse.getMensajeRespuesta(), balanceInquiryWithMovementsResponse.getCodigoAutorizacion(), balanceInquiryWithMovementsResponse.getDisponibleConsumos(), balanceInquiryWithMovementsResponse.getDisponibleCuotas(), balanceInquiryWithMovementsResponse.getDisponibleAdelantos(), balanceInquiryWithMovementsResponse.getDisponiblePrestamos(), balanceInquiryWithMovementsResponse.getSaldo(), balanceInquiryWithMovementsResponse.getSaldoEnDolares(), balanceInquiryWithMovementsResponse.getPagoMinimo(), balanceInquiryWithMovementsResponse.getFechaVencimientoUltimaLiquidacion(), balanceInquiryWithMovementsResponse.getMovimientos());
+                return new BalanceInquiryWithMovementsResponses(balanceInquiryWithMovementsCredential, ResponseCode.SUCCESS, "SUCCESS");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("204")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.NON_EXISTENT_CARD, "NON EXISTENT CARD");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("913")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.INVALID_AMOUNT, "INVALID AMOUNT");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("203")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.EXPIRATION_DATE_DIFFERS, "EXPIRATION DATE DIFFERS");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("205")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.EXPIRED_CARD, "EXPIRED CARD");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("202")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.LOCKED_CARD, "LOCKED CARD");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("201")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.LOCKED_CARD, "LOCKED CARD");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("03")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.LOCKED_CARD, "LOCKED CARD");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("28")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.LOCKED_CARD, "LOCKED_CARD");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("211")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.BLOCKED_ACCOUNT, "BLOCKED ACCOUNT");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("210")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.INVALID_ACCOUNT, "INVALID ACCOUNT");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("998")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.INSUFFICIENT_BALANCE, "INSUFFICIENT BALANCE");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("986")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.INSUFFICIENT_LIMIT, "INSUFFICIENT LIMIT");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("987")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.CREDIT_LIMIT_0, "CREDIT LIMIT 0");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("988")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.CREDIT_LIMIT_0_OF_THE_DESTINATION_ACCOUNT, "CREDIT LIMIT 0 OF THE DESTINATION ACCOUNT");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("999")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.ERROR_PROCESSING_THE_TRANSACTION, "ERROR PROCESSING THE TRANSACTION");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("101")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.INVALID_TRANSACTION, "INVALID TRANSACTION");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("105")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.ERROR_VALIDATION_THE_TERMINAL, "ERROR VALIDATION THE TERMINAL");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("241")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.DESTINATION_ACCOUNT_LOCKED, "DESTINATION ACCOUNT LOCKED");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("230")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.INVALID_DESTINATION_CARD, "INVALID DESTINATION CARD");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("240")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.INVALID_DESTINATION_ACCOUNT, "INVALID DESTINATION ACCOUNT");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("301")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.THE_AMOUNT_MUST_BE_POSITIVE_AND_THE_AMOUNT_IS_REPORTED, "THE AMOUNT MUST BE POSITIVE AND THE AMOUNT IS REPORTED");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("302")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.INVALID_TRANSACTION_DATE, "INVALID TRANSACTION DATE");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("303")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.INVALID_TRANSACTION_TIME, "INVALID TRANSACTION TIME");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("994")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.SOURCE_OR_DESTINATION_ACCOUNT_IS_NOT_COMPATIBLE_WITH_THIS_OPERATION_NN, "SOURCE OR DESTINATION ACCOUNT IS NOT COMPATIBLE WITH THIS OPERATION NN");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("991")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.SOURCE_OR_DESTINATION_ACCOUNT_IS_NOT_COMPATIBLE_WITH_THIS_OPERATION_SN, "SOURCE OR DESTINATION ACCOUNT IS NOT COMPATIBLE WITH THIS OPERATION SN");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("992")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.SOURCE_OR_DESTINATION_ACCOUNT_IS_NOT_COMPATIBLE_WITH_THIS_OPERATION_NS, "SOURCE OR DESTINATION ACCOUNT IS NOT COMPATIBLE WITH THIS OPERATION NS");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("993")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.SOURCE_OR_DESTINATION_ACCOUNT_IS_NOT_COMPATIBLE_WITH_THIS_OPERATION_NS, "SOURCE OR DESTINATION ACCOUNT IS NOT COMPATIBLE WITH THIS OPERATION NS");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("990")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.TRASACTION_BETWEEN_ACCOUNTS_NOT_ALLOWED, "TRASACTION BETWEEN ACCOUNTS NOT ALLOWED");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("120")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.TRADE_VALIDATON_ERROR, "TRADE VALIDATON ERROR");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("110")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.DESTINATION_CARD_DOES_NOT_SUPPORT_TRANSACTION, "DESTINATION CARD DOES NOT SUPPORT TRANSACTION");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("111")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.OPERATION_NOT_ENABLED_FOR_THE_DESTINATION_CARD, "OPERATION NOT ENABLED FOR THE DESTINATION CARD");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("206")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.BIN_NOT_ALLOWED, "BIN NOT ALLOWED");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("207")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.STOCK_CARD, "STOCK CARD");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("205")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.THE_ACCOUNT_EXCEEDS_THE_MONTHLY_LIMIT, "THE ACCOUNT EXCEEDS THE MONTHLY LIMIT");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("101")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.THE_PAN_FIELD_IS_MANDATORY, "THE PAN FIELD IS MANDATORY");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("102")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.THE_AMOUNT_TO_BE_RECHARGE_IS_INCORRECT, "THE AMOUNT TO BE RECHARGE IS INCORRECT");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("3")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.EXPIRED_CARD, "EXPIRED CARD");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("8")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.NON_EXISTENT_CARD, "NON EXISTENT CARD");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("33")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.THE_AMOUNT_MUST_BE_GREATER_THAN_0, "THE AMOUNT MUST BE GREATER THAN 0");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("1")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.SUCCESSFUL_RECHARGE, "SUCCESSFUL RECHARGE");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("410")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.ERROR_VALIDATING_PIN, "THE PAN FIELD IS MANDATORY");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("430")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.ERROR_VALIDATING_CVC1, "ERROR VALIDATING CVC1");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("400")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.ERROR_VALIDATING_CVC2, "ERROR VALIDATING CVC2");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("420")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.PIN_CHANGE_ERROR, "PIN CHANGE ERROR");
+            } else if (balanceInquiryWithMovementsResponse.getCodigoError().equals("250")) {
+                return new BalanceInquiryWithMovementsResponses(ResponseCode.ERROR_VALIDATING_THE_ITEM, " ERROR VALIDATING THE ITEM");
+            }
+            return new BalanceInquiryWithMovementsResponses(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
+        } catch (MalformedURLException ex) {
+            ex.printStackTrace();
+            return new BalanceInquiryWithMovementsResponses(ResponseCode.INTERNAL_ERROR, "");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return new BalanceInquiryWithMovementsResponses(ResponseCode.INTERNAL_ERROR, "");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return new BalanceInquiryWithMovementsResponses(ResponseCode.INTERNAL_ERROR, "");
+        }
+    }
+
+    
+    
+    public BalanceInquiryWithoutMovementsResponses balanceInquiryWithoutMovements(String email) {
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
+        SimpleDateFormat sdg = new SimpleDateFormat("yyyyMMdd");
+        String hour = sdf.format(timestamp);
+        String date = sdg.format(timestamp);
+        CredentialAutorizationClient credentialAutorizationClient = new CredentialAutorizationClient();
+        try {
+            //Se busca por el email el alias que devuelve credencial
+            CardResponse cardResponse = getCardByEmail(email);
+            String alias = cardResponse.getaliasCard();
+            //llamado al servicio de consulta de saldo con movimientos
+            BalanceInquiryWithoutMovementsResponse balanceInquiryWithoutMovementsResponse = credentialAutorizationClient.balanceInquiryWithoutMovements(date, hour, alias);
+            if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("-1")) {
+                BalanceInquiryWithoutMovementsCredential balanceInquiryWithoutMovementsCredential = new BalanceInquiryWithoutMovementsCredential(balanceInquiryWithoutMovementsResponse.getCodigoError(), balanceInquiryWithoutMovementsResponse.getMensajeError(), balanceInquiryWithoutMovementsResponse.getCodigoRespuesta(), balanceInquiryWithoutMovementsResponse.getMensajeRespuesta(), balanceInquiryWithoutMovementsResponse.getCodigoAutorizacion(), balanceInquiryWithoutMovementsResponse.getDisponibleConsumos(), balanceInquiryWithoutMovementsResponse.getDisponibleCuotas(), balanceInquiryWithoutMovementsResponse.getDisponibleAdelantos(), balanceInquiryWithoutMovementsResponse.getDisponiblePrestamos(), balanceInquiryWithoutMovementsResponse.getSaldo(), balanceInquiryWithoutMovementsResponse.getSaldoEnDolares(), balanceInquiryWithoutMovementsResponse.getPagoMinimo(), balanceInquiryWithoutMovementsResponse.getFechaVencimientoUltimaLiquidacion());
+                return new BalanceInquiryWithoutMovementsResponses(balanceInquiryWithoutMovementsCredential, ResponseCode.SUCCESS, "SUCCESS");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("204")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.NON_EXISTENT_CARD, "NON EXISTENT CARD");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("913")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INVALID_AMOUNT, "INVALID AMOUNT");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("203")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.EXPIRATION_DATE_DIFFERS, "EXPIRATION DATE DIFFERS");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("205")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.EXPIRED_CARD, "EXPIRED CARD");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("202")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.LOCKED_CARD, "LOCKED CARD");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("201")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.LOCKED_CARD, "LOCKED CARD");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("03")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.LOCKED_CARD, "LOCKED CARD");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("28")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.LOCKED_CARD, "LOCKED_CARD");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("211")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.BLOCKED_ACCOUNT, "BLOCKED ACCOUNT");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("210")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INVALID_ACCOUNT, "INVALID ACCOUNT");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("998")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INSUFFICIENT_BALANCE, "INSUFFICIENT BALANCE");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("986")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INSUFFICIENT_LIMIT, "INSUFFICIENT LIMIT");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("987")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.CREDIT_LIMIT_0, "CREDIT LIMIT 0");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("988")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.CREDIT_LIMIT_0_OF_THE_DESTINATION_ACCOUNT, "CREDIT LIMIT 0 OF THE DESTINATION ACCOUNT");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("999")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.ERROR_PROCESSING_THE_TRANSACTION, "ERROR PROCESSING THE TRANSACTION");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("101")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INVALID_TRANSACTION, "INVALID TRANSACTION");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("105")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.ERROR_VALIDATION_THE_TERMINAL, "ERROR VALIDATION THE TERMINAL");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("241")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.DESTINATION_ACCOUNT_LOCKED, "DESTINATION ACCOUNT LOCKED");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("230")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INVALID_DESTINATION_CARD, "INVALID DESTINATION CARD");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("240")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INVALID_DESTINATION_ACCOUNT, "INVALID DESTINATION ACCOUNT");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("301")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.THE_AMOUNT_MUST_BE_POSITIVE_AND_THE_AMOUNT_IS_REPORTED, "THE AMOUNT MUST BE POSITIVE AND THE AMOUNT IS REPORTED");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("302")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INVALID_TRANSACTION_DATE, "INVALID TRANSACTION DATE");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("303")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INVALID_TRANSACTION_TIME, "INVALID TRANSACTION TIME");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("994")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.SOURCE_OR_DESTINATION_ACCOUNT_IS_NOT_COMPATIBLE_WITH_THIS_OPERATION_NN, "SOURCE OR DESTINATION ACCOUNT IS NOT COMPATIBLE WITH THIS OPERATION NN");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("991")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.SOURCE_OR_DESTINATION_ACCOUNT_IS_NOT_COMPATIBLE_WITH_THIS_OPERATION_SN, "SOURCE OR DESTINATION ACCOUNT IS NOT COMPATIBLE WITH THIS OPERATION SN");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("992")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.SOURCE_OR_DESTINATION_ACCOUNT_IS_NOT_COMPATIBLE_WITH_THIS_OPERATION_NS, "SOURCE OR DESTINATION ACCOUNT IS NOT COMPATIBLE WITH THIS OPERATION NS");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("993")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.SOURCE_OR_DESTINATION_ACCOUNT_IS_NOT_COMPATIBLE_WITH_THIS_OPERATION_NS, "SOURCE OR DESTINATION ACCOUNT IS NOT COMPATIBLE WITH THIS OPERATION NS");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("990")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.TRASACTION_BETWEEN_ACCOUNTS_NOT_ALLOWED, "TRASACTION BETWEEN ACCOUNTS NOT ALLOWED");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("120")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.TRADE_VALIDATON_ERROR, "TRADE VALIDATON ERROR");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("110")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.DESTINATION_CARD_DOES_NOT_SUPPORT_TRANSACTION, "DESTINATION CARD DOES NOT SUPPORT TRANSACTION");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("111")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.OPERATION_NOT_ENABLED_FOR_THE_DESTINATION_CARD, "OPERATION NOT ENABLED FOR THE DESTINATION CARD");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("206")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.BIN_NOT_ALLOWED, "BIN NOT ALLOWED");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("207")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.STOCK_CARD, "STOCK CARD");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("205")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.THE_ACCOUNT_EXCEEDS_THE_MONTHLY_LIMIT, "THE ACCOUNT EXCEEDS THE MONTHLY LIMIT");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("101")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.THE_PAN_FIELD_IS_MANDATORY, "THE PAN FIELD IS MANDATORY");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("102")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.THE_AMOUNT_TO_BE_RECHARGE_IS_INCORRECT, "THE AMOUNT TO BE RECHARGE IS INCORRECT");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("3")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.EXPIRED_CARD, "EXPIRED CARD");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("8")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.NON_EXISTENT_CARD, "NON EXISTENT CARD");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("33")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.THE_AMOUNT_MUST_BE_GREATER_THAN_0, "THE AMOUNT MUST BE GREATER THAN 0");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("1")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.SUCCESSFUL_RECHARGE, "SUCCESSFUL RECHARGE");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("410")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.ERROR_VALIDATING_PIN, "THE PAN FIELD IS MANDATORY");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("430")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.ERROR_VALIDATING_CVC1, "ERROR VALIDATING CVC1");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("400")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.ERROR_VALIDATING_CVC2, "ERROR VALIDATING CVC2");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("420")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.PIN_CHANGE_ERROR, "PIN CHANGE ERROR");
+            } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("250")) {
+                return new BalanceInquiryWithoutMovementsResponses(ResponseCode.ERROR_VALIDATING_THE_ITEM, " ERROR VALIDATING THE ITEM");
+            }
+            return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
+        } catch (MalformedURLException ex) {
+            ex.printStackTrace();
+            return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INTERNAL_ERROR, "");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INTERNAL_ERROR, "");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INTERNAL_ERROR, "");
+        }
+    }
+    
+    
 }

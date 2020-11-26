@@ -17,6 +17,8 @@ import com.alodiga.wallet.common.model.StatusTransactionApproveRequest;
 import com.alodiga.wallet.responses.AccountBankResponse;
 import com.alodiga.wallet.responses.ActivateCardResponses;
 import com.alodiga.wallet.responses.BalanceHistoryResponse;
+import com.alodiga.wallet.responses.BalanceInquiryWithMovementsResponses;
+import com.alodiga.wallet.responses.BalanceInquiryWithoutMovementsResponses;
 import com.alodiga.wallet.responses.BankListResponse;
 import com.alodiga.wallet.responses.BusinessHasProductResponse;
 import com.alodiga.wallet.responses.BusinessShopResponse;
@@ -774,5 +776,17 @@ public class APIAlodigaWallet {
         return operations.getProductsUsePrepaidCardByUserId(userId);
     }
     
+    
+    @WebMethod
+    public BalanceInquiryWithoutMovementsResponses balanceInquiryWithoutMovements(
+            @WebParam(name = "email") String email){
+        return operations.balanceInquiryWithoutMovements(email);
+    }
+    
+    @WebMethod
+    public BalanceInquiryWithMovementsResponses balanceInquiryWithMovements(
+            @WebParam(name = "email") String email){
+        return operations.balanceInquiryWithMovements(email);
+    }
     
 }
