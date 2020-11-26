@@ -241,21 +241,22 @@ public class APIOperations {
         Boolean isDefaultProduct = true;
         try {
             products = (List<Product>) entityManager.createNamedQuery("Product.findByIsDefaultProduct", Product.class).setParameter("isDefaultProduct", isDefaultProduct).getResultList();
-
-            if (!products.isEmpty()) {
-                for (Product pr : products) {
-                    if (pr.getId() != null) {
+            
+            if(!products.isEmpty()){
+               for(Product pr : products){
+                    if(pr.getId() != null){
                         UserHasProduct userHasProduct = new UserHasProduct();
                         userHasProduct.setProductId(pr.getId());
                         userHasProduct.setUserSourceId(userId);
                         userHasProduct.setBeginningDate(new Timestamp(new Date().getTime()));
                         entityManager.persist(userHasProduct);
-                    }
-                }
+                    } 
+                } 
             } else {
                 return new UserHasProductResponse(ResponseCode.INTERNAL_ERROR, "There is no default product active at the moment");
             }
-
+            
+            
         } catch (Exception e) {
             e.printStackTrace();
             return new UserHasProductResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving product_has_response");
@@ -5884,10 +5885,10 @@ public class APIOperations {
             //Se obtiene el usuario de registro unificado
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS", "passwordWS", email);
             Long userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
-
+            
             //Se obtiene el saldo disponible del usuario
             balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
-
+            
             try {
                 //Se calcula la comisión de la operación 
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransactionTypePR).getResultList();
@@ -5903,7 +5904,7 @@ public class APIOperations {
                     }
                     amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
                 }
-
+                
                 amountTransferTotal = balance + amountCommission;
                 //Se valida si tiene saldo disponible
                 if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < amountTransferTotal) {
@@ -6018,8 +6019,8 @@ public class APIOperations {
                 e.printStackTrace();
                 return new DispertionTransferResponses(ResponseCode.INTERNAL_ERROR, "Error in validation process");
             }
-
-            //Se obtiene la tarjeta asociada al usuario
+            Float amountTransferTotal = balance + amountCommission;
+            //Se busca por el email el alias que devuelve credencial
             CardResponse cardResponse = getCardByEmail(email);
             String alias = cardResponse.getaliasCard();
 
@@ -6540,20 +6541,36 @@ public class APIOperations {
                 return new BalanceInquiryWithoutMovementsResponses(ResponseCode.PIN_CHANGE_ERROR, "PIN CHANGE ERROR");
             } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("250")) {
                 return new BalanceInquiryWithoutMovementsResponses(ResponseCode.ERROR_VALIDATING_THE_ITEM, " ERROR VALIDATING THE ITEM");
-            }
-            return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
-        } catch (MalformedURLException ex) {
-            ex.printStackTrace();
-            return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INTERNAL_ERROR, "");
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INTERNAL_ERROR, "");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INTERNAL_ERROR, "");
-        }
-    }
-
     
+    public ProductResponse getProductPrepaidCardByUser(Long userId){
+        Product product = new Product();
+        try{
+            //Se buscan los productos asociados al usuario
+            ProductListResponse productsResponse = getProductsByUserId(userId);
+            
+            if(productsResponse == null){
+                return new ProductResponse(ResponseCode.USER_NOT_HAS_PRODUCT, "They are not products asociated");
+            }
+           
+            //Se verificar que el producto del usuario tiene activado el indicador isUsePrepaidCard 
+            List<Product> productsList = productsResponse.products;
+            for(Product pr : productsList){
+                if(pr.getIsUsePrepaidCard() == true){
+                   product = entityManager.find(Product.class, pr.getId());
+                }
+            }
+            
+            //Si el usuario no tiene ningun producto con el indicador isUsePrepaidCard se envia un mensaje
+            if(product.getId() == null){
+                return new ProductResponse(ResponseCode.INTERNAL_ERROR, "The user does not have a product for the prepaid card");
+            }
 
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ProductResponse(ResponseCode.INTERNAL_ERROR, "Error loading products");
+        }
+        return new ProductResponse(ResponseCode.SUCCESS, "", product);
+    }
+    
+    
 }
