@@ -184,6 +184,7 @@ import com.alodiga.wallet.responses.DispertionTransferCredential;
 import com.alodiga.wallet.responses.DispertionTransferResponses;
 import com.alodiga.wallet.responses.LimitAdvanceCredential;
 import com.alodiga.wallet.responses.LimitAdvanceResponses;
+import com.alodiga.wallet.responses.AccountTypeBankListResponse;
 import com.cms.commons.genericEJB.EJBRequest;
 import com.cms.commons.models.PhonePerson;
 import com.cms.commons.util.EJBServiceLocator;
@@ -1975,7 +1976,23 @@ public class APIOperations {
             recharge.setTopUpDescription(null);
             recharge.setBillPaymentDescription(null);
             recharge.setExternalId(null);
-            recharge.setTransactionNumber("1");
+            
+            //Se hace el conteo de los id de transacciones para la secuancia
+            Query query = entityManager.createQuery("SELECT COUNT(t.Id) FROM transaction t ");
+            List count =(List) query.getResultList();
+            //Se le suma al valor total para la secuencia
+            Integer numberSecuence = ((BigInteger) count.get(0)).intValue() + 1;
+            //Se estructura la secuancia
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy");
+            String begginingDate = formatter.format(creationDate);
+            StringBuilder transactionNumber = new StringBuilder(transactionSource.getCode());
+            transactionNumber.append("-");
+            transactionNumber.append(transactionType.getCode());
+            transactionNumber.append("-");
+            transactionNumber.append(begginingDate);
+            transactionNumber.append("-");
+            transactionNumber.append(numberSecuence);
+            recharge.setTransactionNumber(transactionNumber.toString());
             entityManager.flush();
             entityManager.persist(recharge);
             try {
@@ -2527,7 +2544,6 @@ public class APIOperations {
         List<TopUpCountry> topUpCountrys = null;
         try {
             topUpCountrys = entityManager.createNamedQuery("TopUpCountry.findAll", TopUpCountry.class).getResultList();
-
         } catch (Exception e) {
             return new TopUpCountryListResponse(ResponseCode.INTERNAL_ERROR, "Error loading countries");
         }
@@ -5827,18 +5843,17 @@ public class APIOperations {
         List<UserHasBank> userHasBank = new ArrayList<UserHasBank>();
         List<Bank> banks = new ArrayList<Bank>();
         try {
-            userHasBank = (List<UserHasBank>) entityManager.createNamedQuery("UserHasBank.findByUserSourceIdAllBank", UserHasBank.class).setParameter("userSourceId", userId).getResultList();
-
+            userHasBank = (List<UserHasBank>) entityManager.createNamedQuery("UserHasBank.findByUserSourceIdAllBank", UserHasBank.class).setParameter("userSourceId", userId).getResultList();   
             if (userHasBank.size() <= 0) {
                 return new BankListResponse(ResponseCode.USER_NOT_HAS_BANK, "They are not banks asociated");
             }
-
+            
             for (UserHasBank uhb : userHasBank) {
                 Bank bank = new Bank();
                 bank = entityManager.find(Bank.class, uhb.getBankId().getId());
                 banks.add(bank);
             }
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             return new BankListResponse(ResponseCode.INTERNAL_ERROR, "Error loading banks");
@@ -6970,6 +6985,17 @@ public class APIOperations {
             ex.printStackTrace();
             return new LimitAdvanceResponses(ResponseCode.INTERNAL_ERROR, "");
         }
+    }
+    
+    public AccountTypeBankListResponse getAccountTypeBank() {
+        List<AccountTypeBank> accounTypes = null;
+        try {
+            accounTypes = entityManager.createNamedQuery("AccountTypeBank.findAll", AccountTypeBank.class).getResultList();
+
+        } catch (Exception e) {
+            return new AccountTypeBankListResponse(ResponseCode.INTERNAL_ERROR, "Error loading countries");
+        }
+        return new AccountTypeBankListResponse(ResponseCode.SUCCESS, "", accounTypes);
     }
 
 }
