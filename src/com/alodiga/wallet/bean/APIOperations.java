@@ -6019,7 +6019,7 @@ public class APIOperations {
                 e.printStackTrace();
                 return new DispertionTransferResponses(ResponseCode.INTERNAL_ERROR, "Error in validation process");
             }
-            Float amountTransferTotal = balance + amountCommission;
+            amountTransferTotal = balance + amountCommission;
             //Se busca por el email el alias que devuelve credencial
             CardResponse cardResponse = getCardByEmail(email);
             String alias = cardResponse.getaliasCard();
@@ -6541,36 +6541,18 @@ public class APIOperations {
                 return new BalanceInquiryWithoutMovementsResponses(ResponseCode.PIN_CHANGE_ERROR, "PIN CHANGE ERROR");
             } else if (balanceInquiryWithoutMovementsResponse.getCodigoError().equals("250")) {
                 return new BalanceInquiryWithoutMovementsResponses(ResponseCode.ERROR_VALIDATING_THE_ITEM, " ERROR VALIDATING THE ITEM");
-    
-    public ProductResponse getProductPrepaidCardByUser(Long userId){
-        Product product = new Product();
-        try{
-            //Se buscan los productos asociados al usuario
-            ProductListResponse productsResponse = getProductsByUserId(userId);
-            
-            if(productsResponse == null){
-                return new ProductResponse(ResponseCode.USER_NOT_HAS_PRODUCT, "They are not products asociated");
-            }
-           
-            //Se verificar que el producto del usuario tiene activado el indicador isUsePrepaidCard 
-            List<Product> productsList = productsResponse.products;
-            for(Product pr : productsList){
-                if(pr.getIsUsePrepaidCard() == true){
-                   product = entityManager.find(Product.class, pr.getId());
-                }
-            }
-            
-            //Si el usuario no tiene ningun producto con el indicador isUsePrepaidCard se envia un mensaje
-            if(product.getId() == null){
-                return new ProductResponse(ResponseCode.INTERNAL_ERROR, "The user does not have a product for the prepaid card");
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ProductResponse(ResponseCode.INTERNAL_ERROR, "Error loading products");
+            }    
+            return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
+        } catch (MalformedURLException ex) {
+            ex.printStackTrace();
+            return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INTERNAL_ERROR, "");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INTERNAL_ERROR, "");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return new BalanceInquiryWithoutMovementsResponses(ResponseCode.INTERNAL_ERROR, "");
         }
-        return new ProductResponse(ResponseCode.SUCCESS, "", product);
-    }
-    
+    }    
     
 }
