@@ -54,6 +54,7 @@ import com.alodiga.wallet.responses.TransactionListResponse;
 import com.alodiga.wallet.responses.TransactionResponse;
 import com.alodiga.wallet.responses.TransferCardToCardResponses;
 import com.alodiga.wallet.responses.UserHasProductResponse;
+import com.alodiga.wallet.responses.AccountTypeBankListResponse;
 
 @WebService
 public class APIAlodigaWallet {
@@ -660,7 +661,7 @@ public class APIAlodigaWallet {
         return operations.saveAccountBankUser(bankId,unifiedRegistryId,accountNumber,accountTypeBankId);
 
     }
-    
+        
     @WebMethod
     public TransactionApproveRequestResponse saveTransactionApproveRequest(
     @WebParam(name = "unifiedRegistryId") Long unifiedRegistryId,
@@ -804,4 +805,8 @@ public class APIAlodigaWallet {
         return operations.limitAdvance(email,balance,productId);
     }
     
+    @WebMethod
+    public AccountTypeBankListResponse getAccountTypeBank() {
+        return operations.getAccountTypeBank();
+    }
 }
