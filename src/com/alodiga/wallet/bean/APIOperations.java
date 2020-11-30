@@ -1563,6 +1563,8 @@ public class APIOperations {
         int totalTransactionsByUserDaily = 0;
         int totalTransactionsByUserMonthly = 0;
         int totalTransactionsByUserYearly = 0;
+        Integer manualWithdrawalsType = DocumentTypeE.WITMAN.getId();
+        Integer transactionTypeE = TransactionTypeE.WITMAN.getId();
         Double totalAmountByUserDaily = 0.00D;
         Double totalAmountByUserMonthly = 0.00D;
         Double totalAmountByUserYearly = 0.00D;
@@ -1576,7 +1578,10 @@ public class APIOperations {
         ArrayList<Product> products = new ArrayList<Product>();
         CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
         AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
-
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        SimpleDateFormat year = new SimpleDateFormat("yyyy");
+        String yearSequence = year.format(timestamp);
+        
         try {
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS", "passwordWS", emailUser);
@@ -1687,9 +1692,15 @@ public class APIOperations {
                         break;
                 }
             }
-
+            
+            //Se genera la secuencia de la transacción
+            Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Long.valueOf(manualWithdrawalsType), Long.valueOf(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID));
+            String Numbersequence = generateNumberSequence(sequences);
+            String sequence = transactionTypeE + yearSequence + sequences.getCurrentValue();
+            
             withdrawal.setId(null);
-            withdrawal.setTransactionNumber("1");
+            withdrawal.setTransactionNumber(Numbersequence);
+            withdrawal.setTransactionSequence(sequence);
             withdrawal.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             withdrawal.setUserDestinationId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             Product product = entityManager.find(Product.class, productId);
@@ -1834,6 +1845,8 @@ public class APIOperations {
         Double totalAmountByUserDaily = 0.00D;
         Double totalAmountByUserMonthly = 0.00D;
         Double totalAmountByUserYearly = 0.00D;
+        Integer manualRechargeType = DocumentTypeE.MANREC.getId();
+        Integer transactionTypeE = TransactionTypeE.MANREC.getId();
         List<Transaction> transactionsByUser = new ArrayList<Transaction>();
         List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
         List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
@@ -1845,7 +1858,9 @@ public class APIOperations {
         ArrayList<Product> products = new ArrayList<Product>();
         CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
         AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
-
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        SimpleDateFormat year = new SimpleDateFormat("yyyy");
+        String yearSequence = year.format(timestamp);
         try {
             //Se obtiene el usuario de la API de Registro Unificado
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
@@ -1953,7 +1968,12 @@ public class APIOperations {
                         break;
                 }
             }
-
+            
+            //Se genera la secuencia de la transacción
+            Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Long.valueOf(manualRechargeType), Long.valueOf(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID));
+            String Numbersequence = generateNumberSequence(sequences);
+            String sequence = transactionTypeE + yearSequence + sequences.getCurrentValue();
+            
             recharge.setId(null);
             recharge.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             recharge.setUserDestinationId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
@@ -1976,25 +1996,11 @@ public class APIOperations {
             recharge.setTopUpDescription(null);
             recharge.setBillPaymentDescription(null);
             recharge.setExternalId(null);
-            
-            //Se hace el conteo de los id de transacciones para la secuancia
-            Query query = entityManager.createQuery("SELECT COUNT(t.Id) FROM transaction t ");
-            List count =(List) query.getResultList();
-            //Se le suma al valor total para la secuencia
-            Integer numberSecuence = ((BigInteger) count.get(0)).intValue() + 1;
-            //Se estructura la secuancia
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyy");
-            String begginingDate = formatter.format(creationDate);
-            StringBuilder transactionNumber = new StringBuilder(transactionSource.getCode());
-            transactionNumber.append("-");
-            transactionNumber.append(transactionType.getCode());
-            transactionNumber.append("-");
-            transactionNumber.append(begginingDate);
-            transactionNumber.append("-");
-            transactionNumber.append(numberSecuence);
-            recharge.setTransactionNumber(transactionNumber.toString());
+            recharge.setTransactionNumber(Numbersequence);
+            recharge.setTransactionSequence(sequence);
             entityManager.flush();
             entityManager.persist(recharge);
+            
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransationTypeManualRecharge).getResultList();
                 if (commissions.size() < 1) {
@@ -6478,7 +6484,7 @@ public class APIOperations {
         String date = sdg.format(timestamp);
         CredentialAutorizationClient credentialAutorizationClient = new CredentialAutorizationClient();
         try {
-            //Se busca por el email el alias que devuelve credencial
+//            //Se busca por el email el alias que devuelve credencial
             CardResponse cardResponse = getCardByEmail(email);
             String alias = cardResponse.getaliasCard();
             //llamado al servicio de consulta de saldo con movimientos
