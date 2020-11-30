@@ -7001,7 +7001,8 @@ public class APIOperations {
         } catch (Exception e) {
             return new AccountTypeBankListResponse(ResponseCode.INTERNAL_ERROR, "Error loading countries");
         }
-        return new AccountTypeBankListResponse(ResponseCode.SUCCESS, "", accounTypes);
+        return new ProductResponse(ResponseCode.SUCCESS, "", product);
     }
-
+    
+    
 }
