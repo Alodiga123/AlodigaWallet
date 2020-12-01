@@ -173,8 +173,29 @@ import com.alodiga.businessportal.ws.BpBusinessInfoResponse;
 import com.alodiga.businessportal.ws.BusinessPortalWSException;
 import com.alodiga.cms.commons.ejb.CardEJB;
 import com.alodiga.cms.commons.ejb.PersonEJB;
+import com.alodiga.wallet.common.ejb.BusinessPortalEJB;
+import com.alodiga.wallet.common.ejb.UtilsEJB;
 import com.alodiga.wallet.common.enumeraciones.DocumentTypeE;
+import com.alodiga.wallet.common.enumeraciones.RequestTypeE;
 import com.alodiga.wallet.common.enumeraciones.TransactionTypeE;
+import com.alodiga.wallet.common.exception.EmptyListException;
+import com.alodiga.wallet.common.exception.GeneralException;
+import com.alodiga.wallet.common.exception.NullParameterException;
+import com.alodiga.wallet.common.exception.RegisterNotFoundException;
+import com.alodiga.wallet.common.model.AffiliationRequest;
+import com.alodiga.wallet.common.model.City;
+import com.alodiga.wallet.common.model.CollectionsRequest;
+import com.alodiga.wallet.common.model.County;
+import com.alodiga.wallet.common.model.DocumentsPersonType;
+import com.alodiga.wallet.common.model.NaturalPerson;
+import com.alodiga.wallet.common.model.OriginApplication;
+import com.alodiga.wallet.common.model.Person;
+import com.alodiga.wallet.common.model.PersonType;
+import com.alodiga.wallet.common.model.PhoneType;
+import com.alodiga.wallet.common.model.RequestHasCollectionRequest;
+import com.alodiga.wallet.common.model.RequestType;
+import com.alodiga.wallet.common.model.StatusApplicant;
+import com.alodiga.wallet.responses.AffiliationRequestResponse;
 import com.alodiga.wallet.responses.BalanceInquiryWithMovementsCredential;
 import com.alodiga.wallet.responses.BalanceInquiryWithMovementsResponses;
 import com.alodiga.wallet.responses.BalanceInquiryWithoutMovementsCredential;
@@ -6789,7 +6810,7 @@ public class APIOperations {
                 transaction.setConcept(Constants.LIMIT_ADVANCE_CONCEPT_TRANSFER);
                 transaction.setTotalAmount(Float.valueOf(amountWithdrawal));
                 entityManager.persist(transaction);
-                
+
                 //BalanceHistory del producto de origen
                 product = entityManager.find(Product.class, Product.PREPAID_CARD);
                 balanceProductSource = loadLastBalanceHistoryByAccount(userId, product.getId());
@@ -6864,11 +6885,11 @@ public class APIOperations {
 
                     return new LimitAdvanceResponses(ResponseCode.INTERNAL_ERROR, "Error loading products");
                 }
-                
+
                 LimitAdvanceResponses limitAdvanceResponses = new LimitAdvanceResponses(limitAdvanceCredential, ResponseCode.SUCCESS, "SUCCESS", products);
                 limitAdvanceResponses.setIdTransaction(transaction.getId().toString());
                 limitAdvanceResponses.setProducts(products);
-                
+
                 return limitAdvanceResponses;
 
             } else if (limitAdvanceResponse.getCodigoError().equals("204")) {
@@ -6970,6 +6991,163 @@ public class APIOperations {
             ex.printStackTrace();
             return new LimitAdvanceResponses(ResponseCode.INTERNAL_ERROR, "");
         }
+    }
+
+    public AffiliationRequestResponse saveAffiliationRequestUserWallet(String userId, Long countryId, String zipCode, String addressLine1, String addressLine2, byte[] imgDocumentIdetification, byte[] imgProfile) {
+
+        APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+        RespuestaUsuario responseUser;
+        UtilsEJB utilsEJB = (UtilsEJB) EJBServiceLocator.getInstance().get(EjbConstants.UTILS_EJB);
+        com.alodiga.wallet.common.ejb.PersonEJB personEJB = (com.alodiga.wallet.common.ejb.PersonEJB) EJBServiceLocator.getInstance().get(EjbConstants.PERSON_EJB);
+        BusinessPortalEJB businessPortalEJB = (BusinessPortalEJB) EJBServiceLocator.getInstance().get(EjbConstants.BUSSINES_PORTAL_EJB);
+        PersonType personType;
+        OriginApplication originApplication;
+        Country country;
+        DocumentsPersonType documentsPersonType;
+        StatusApplicant statusApplicant;
+        String numberPhone = null;
+        PhoneType phoneType;
+        City city;
+        County county;
+        AffiliationRequest affiliationRequest = new AffiliationRequest();
+        try {
+            responseUser = proxy.getUsuarioporId("usuarioWS", "passwordWS", userId);
+            String email = responseUser.getDatosRespuesta().getEmail();
+
+            //Objeto Person
+            Person person = new Person();
+            person.setEmail(email);
+            Map params = new HashMap();
+            com.alodiga.wallet.common.genericEJB.EJBRequest request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
+            params.put(QueryConstants.PARAM_CODE, "AWAAPP");
+            request1.setParams(params);
+            originApplication = utilsEJB.loadOriginApplicationByCode(request1);
+            request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
+            params = new HashMap();
+            params.put(QueryConstants.PARAM_COUNTRY_ID, countryId);
+            params.put(QueryConstants.PARAM_ORIGIN_APPLICATION_ID, originApplication.getId());
+            request1.setParams(params);
+            personType = (PersonType) utilsEJB.getPersonTypeByCountryByOriginApplication(request1);
+            person.setPersonTypeId(personType);
+            request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
+            request1.setParam(countryId);
+            country = utilsEJB.loadCountry(request1);
+            person.setCountryId(country);
+            person.setCreateDate(new Timestamp(new Date().getTime()));
+
+            //Objeto Natural Person
+            NaturalPerson naturalPerson = new NaturalPerson();
+            naturalPerson.setPersonId(person);
+            request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
+            params = new HashMap();
+            params.put(QueryConstants.PARAM_COUNTRY_ID, countryId);
+            params.put(QueryConstants.PARAM_IND_NATURAL_PERSON, Constants.IND_NATURAL_PERSON);
+            params.put(QueryConstants.PARAM_ORIGIN_APPLICATION_ID, originApplication.getId());
+            request1.setParams(params);
+            documentsPersonType = (DocumentsPersonType) personEJB.getDocumentsPersonByCountry(request1);
+            naturalPerson.setDocumentsPersonTypeId(documentsPersonType);
+            String identificationNumber = responseUser.getDatosRespuesta().getNumeroDocumento();
+            naturalPerson.setIdentificationNumber(identificationNumber);
+            String firstName = responseUser.getDatosRespuesta().getNombre();
+            naturalPerson.setFirstName(firstName);
+            String lastName = responseUser.getDatosRespuesta().getApellido();
+            naturalPerson.setLastName(lastName);
+            String gender = responseUser.getDatosRespuesta().getGenero();
+            naturalPerson.setGender(gender);
+            Calendar dateBirth = responseUser.getDatosRespuesta().getFechaNacimiento();
+            naturalPerson.setDateBirth(dateBirth.getTime());
+            request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
+            request1.setParam(1);
+            statusApplicant = personEJB.loadStatusApplicant(request1);
+            naturalPerson.setStatusApplicantId(statusApplicant);
+            naturalPerson.setCreateDate(new Timestamp(new Date().getTime()));
+
+            //Objeto Phone Person
+            com.alodiga.wallet.common.model.PhonePerson phonePerson = new com.alodiga.wallet.common.model.PhonePerson();
+            phonePerson.setCountryId(country);
+            phonePerson.setCountryCode(country.getCode());
+
+            if (responseUser.getDatosRespuesta().getMovil() != null) {
+                numberPhone = responseUser.getDatosRespuesta().getMovil();
+                request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
+                request1.setParam(2);
+                phoneType = personEJB.loadPhoneType(request1);
+                phonePerson.setNumberPhone(numberPhone);
+                phonePerson.setPhoneTypeId(phoneType);
+            }
+
+            if (responseUser.getDatosRespuesta().getTelefonoResidencial() != null) {
+                numberPhone = responseUser.getDatosRespuesta().getTelefonoResidencial();
+                request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
+                request1.setParam(1);
+                phoneType = personEJB.loadPhoneType(request1);
+                phonePerson.setNumberPhone(numberPhone);
+                phonePerson.setPhoneTypeId(phoneType);
+            }
+
+            phonePerson.setIndMainPhone(Constants.MAIN_PHONE_NATURAL_PERSON);
+
+            //Objeto RequesType
+            String code = RequestTypeE.SORUBI.getRequestTypeCode();
+            String description = RequestTypeE.SORUBI.getRequestTypeDescription();
+            Integer requestTypeId = RequestTypeE.SORUBI.getId();
+            RequestType requestType = new RequestType();
+            requestType.setCode(code);
+            requestType.setDescription(description);
+            requestType.setId(requestTypeId);
+
+            //Objeto Address
+            Address address = new Address();
+            address.setCountryId(country);
+            Integer cityId = responseUser.getDatosRespuesta().getDireccion().getCiudadId();
+            request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
+            request1.setParam(cityId);
+            city = utilsEJB.loadCity(request1);
+            address.setCityId(city);
+            Integer countyId = responseUser.getDatosRespuesta().getDireccion().getCondadoId();
+            request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
+            request1.setParam(countyId);
+            county = utilsEJB.loadCounty(request1);
+            address.setCountyId(county);
+            zipCode = responseUser.getDatosRespuesta().getDireccion().getCodigoPostal();
+            address.setZipCode(zipCode);
+            address.setAddressLine1(addressLine1);
+            address.setAddressLine2(addressLine2);
+            affiliationRequest = businessPortalEJB.saveNaturalPersonAffiliationRequest(person, naturalPerson, requestType, phonePerson, address);
+
+            List<CollectionsRequest> collectionsRequests = new ArrayList<CollectionsRequest>();
+
+            //OBJETO RequestHasCollectionRequest
+            RequestHasCollectionRequest requestHasCollectionRequest = new RequestHasCollectionRequest();
+            requestHasCollectionRequest.setCreateDate(new Timestamp(new Date().getTime()));
+            collectionsRequests = businessPortalEJB.getCollectionRequestsByPersonTypeId(Long.valueOf(personType.getId()));
+            for (CollectionsRequest collectionsRequest : collectionsRequests) {
+                requestHasCollectionRequest.setCollectionsRequestId(collectionsRequest);
+            }
+            requestHasCollectionRequest.setAffiliationRequestId(affiliationRequest);
+            requestHasCollectionRequest.setImageFileUrl("44.235.115.116: /opt/alodiga/proyecto/maw/imagenes");
+
+            requestHasCollectionRequest = businessPortalEJB.saveRequestHasCollectionsRequest(requestHasCollectionRequest);
+
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+            return new AffiliationRequestResponse(ResponseCode.INTERNAL_ERROR, "");
+        } catch (EmptyListException ex) {
+            ex.printStackTrace();
+            return new AffiliationRequestResponse(ResponseCode.INTERNAL_ERROR, "");
+        } catch (GeneralException ex) {
+            ex.printStackTrace();
+            return new AffiliationRequestResponse(ResponseCode.INTERNAL_ERROR, "");
+        } catch (NullParameterException ex) {
+            ex.printStackTrace();
+            return new AffiliationRequestResponse(ResponseCode.INTERNAL_ERROR, "");
+        } catch (RegisterNotFoundException ex) {
+            ex.printStackTrace();
+            return new AffiliationRequestResponse(ResponseCode.INTERNAL_ERROR, "");
+        }
+
+        return new AffiliationRequestResponse(ResponseCode.SUCCESS);
+
     }
 
 }
