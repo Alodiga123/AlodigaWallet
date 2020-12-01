@@ -202,13 +202,12 @@ public class APIAlodigaWallet {
     public TransactionResponse manualWithdrawals(
             @WebParam(name = "bankId") Long bankId,
             @WebParam(name = "emailUser") String emailUser,
-            @WebParam(name = "accountBank") String accountBank,
             @WebParam(name = "amountWithdrawal") Float amountWithdrawal,
             @WebParam(name = "productId") Long productId,
             @WebParam(name = "conceptTransaction") String conceptTransaction,
             @WebParam(name = "documentTypeId") Long documentTypeId,
             @WebParam(name = "originApplicationId") Long originApplicationId) {
-        return operations.manualWithdrawals(bankId, emailUser, accountBank, amountWithdrawal, productId, conceptTransaction,documentTypeId,originApplicationId);
+        return operations.manualWithdrawals(bankId, emailUser, amountWithdrawal, productId, conceptTransaction,documentTypeId,originApplicationId);
     }
 
     @WebMethod
