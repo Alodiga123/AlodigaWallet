@@ -175,8 +175,10 @@ import com.alodiga.cms.commons.ejb.CardEJB;
 import com.alodiga.cms.commons.ejb.PersonEJB;
 import com.alodiga.wallet.common.ejb.BusinessPortalEJB;
 import com.alodiga.wallet.common.ejb.UtilsEJB;
+import com.alodiga.wallet.common.ejb.UtilsEJBLocal;
 import com.alodiga.wallet.common.enumeraciones.DocumentTypeE;
 import com.alodiga.wallet.common.enumeraciones.RequestTypeE;
+import com.alodiga.wallet.common.enumeraciones.StatusApplicantE;
 import com.alodiga.wallet.common.enumeraciones.TransactionTypeE;
 import com.alodiga.wallet.common.exception.EmptyListException;
 import com.alodiga.wallet.common.exception.GeneralException;
@@ -184,6 +186,7 @@ import com.alodiga.wallet.common.exception.NullParameterException;
 import com.alodiga.wallet.common.exception.RegisterNotFoundException;
 import com.alodiga.wallet.common.model.AffiliationRequest;
 import com.alodiga.wallet.common.model.City;
+import com.alodiga.wallet.common.model.CollectionType;
 import com.alodiga.wallet.common.model.CollectionsRequest;
 import com.alodiga.wallet.common.model.County;
 import com.alodiga.wallet.common.model.DocumentsPersonType;
@@ -213,8 +216,26 @@ import java.util.HashMap;
 import java.util.Map;
 import plaidclientintegration.PlaidClientIntegration;
 import credentialautorizationclient.CredentialAutorizationClient;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Transparency;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.ComponentColorModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferByte;
+import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReadParam;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 @Stateless(name = "FsProcessorWallet", mappedName = "ejb/FsProcessorWallet")
 @TransactionManagement(TransactionManagementType.CONTAINER)
@@ -7056,8 +7077,9 @@ public class APIOperations {
             naturalPerson.setGender(gender);
             Calendar dateBirth = responseUser.getDatosRespuesta().getFechaNacimiento();
             naturalPerson.setDateBirth(dateBirth.getTime());
+            Integer statusApplicantId = StatusApplicantE.ACTIVO.getId();
             request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
-            request1.setParam(1);
+            request1.setParam(statusApplicantId);
             statusApplicant = personEJB.loadStatusApplicant(request1);
             naturalPerson.setStatusApplicantId(statusApplicant);
             naturalPerson.setCreateDate(new Timestamp(new Date().getTime()));
@@ -7074,27 +7096,25 @@ public class APIOperations {
                 phoneType = personEJB.loadPhoneType(request1);
                 phonePerson.setNumberPhone(numberPhone);
                 phonePerson.setPhoneTypeId(phoneType);
-            }
+                phonePerson.setIndMainPhone(Constants.MAIN_PHONE_NATURAL_PERSON);
+            } else {
+                if (responseUser.getDatosRespuesta().getTelefonoResidencial() != null) {
+                    numberPhone = responseUser.getDatosRespuesta().getTelefonoResidencial();
+                    request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
+                    request1.setParam(1);
+                    phoneType = personEJB.loadPhoneType(request1);
+                    phonePerson.setNumberPhone(numberPhone);
+                    phonePerson.setPhoneTypeId(phoneType);
+                }
 
-            if (responseUser.getDatosRespuesta().getTelefonoResidencial() != null) {
-                numberPhone = responseUser.getDatosRespuesta().getTelefonoResidencial();
-                request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
-                request1.setParam(1);
-                phoneType = personEJB.loadPhoneType(request1);
-                phonePerson.setNumberPhone(numberPhone);
-                phonePerson.setPhoneTypeId(phoneType);
             }
-
-            phonePerson.setIndMainPhone(Constants.MAIN_PHONE_NATURAL_PERSON);
 
             //Objeto RequesType
-            String code = RequestTypeE.SORUBI.getRequestTypeCode();
-            String description = RequestTypeE.SORUBI.getRequestTypeDescription();
-            Integer requestTypeId = RequestTypeE.SORUBI.getId();
-            RequestType requestType = new RequestType();
-            requestType.setCode(code);
-            requestType.setDescription(description);
-            requestType.setId(requestTypeId);
+            params = new HashMap();
+            request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
+            params.put(QueryConstants.PARAM_CODE, "SORUBI");
+            request1.setParams(params);
+            RequestType requestType = utilsEJB.loadRequestTypeByCode(request1);
 
             //Objeto Address
             Address address = new Address();
@@ -7115,19 +7135,77 @@ public class APIOperations {
             address.setAddressLine2(addressLine2);
             affiliationRequest = businessPortalEJB.saveNaturalPersonAffiliationRequest(person, naturalPerson, requestType, phonePerson, address);
 
-            List<CollectionsRequest> collectionsRequests = new ArrayList<CollectionsRequest>();
+            if (imgDocumentIdetification != null) {
+                ByteArrayInputStream bis = new ByteArrayInputStream(imgDocumentIdetification);
+                Iterator<?> readers = ImageIO.getImageReadersByFormatName("jpg");
+                //ImageIO is a class containing static methods for locating ImageReaders
+                //and ImageWriters, and performing simple encoding and decoding.
+
+                ImageReader reader = (ImageReader) readers.next();
+                Object source = bis;
+                ImageInputStream iis = ImageIO.createImageInputStream(source);
+                reader.setInput(iis, true);
+                ImageReadParam param = reader.getDefaultReadParam();
+
+                Image image = reader.read(0, param);
+                //got an image file
+
+                BufferedImage bufferedImage = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_RGB);
+                //bufferedImage is the RenderedImage to be written
+
+                Graphics2D g2 = bufferedImage.createGraphics();
+                g2.drawImage(image, null, null);
+
+                File imageFile = new File("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "DocumentoIdentidad.jpg");
+                ImageIO.write(bufferedImage, "jpg", imageFile);
+            }
+
+            if (imgProfile != null) {
+                ByteArrayInputStream bis = new ByteArrayInputStream(imgDocumentIdetification);
+                Iterator<?> readers = ImageIO.getImageReadersByFormatName("jpg");
+                //ImageIO is a class containing static methods for locating ImageReaders
+                //and ImageWriters, and performing simple encoding and decoding.
+
+                ImageReader reader = (ImageReader) readers.next();
+                Object source = bis;
+                ImageInputStream iis = ImageIO.createImageInputStream(source);
+                reader.setInput(iis, true);
+                ImageReadParam param = reader.getDefaultReadParam();
+
+                Image image = reader.read(0, param);
+                //got an image file
+
+                BufferedImage bufferedImage = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_RGB);
+                //bufferedImage is the RenderedImage to be written
+
+                Graphics2D g2 = bufferedImage.createGraphics();
+                g2.drawImage(image, null, null);
+
+                File imageFile = new File("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "FotoSelfieDocumento.png");
+                ImageIO.write(bufferedImage, "jpg", imageFile);
+            }
 
             //OBJETO RequestHasCollectionRequest
-            RequestHasCollectionRequest requestHasCollectionRequest = new RequestHasCollectionRequest();
-            requestHasCollectionRequest.setCreateDate(new Timestamp(new Date().getTime()));
-            collectionsRequests = businessPortalEJB.getCollectionRequestsByPersonTypeId(Long.valueOf(personType.getId()));
+            CollectionType collectionType = new CollectionType();
+            request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
+            request1.setFirst(0);
+            request1.setLimit(null);
+            collectionType = utilsEJB.loadCollectionType(request1);
+            List<CollectionsRequest> collectionsRequests = businessPortalEJB.getCollectionRequestsByPersonTypeId(Long.valueOf(personType.getId()));
             for (CollectionsRequest collectionsRequest : collectionsRequests) {
+                RequestHasCollectionRequest requestHasCollectionRequest = new RequestHasCollectionRequest();
+                requestHasCollectionRequest.setCreateDate(new Timestamp(new Date().getTime()));
                 requestHasCollectionRequest.setCollectionsRequestId(collectionsRequest);
-            }
-            requestHasCollectionRequest.setAffiliationRequestId(affiliationRequest);
-            requestHasCollectionRequest.setImageFileUrl("44.235.115.116: /opt/alodiga/proyecto/maw/imagenes");
+                requestHasCollectionRequest.setAffiliationRequestId(affiliationRequest);
+                if (collectionType.getOrden().equals("1")) {
+                    requestHasCollectionRequest.setImageFileUrl("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "DocumentoIdentidad.png");
+                }
+                if (collectionType.getOrden().equals("2")) {
+                    requestHasCollectionRequest.setImageFileUrl("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "FotoSelfieDocumento.png");
+                }
 
-            requestHasCollectionRequest = businessPortalEJB.saveRequestHasCollectionsRequest(requestHasCollectionRequest);
+                requestHasCollectionRequest = businessPortalEJB.saveRequestHasCollectionsRequest(requestHasCollectionRequest);
+            }
 
         } catch (RemoteException ex) {
             ex.printStackTrace();
@@ -7144,6 +7222,8 @@ public class APIOperations {
         } catch (RegisterNotFoundException ex) {
             ex.printStackTrace();
             return new AffiliationRequestResponse(ResponseCode.INTERNAL_ERROR, "");
+        } catch (IOException ex) {
+            Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return new AffiliationRequestResponse(ResponseCode.SUCCESS);
