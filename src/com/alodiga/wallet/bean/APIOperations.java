@@ -7021,17 +7021,19 @@ public class APIOperations {
         UtilsEJB utilsEJB = (UtilsEJB) EJBServiceLocator.getInstance().get(EjbConstants.UTILS_EJB);
         com.alodiga.wallet.common.ejb.PersonEJB personEJB = (com.alodiga.wallet.common.ejb.PersonEJB) EJBServiceLocator.getInstance().get(EjbConstants.PERSON_EJB);
         BusinessPortalEJB businessPortalEJB = (BusinessPortalEJB) EJBServiceLocator.getInstance().get(EjbConstants.BUSSINES_PORTAL_EJB);
-        PersonType personType;
-        OriginApplication originApplication;
-        Country country;
-        DocumentsPersonType documentsPersonType;
+        PersonType personType = new PersonType();
+        OriginApplication originApplication = new OriginApplication();
+        Country country = new Country();
+        DocumentsPersonType documentsPersonType = new DocumentsPersonType();
         StatusApplicant statusApplicant;
         String numberPhone = null;
-        PhoneType phoneType;
-        City city;
-        County county;
+        PhoneType phoneType = new PhoneType();
+        City city = new City();
+        County county = new County();
         AffiliationRequest affiliationRequest = new AffiliationRequest();
         try {
+
+            //Se busca el Id del usuario en registro unificado
             responseUser = proxy.getUsuarioporId("usuarioWS", "passwordWS", userId);
             String email = responseUser.getDatosRespuesta().getEmail();
 
@@ -7088,7 +7090,7 @@ public class APIOperations {
             com.alodiga.wallet.common.model.PhonePerson phonePerson = new com.alodiga.wallet.common.model.PhonePerson();
             phonePerson.setCountryId(country);
             phonePerson.setCountryCode(country.getCode());
-
+            //Se valida si tiene un numero de celular si no tiene se busca el numero residencial
             if (responseUser.getDatosRespuesta().getMovil() != null) {
                 numberPhone = responseUser.getDatosRespuesta().getMovil();
                 request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
@@ -7133,8 +7135,11 @@ public class APIOperations {
             address.setZipCode(zipCode);
             address.setAddressLine1(addressLine1);
             address.setAddressLine2(addressLine2);
+
+            //Se guarda la solicitud de afiliacion de la persona natural
             affiliationRequest = businessPortalEJB.saveNaturalPersonAffiliationRequest(person, naturalPerson, requestType, phonePerson, address);
 
+            //Se valida la imagen del documento de identidad y se guarda en la ruta del servidor
             if (imgDocumentIdetification != null) {
                 ByteArrayInputStream bis = new ByteArrayInputStream(imgDocumentIdetification);
                 Iterator<?> readers = ImageIO.getImageReadersByFormatName("jpg");
@@ -7159,7 +7164,7 @@ public class APIOperations {
                 File imageFile = new File("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "DocumentoIdentidad.jpg");
                 ImageIO.write(bufferedImage, "jpg", imageFile);
             }
-
+            //Se valida la imagen de la persona con su documento de identidad y se guarda en la ruta del servidor
             if (imgProfile != null) {
                 ByteArrayInputStream bis = new ByteArrayInputStream(imgDocumentIdetification);
                 Iterator<?> readers = ImageIO.getImageReadersByFormatName("jpg");
@@ -7203,7 +7208,7 @@ public class APIOperations {
                 if (collectionType.getOrden().equals("2")) {
                     requestHasCollectionRequest.setImageFileUrl("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "FotoSelfieDocumento.png");
                 }
-
+                //Se guarda los recaudos 
                 requestHasCollectionRequest = businessPortalEJB.saveRequestHasCollectionsRequest(requestHasCollectionRequest);
             }
 
@@ -7223,7 +7228,8 @@ public class APIOperations {
             ex.printStackTrace();
             return new AffiliationRequestResponse(ResponseCode.INTERNAL_ERROR, "");
         } catch (IOException ex) {
-            Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+            return new AffiliationRequestResponse(ResponseCode.INTERNAL_ERROR, "");
         }
 
         return new AffiliationRequestResponse(ResponseCode.SUCCESS);
