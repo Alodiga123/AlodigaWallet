@@ -16,6 +16,7 @@ import com.alodiga.wallet.common.model.Country;
 import com.alodiga.wallet.common.model.StatusTransactionApproveRequest;
 import com.alodiga.wallet.responses.AccountBankResponse;
 import com.alodiga.wallet.responses.ActivateCardResponses;
+import com.alodiga.wallet.responses.AffiliationRequestResponse;
 import com.alodiga.wallet.responses.BalanceHistoryResponse;
 import com.alodiga.wallet.responses.BalanceInquiryWithMovementsResponses;
 import com.alodiga.wallet.responses.BalanceInquiryWithoutMovementsResponses;
@@ -803,6 +804,20 @@ public class APIAlodigaWallet {
             @WebParam(name = "productId") Long productId){
         return operations.limitAdvance(email,balance,productId);
     }
+    
+    @WebMethod
+    public AffiliationRequestResponse saveAffiliationRequestUserWallet(
+            @WebParam(name = "userId") String userId,
+            @WebParam(name = "countryId") Long countryId,
+            @WebParam(name = "zipCode") String zipCode,
+            @WebParam(name = "addressLine1") String addressLine1,
+            @WebParam(name = "addressLine2") String addressLine2,
+            @WebParam(name = "imgDocumentIdetification") byte[] imgDocumentIdetification,
+            @WebParam(name = "imgProfile") byte[] imgProfile){
+        return operations.saveAffiliationRequestUserWallet(userId,countryId,zipCode,addressLine1,addressLine2,imgDocumentIdetification,imgProfile);
+    }
+    
+     
     
     @WebMethod
     public AccountTypeBankListResponse getAccountTypeBank() {
