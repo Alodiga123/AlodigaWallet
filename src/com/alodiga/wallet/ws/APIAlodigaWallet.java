@@ -55,6 +55,7 @@ import com.alodiga.wallet.responses.TransactionListResponse;
 import com.alodiga.wallet.responses.TransactionResponse;
 import com.alodiga.wallet.responses.TransferCardToCardResponses;
 import com.alodiga.wallet.responses.UserHasProductResponse;
+import com.alodiga.wallet.responses.AccountTypeBankListResponse;
 
 @WebService
 public class APIAlodigaWallet {
@@ -202,13 +203,12 @@ public class APIAlodigaWallet {
     public TransactionResponse manualWithdrawals(
             @WebParam(name = "bankId") Long bankId,
             @WebParam(name = "emailUser") String emailUser,
-            @WebParam(name = "accountBank") String accountBank,
             @WebParam(name = "amountWithdrawal") Float amountWithdrawal,
             @WebParam(name = "productId") Long productId,
             @WebParam(name = "conceptTransaction") String conceptTransaction,
             @WebParam(name = "documentTypeId") Long documentTypeId,
             @WebParam(name = "originApplicationId") Long originApplicationId) {
-        return operations.manualWithdrawals(bankId, emailUser, accountBank, amountWithdrawal, productId, conceptTransaction,documentTypeId,originApplicationId);
+        return operations.manualWithdrawals(bankId, emailUser, amountWithdrawal, productId, conceptTransaction,documentTypeId,originApplicationId);
     }
 
     @WebMethod
@@ -661,7 +661,7 @@ public class APIAlodigaWallet {
         return operations.saveAccountBankUser(bankId,unifiedRegistryId,accountNumber,accountTypeBankId);
 
     }
-    
+        
     @WebMethod
     public TransactionApproveRequestResponse saveTransactionApproveRequest(
     @WebParam(name = "unifiedRegistryId") Long unifiedRegistryId,
@@ -819,4 +819,8 @@ public class APIAlodigaWallet {
     
      
     
+    @WebMethod
+    public AccountTypeBankListResponse getAccountTypeBank() {
+        return operations.getAccountTypeBank();
+    }
 }

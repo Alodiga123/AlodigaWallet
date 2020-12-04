@@ -87,6 +87,7 @@ import com.alodiga.wallet.common.model.Provider;
 import com.alodiga.wallet.common.model.Sequences;
 import com.alodiga.wallet.common.model.StatusAccountBank;
 import com.alodiga.wallet.common.model.StatusTransactionApproveRequest;
+import com.alodiga.wallet.common.model.StatusBankOperation;
 import com.alodiga.wallet.common.model.TopUpCountry;
 import com.alodiga.wallet.common.model.TopUpResponseConstants;
 import com.alodiga.wallet.common.model.Transaction;
@@ -208,6 +209,7 @@ import com.alodiga.wallet.responses.DispertionTransferCredential;
 import com.alodiga.wallet.responses.DispertionTransferResponses;
 import com.alodiga.wallet.responses.LimitAdvanceCredential;
 import com.alodiga.wallet.responses.LimitAdvanceResponses;
+import com.alodiga.wallet.responses.AccountTypeBankListResponse;
 import com.cms.commons.genericEJB.EJBRequest;
 import com.cms.commons.models.PhonePerson;
 import com.cms.commons.util.EJBServiceLocator;
@@ -381,6 +383,8 @@ public class APIOperations {
         int totalTransactionsByUserDaily = 0;
         int totalTransactionsByUserMonthly = 0;
         int totalTransactionsByUserYearly = 0;
+        Integer paymentShopType = DocumentTypeE.PROPAY.getId();
+        Integer transactionTypeE = TransactionTypeE.PROPAY.getId();
         Double totalAmountByUserDaily = 0.00D;
         Double totalAmountByUserMonthly = 0.00D;
         Double totalAmountByUserYearly = 0.00D;
@@ -393,6 +397,9 @@ public class APIOperations {
         Transaction paymentShop = new Transaction();
         APIBusinessPortalWSProxy aPIBusinessPortalWSProxy = new APIBusinessPortalWSProxy();
         BpBusinessSellResponse addSellTransaction = null;
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        SimpleDateFormat year = new SimpleDateFormat("yyyy");
+        String yearSequence = year.format(timestamp);
         try {
             //Se obtiene el usuario de la API de Registro Unificado
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
@@ -511,6 +518,12 @@ public class APIOperations {
                         break;
                 }
             }
+            
+            //Se genera la secuencia de la transacción
+            Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Long.valueOf(paymentShopType), Long.valueOf(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID));
+            String Numbersequence = generateNumberSequence(sequences);
+            String sequence = transactionTypeE + yearSequence + sequences.getCurrentValue();
+            
             paymentShop.setId(null);
             paymentShop.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             paymentShop.setUserDestinationId(BigInteger.valueOf(addSellTransaction.getIdBusiness()));
@@ -534,7 +547,8 @@ public class APIOperations {
             paymentShop.setTopUpDescription(null);
             paymentShop.setBillPaymentDescription(null);
             paymentShop.setExternalId(null);
-            paymentShop.setTransactionNumber("1");
+            paymentShop.setTransactionNumber(Numbersequence);
+            paymentShop.setTransactionSequence(sequence);
             entityManager.flush();
             entityManager.persist(paymentShop);
 
@@ -668,6 +682,8 @@ public class APIOperations {
         int totalTransactionsByUserDaily = 0;
         int totalTransactionsByUserMonthly = 0;
         int totalTransactionsByUserYearly = 0;
+        Integer transferBetweenAccountType = DocumentTypeE.PROTRA.getId();
+        Integer transactionTypeE = TransactionTypeE.PROTRA.getId();
         Double totalAmountByUserDaily = 0.00D;
         Double totalAmountByUserMonthly = 0.00D;
         Double totalAmountByUserYearly = 0.00D;
@@ -679,6 +695,9 @@ public class APIOperations {
         Commission commissionTransfer = new Commission();
         ArrayList<Product> products = new ArrayList<Product>();
         Transaction transfer = new Transaction();
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        SimpleDateFormat year = new SimpleDateFormat("yyyy");
+        String yearSequence = year.format(timestamp);
         try {
 
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
@@ -815,6 +834,11 @@ public class APIOperations {
                         break;
                 }
             }
+            
+            //Se genera la secuencia de la transacción
+            Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Long.valueOf(transferBetweenAccountType), Long.valueOf(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID));
+            String numberSequence = generateNumberSequence(sequences);
+            String sequence = transactionTypeE + yearSequence + sequences.getCurrentValue();        
 
             transfer.setId(null);
             transfer.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
@@ -838,7 +862,8 @@ public class APIOperations {
             transfer.setTopUpDescription(null);
             transfer.setBillPaymentDescription(null);
             transfer.setExternalId(null);
-            transfer.setTransactionNumber("1");
+            transfer.setTransactionNumber(numberSequence );
+            transfer.setTransactionSequence(sequence);
             entityManager.flush();
             entityManager.persist(transfer);
 
@@ -1019,6 +1044,8 @@ public class APIOperations {
         int totalTransactionsByUserDaily = 0;
         int totalTransactionsByUserMonthly = 0;
         int totalTransactionsByUserYearly = 0;
+        Integer exchangeProductType = DocumentTypeE.PROEXC.getId();
+        Integer transactionTypeE = TransactionTypeE.PROEXC.getId();
         Double totalAmountByUserDaily = 0.00D;
         Double totalAmountByUserMonthly = 0.00D;
         Double totalAmountByUserYearly = 0.00D;
@@ -1029,7 +1056,9 @@ public class APIOperations {
         short isPercentCommission = 0;
         ArrayList<Product> products = new ArrayList<Product>();
         Transaction exchange = new Transaction();
-
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        SimpleDateFormat year = new SimpleDateFormat("yyyy");
+        String yearSequence = year.format(timestamp);
         try {
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS", "passwordWS", emailUser);
@@ -1140,7 +1169,12 @@ public class APIOperations {
                         break;
                 }
             }
-
+    
+            //Se genera la secuencia de la transacción
+            Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Long.valueOf(exchangeProductType), Long.valueOf(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID));
+            String Numbersequence = generateNumberSequence(sequences);
+            String sequence = transactionTypeE + yearSequence + sequences.getCurrentValue();
+            
             exchange.setId(null);
             exchange.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             exchange.setUserDestinationId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
@@ -1163,7 +1197,8 @@ public class APIOperations {
             exchange.setTopUpDescription(null);
             exchange.setBillPaymentDescription(null);
             exchange.setExternalId(null);
-            exchange.setTransactionNumber("1");
+            exchange.setTransactionNumber(Numbersequence);
+            exchange.setTransactionSequence(sequence);
             entityManager.flush();
             entityManager.persist(exchange);
 
@@ -1596,14 +1631,16 @@ public class APIOperations {
         return new TransactionListResponse(ResponseCode.SUCCESS, "", transactions);
     }
 
-    public TransactionResponse manualWithdrawals(Long bankId, String emailUser, String accountBank,
-            Float amountWithdrawal, Long productId, String conceptTransaction, Long documentTypeId, Long originApplicationId) {
+    public TransactionResponse manualWithdrawals(Long bankId, String emailUser, Float amountWithdrawal, 
+            Long productId, String conceptTransaction, Long documentTypeId, Long originApplicationId) {
 
         Long idTransaction = 0L;
         Long userId = 0L;
         int totalTransactionsByUserDaily = 0;
         int totalTransactionsByUserMonthly = 0;
         int totalTransactionsByUserYearly = 0;
+        Integer manualWithdrawalsType = DocumentTypeE.WITMAN.getId();
+        Integer transactionTypeE = TransactionTypeE.WITMAN.getId();
         Double totalAmountByUserDaily = 0.00D;
         Double totalAmountByUserMonthly = 0.00D;
         Double totalAmountByUserYearly = 0.00D;
@@ -1617,7 +1654,10 @@ public class APIOperations {
         ArrayList<Product> products = new ArrayList<Product>();
         CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
         AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
-
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        SimpleDateFormat year = new SimpleDateFormat("yyyy");
+        String yearSequence = year.format(timestamp);
+        
         try {
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS", "passwordWS", emailUser);
@@ -1728,9 +1768,15 @@ public class APIOperations {
                         break;
                 }
             }
-
+            
+            //Se genera la secuencia de la transacción
+            Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Long.valueOf(manualWithdrawalsType), Long.valueOf(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID));
+            String Numbersequence = generateNumberSequence(sequences);
+            String sequence = transactionTypeE + yearSequence + sequences.getCurrentValue();
+            
             withdrawal.setId(null);
-            withdrawal.setTransactionNumber("1");
+            withdrawal.setTransactionNumber(Numbersequence);
+            withdrawal.setTransactionSequence(sequence);
             withdrawal.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             withdrawal.setUserDestinationId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             Product product = entityManager.find(Product.class, productId);
@@ -1782,20 +1828,23 @@ public class APIOperations {
                 e.printStackTrace();
                 return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
             }
-
+            
             BankOperation manualWithdrawal = new BankOperation();
             manualWithdrawal.setId(null);
             manualWithdrawal.setUserSourceId(BigInteger.valueOf(userId));
             manualWithdrawal.setProductId(product);
             manualWithdrawal.setTransactionId(withdrawal);
             manualWithdrawal.setCommisionId(commissionWithdrawal);
+            StatusBankOperation statusOperation = entityManager.find(StatusBankOperation.class, Constante.sStatusBankOperationWithdrawal);
+            manualWithdrawal.setStatusBankOperationId(statusOperation);
             BankOperationType operationType = entityManager.find(BankOperationType.class, Constante.sBankOperationTypeWithdrawal);
             manualWithdrawal.setBankOperationTypeId(operationType);
             BankOperationMode operationMode = entityManager.find(BankOperationMode.class, Constante.sBankOperationModeManual);
             manualWithdrawal.setBankOperationModeId(operationMode);
             Bank bank = entityManager.find(Bank.class, bankId);
             manualWithdrawal.setBankId(bank);
-            manualWithdrawal.setBankOperationNumber(accountBank);
+            manualWithdrawal.setBankOperationNumber(null);
+            manualWithdrawal.setBankOperationAmount(amountWithdrawal - amountCommission);
             entityManager.persist(manualWithdrawal);
 
             withdrawal.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
@@ -1844,7 +1893,7 @@ public class APIOperations {
 
                 return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error loading products");
             }
-            SendMailTherad sendMailTherad = new SendMailTherad("ES", accountBank, amountWithdrawal, conceptTransaction, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), emailUser, Integer.valueOf("4"));
+            SendMailTherad sendMailTherad = new SendMailTherad("ES", amountWithdrawal, conceptTransaction, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), emailUser, Integer.valueOf("4"));
             sendMailTherad.run();
 
             SendSmsThread sendSmsThread = new SendSmsThread(responseUser.getDatosRespuesta().getMovil(), Integer.valueOf("23"), amountWithdrawal, userId, entityManager);
@@ -1864,7 +1913,7 @@ public class APIOperations {
 
     }
 
-    public TransactionResponse manualRecharge(Long bankId, String emailUser, String referenceNumberOperation,
+    public TransactionResponse manualRecharge(Long bankId, String emailUser, String bankOperationNumber,
             Float amountRecharge, Long productId, String conceptTransaction, Long documentTypeId, Long originApplicationId) {
 
         Long idTransaction = 0L;
@@ -1875,6 +1924,8 @@ public class APIOperations {
         Double totalAmountByUserDaily = 0.00D;
         Double totalAmountByUserMonthly = 0.00D;
         Double totalAmountByUserYearly = 0.00D;
+        Integer manualRechargeType = DocumentTypeE.MANREC.getId();
+        Integer transactionTypeE = TransactionTypeE.MANREC.getId();
         List<Transaction> transactionsByUser = new ArrayList<Transaction>();
         List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
         List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
@@ -1886,7 +1937,9 @@ public class APIOperations {
         ArrayList<Product> products = new ArrayList<Product>();
         CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
         AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
-
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        SimpleDateFormat year = new SimpleDateFormat("yyyy");
+        String yearSequence = year.format(timestamp);
         try {
             //Se obtiene el usuario de la API de Registro Unificado
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
@@ -1994,7 +2047,12 @@ public class APIOperations {
                         break;
                 }
             }
-
+            
+            //Se genera la secuencia de la transacción
+            Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Long.valueOf(manualRechargeType), Long.valueOf(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID));
+            String Numbersequence = generateNumberSequence(sequences);
+            String sequence = transactionTypeE + yearSequence + sequences.getCurrentValue();
+            
             recharge.setId(null);
             recharge.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             recharge.setUserDestinationId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
@@ -2017,9 +2075,11 @@ public class APIOperations {
             recharge.setTopUpDescription(null);
             recharge.setBillPaymentDescription(null);
             recharge.setExternalId(null);
-            recharge.setTransactionNumber("1");
+            recharge.setTransactionNumber(Numbersequence);
+            recharge.setTransactionSequence(sequence);
             entityManager.flush();
             entityManager.persist(recharge);
+            
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransationTypeManualRecharge).getResultList();
                 if (commissions.size() < 1) {
@@ -2052,13 +2112,16 @@ public class APIOperations {
             manualRecharge.setProductId(product);
             manualRecharge.setTransactionId(recharge);
             manualRecharge.setCommisionId(commissionRecharge);
+            StatusBankOperation statusOperation = entityManager.find(StatusBankOperation.class, Constante.sStatusBankOperationRecharge);
+            manualRecharge.setStatusBankOperationId(statusOperation);
             BankOperationType operationType = entityManager.find(BankOperationType.class, Constante.sBankOperationTypeRecharge);
             manualRecharge.setBankOperationTypeId(operationType);
             BankOperationMode operationMode = entityManager.find(BankOperationMode.class, Constante.sBankOperationModeManual);
             manualRecharge.setBankOperationModeId(operationMode);
             Bank bank = entityManager.find(Bank.class, bankId);
             manualRecharge.setBankId(bank);
-            manualRecharge.setBankOperationNumber(referenceNumberOperation);
+            manualRecharge.setBankOperationNumber(bankOperationNumber);
+            manualRecharge.setBankOperationAmount(amountRecharge);
             entityManager.persist(manualRecharge);
             recharge.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(recharge);
@@ -2107,10 +2170,10 @@ public class APIOperations {
             }
             Usuario usuario = new Usuario();
             usuario.setEmail(emailUser);
-            SendMailTherad sendMailTherad = new SendMailTherad("ES", referenceNumberOperation, conceptTransaction, amountRecharge, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), emailUser, Integer.valueOf("2"));
+            SendMailTherad sendMailTherad = new SendMailTherad("ES", bankOperationNumber, conceptTransaction, amountRecharge, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), emailUser, Integer.valueOf("2"));
             sendMailTherad.run();
 
-            SendSmsThread sendSmsThread = new SendSmsThread(responseUser.getDatosRespuesta().getMovil(), amountRecharge, referenceNumberOperation, Integer.valueOf("21"), userId, entityManager);
+            SendSmsThread sendSmsThread = new SendSmsThread(responseUser.getDatosRespuesta().getMovil(), amountRecharge, bankOperationNumber, Integer.valueOf("21"), userId, entityManager);
             sendSmsThread.run();
         } catch (Exception e) {
             e.printStackTrace();
@@ -2569,7 +2632,6 @@ public class APIOperations {
         List<TopUpCountry> topUpCountrys = null;
         try {
             topUpCountrys = entityManager.createNamedQuery("TopUpCountry.findAll", TopUpCountry.class).getResultList();
-
         } catch (Exception e) {
             return new TopUpCountryListResponse(ResponseCode.INTERNAL_ERROR, "Error loading countries");
         }
@@ -5733,7 +5795,8 @@ public class APIOperations {
             return answer;
         } catch (BusinessPortalWSException ex) {
             return new BusinessShopResponse(ResponseCode.INTERNAL_ERROR, ex.getErrorMessage().getErrorMessageValue());
-        } catch (RemoteException ex) {
+        } 
+        catch (RemoteException ex) {
             return new BusinessShopResponse(ResponseCode.INTERNAL_ERROR, "Error processing businessInfo");
         }
     }
@@ -5869,18 +5932,17 @@ public class APIOperations {
         List<UserHasBank> userHasBank = new ArrayList<UserHasBank>();
         List<Bank> banks = new ArrayList<Bank>();
         try {
-            userHasBank = (List<UserHasBank>) entityManager.createNamedQuery("UserHasBank.findByUserSourceIdAllBank", UserHasBank.class).setParameter("userSourceId", userId).getResultList();
-
+            userHasBank = (List<UserHasBank>) entityManager.createNamedQuery("UserHasBank.findByUserSourceIdAllBank", UserHasBank.class).setParameter("userSourceId", userId).getResultList();   
             if (userHasBank.size() <= 0) {
                 return new BankListResponse(ResponseCode.USER_NOT_HAS_BANK, "They are not banks asociated");
             }
-
+            
             for (UserHasBank uhb : userHasBank) {
                 Bank bank = new Bank();
                 bank = entityManager.find(Bank.class, uhb.getBankId().getId());
                 banks.add(bank);
             }
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             return new BankListResponse(ResponseCode.INTERNAL_ERROR, "Error loading banks");
@@ -7013,7 +7075,19 @@ public class APIOperations {
             return new LimitAdvanceResponses(ResponseCode.INTERNAL_ERROR, "");
         }
     }
+    
+    public AccountTypeBankListResponse getAccountTypeBank() {
+        List<AccountTypeBank> accounTypes = null;
+        try {
+            accounTypes = entityManager.createNamedQuery("AccountTypeBank.findAll", AccountTypeBank.class).getResultList();
 
+        } catch (Exception e) {
+            return new AccountTypeBankListResponse(ResponseCode.INTERNAL_ERROR, "Error loading countries");
+        }
+        return new AccountTypeBankListResponse(ResponseCode.SUCCESS, "", accounTypes);
+    }
+    
+    
     public AffiliationRequestResponse saveAffiliationRequestUserWallet(String userId, Long countryId, String zipCode, String addressLine1, String addressLine2, byte[] imgDocumentIdetification, byte[] imgProfile) {
 
         APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
