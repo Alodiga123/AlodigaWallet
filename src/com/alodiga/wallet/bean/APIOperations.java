@@ -202,6 +202,8 @@ public class APIOperations {
 
     @PersistenceContext(unitName = "AlodigaWalletPU")
     private EntityManager entityManager;
+    private PersonEJB personEJB = null;
+    private CardEJB cardEJB = null;
 
     public ProductResponse saveProduct(Long enterpriseId, Long categoryId, Long productIntegrationTypeId, String name, boolean taxInclude, boolean status, String referenceCode, String rateUrl, String accesNumberURL, boolean isFree, boolean isAlocashProduct, String symbol) {
         try {
@@ -5719,10 +5721,9 @@ public class APIOperations {
     }
 
     public CardResponse getCardByIdentificationNumber(String numberIdentification) {
-
         List<Card> cards = new ArrayList<Card>();
-        CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
-        PersonEJB personEJB = (PersonEJB) EJBServiceLocator.getInstance().get(EjbConstants.PERSON_EJB);
+        cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
+        personEJB = (PersonEJB) EJBServiceLocator.getInstance().get(EjbConstants.PERSON_EJB);
         List<PhonePerson> phonePersonList = null;
         String alias = "";
         String name = "";
@@ -5760,8 +5761,8 @@ public class APIOperations {
 
     public CardResponse getCardByEmail(String email) {
         List<Card> cards = new ArrayList<Card>();
-        CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
-        PersonEJB personEJB = (PersonEJB) EJBServiceLocator.getInstance().get(EjbConstants.PERSON_EJB);
+        cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
+        personEJB = (PersonEJB) EJBServiceLocator.getInstance().get(EjbConstants.PERSON_EJB);
         List<PhonePerson> phonePersonList = null;
         String alias = "";
         String name = "";
@@ -5805,10 +5806,9 @@ public class APIOperations {
     }
 
     public CardResponse getCardByPhone(String phone) {
-
         List<Card> cards = new ArrayList<Card>();
-        CardEJB cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
-        PersonEJB personEJB = (PersonEJB) EJBServiceLocator.getInstance().get(EjbConstants.PERSON_EJB);
+        cardEJB = (CardEJB) EJBServiceLocator.getInstance().get(EjbConstants.CARD_EJB);
+        personEJB = (PersonEJB) EJBServiceLocator.getInstance().get(EjbConstants.PERSON_EJB);
         List<PhonePerson> phonePersonList = null;
         String alias = "";
         String name = "";
@@ -7001,7 +7001,7 @@ public class APIOperations {
         } catch (Exception e) {
             return new AccountTypeBankListResponse(ResponseCode.INTERNAL_ERROR, "Error loading countries");
         }
-        return new ProductResponse(ResponseCode.SUCCESS, "", product);
+        return new AccountTypeBankListResponse(ResponseCode.SUCCESS, "", accounTypes);
     }
     
     
