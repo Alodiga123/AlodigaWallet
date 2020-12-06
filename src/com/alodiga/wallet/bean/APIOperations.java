@@ -7094,7 +7094,7 @@ public class APIOperations {
         RespuestaUsuario responseUser;
         UtilsEJB utilsEJB = (UtilsEJB) EJBServiceLocator.getInstance().get(EjbConstants.UTILS_EJB);
         com.alodiga.wallet.common.ejb.PersonEJB personEJB = (com.alodiga.wallet.common.ejb.PersonEJB) EJBServiceLocator.getInstance().get(EjbConstants.PERSON_EJB);
-        BusinessPortalEJB businessPortalEJB = (BusinessPortalEJB) EJBServiceLocator.getInstance().get(EjbConstants.BUSSINES_PORTAL_EJB);
+        com.alodiga.wallet.common.ejb.BusinessPortalEJB businessPortalEJB = (BusinessPortalEJB) EJBServiceLocator.getInstance().get(com.alodiga.wallet.common.utils.EjbConstants.BUSINESS_PORTAL_EJB);
         PersonType personType = new PersonType();
         OriginApplication originApplication = new OriginApplication();
         Country country = new Country();
