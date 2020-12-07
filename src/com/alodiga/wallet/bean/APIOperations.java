@@ -183,6 +183,11 @@ import java.util.HashMap;
 import java.util.Map;
 import plaidclientintegration.PlaidClientIntegration;
 import credentialautorizationclient.CredentialAutorizationClient;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 @Stateless(name = "FsProcessorWallet", mappedName = "ejb/FsProcessorWallet")
 @TransactionManagement(TransactionManagementType.CONTAINER)
@@ -4726,7 +4731,15 @@ public class APIOperations {
         List<BusinessHasProduct> businessHasProducts = new ArrayList<BusinessHasProduct>();
         List<Product> products = new ArrayList<Product>();
         try {
-            businessHasProducts = (List<BusinessHasProduct>) entityManager.createNamedQuery("BusinessHasProduct.findByBusinessIdAllProduct", BusinessHasProduct.class).setParameter("businessId", businessId).getResultList();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<BusinessHasProduct> cq = cb.createQuery(BusinessHasProduct.class);
+            Root<BusinessHasProduct> from = cq.from(BusinessHasProduct.class);
+            cq.select(from);
+            cq.where(cb.equal(from.get("businessId"), businessId));
+            Query query = entityManager.createQuery(cq);
+
+            businessHasProducts = query.getResultList();
+            //businessHasProducts = (List<BusinessHasProduct>) entityManager.createNamedQuery("BusinessHasProduct.findByBusinessIdAllProduct", BusinessHasProduct.class).setParameter("businessId", businessId).getResultList();
 
             if (businessHasProducts.size() <= 0) {
                 return new ProductListResponse(ResponseCode.BUSINESS_NOT_HAS_PRODUCT, "They are not products asociated");
@@ -5831,9 +5844,9 @@ public class APIOperations {
     }
 
     public DispertionTransferResponses dispertionTransfer(String email, Float balance, Long productId) {
-        
+
         APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
-        CredentialAutorizationClient credentialAutorizationClient = new CredentialAutorizationClient();      
+        CredentialAutorizationClient credentialAutorizationClient = new CredentialAutorizationClient();
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         Timestamp begginingDateTime = new Timestamp(0);
         Timestamp endingDateTime = new Timestamp(0);
@@ -5859,20 +5872,20 @@ public class APIOperations {
         ArrayList<Product> products = new ArrayList<Product>();
         List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
         List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
-        List<Commission> commissions = new ArrayList<Commission>();        
+        List<Commission> commissions = new ArrayList<Commission>();
         BalanceHistory balanceUserSource = null;
         Commission commissionTransfer = new Commission();
-        
+
         try {
-            ignoreSSLAutorization(); 
-            
+            ignoreSSLAutorization();
+
             //Se obtiene el usuario de registro unificado
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS", "passwordWS", email);
             Long userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
-            
+
             //Se obtiene el saldo disponible del usuario
             balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
-            
+
             try {
                 //Se calcula la comisión de la operación 
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransactionTypePR).getResultList();
@@ -5888,7 +5901,7 @@ public class APIOperations {
                     }
                     amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
                 }
-                
+
                 amountTransferTotal = balance + amountCommission;
                 //Se valida si tiene saldo disponible
                 if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < amountTransferTotal) {
@@ -5904,7 +5917,7 @@ public class APIOperations {
                 totalAmountByUserMonthly = AmountMaxByBusinessCurrentDate(userId, EjbUtils.getBeginningDateMonth(new Date()), EjbUtils.getEndingDate(new Date()));
                 totalTransactionsByUserYearly = TransactionsByBusinessCurrentDate(userId, EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
                 totalAmountByUserYearly = AmountMaxByBusinessCurrentDate(userId, EjbUtils.getBeginningDateAnnual(new Date()), EjbUtils.getEndingDate(new Date()));
-                
+
                 //Validar las preferencias
                 List<Preference> preferences = getPreferences();
                 for (Preference p : preferences) {
@@ -5998,27 +6011,27 @@ public class APIOperations {
                             }
                             break;
                     }
-                }                
+                }
             } catch (NoResultException e) {
                 e.printStackTrace();
                 return new DispertionTransferResponses(ResponseCode.INTERNAL_ERROR, "Error in validation process");
             }
-            
+
             //Se obtiene la tarjeta asociada al usuario
             CardResponse cardResponse = getCardByEmail(email);
             String alias = cardResponse.getaliasCard();
-            
+
             //Se genera la secuencia de la transacción
             Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Long.valueOf(recharge), Long.valueOf(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID));
             String Numbersequence = generateNumberSequence(sequences);
             String sequence = transactionTypeE + yearSequence + Numbersequence;
-            
+
             //Se efectúa la recarga de la tarjeta
             DispertionResponse dispertionResponse = credentialAutorizationClient.dispertionTransfer(date, hour, alias, String.valueOf(balance), sequence);
 
             if (dispertionResponse.getCodigoError().equals("-1")) {
                 DispertionTransferCredential dispertionTransferCredential = new DispertionTransferCredential(dispertionResponse.getCodigoError(), dispertionResponse.getMensajeError(), dispertionResponse.getCodigoRespuesta(), dispertionResponse.getMensajeRespuesta(), dispertionResponse.getCodigoAutorizacion());
-                
+
                 //Se guarda el objeto Transaction
                 Transaction transaction = new Transaction();
                 transaction.setId(null);
@@ -6040,7 +6053,7 @@ public class APIOperations {
                 transaction.setConcept(Constants.DISPERTION_CONCEPT_TRANSFER);
                 transaction.setTotalAmount(Float.valueOf(balance));
                 entityManager.persist(transaction);
-                
+
                 //Se actualiza el saldo del usuario
                 BalanceHistory balanceHistory = new BalanceHistory();
                 balanceHistory.setId(null);
@@ -6060,7 +6073,7 @@ public class APIOperations {
                 Timestamp balanceHistoryDate = new Timestamp(balanceDate.getTime());
                 balanceHistory.setDate(balanceHistoryDate);
                 entityManager.persist(balanceHistory);
-                
+
                 //Se obtiene la lista de productos del usuario
                 try {
                     products = getProductsListByUserId(userId);
@@ -6102,7 +6115,7 @@ public class APIOperations {
                 dispertionTransferResponses.setIdTransaction(transaction.getId().toString());
                 dispertionTransferResponses.setProducts(products);
                 return dispertionTransferResponses;
-                
+
             } else if (dispertionResponse.getCodigoError().equals("204")) {
                 return new DispertionTransferResponses(ResponseCode.NON_EXISTENT_CARD, "NON EXISTENT CARD");
             } else if (dispertionResponse.getCodigoError().equals("913")) {
@@ -6232,26 +6245,26 @@ public class APIOperations {
 
         return new ProductListResponse(ResponseCode.SUCCESS, "", productFinals);
     }
-    
-    public AccountBankResponse saveAccountBankUser(Long bankId, Long unifiedRegistryId, String accountNumber, Integer accountTypeBankId){
+
+    public AccountBankResponse saveAccountBankUser(Long bankId, Long unifiedRegistryId, String accountNumber, Integer accountTypeBankId) {
         String statusAccountBankCode = StatusAccountBankE.ACTIVA.getStatusAccountCode();
         try {
 
             //Se consulta si el bank existe
             Bank bank = entityManager.find(Bank.class, bankId);
-            if(bank == null){
-               return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "The Bank is not registered in the BD"); 
+            if (bank == null) {
+                return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "The Bank is not registered in the BD");
             }
-            
+
             //Se consulta si el AccountTypeBank existe
-            AccountTypeBank accountTypeBank = entityManager.find(AccountTypeBank.class, accountTypeBankId);   
-            if(accountTypeBank == null){
-               return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "The Account Type Bank is not registered in the BD"); 
+            AccountTypeBank accountTypeBank = entityManager.find(AccountTypeBank.class, accountTypeBankId);
+            if (accountTypeBank == null) {
+                return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "The Account Type Bank is not registered in the BD");
             }
-            
+
             //Se busca el status Activo para la cuente bancaria
             StatusAccountBank statusAccountBank = (StatusAccountBank) entityManager.createNamedQuery(QueryConstants.STATUS_ACCOUNT_BANK_BY_CODE, StatusAccountBank.class).setParameter("code", statusAccountBankCode).getSingleResult();
-            
+
             //Se guarda la cuenta bancaria del usuario en la BD
             AccountBank accountBank = new AccountBank();
             accountBank.setUnifiedRegistryId(unifiedRegistryId);
@@ -6262,33 +6275,33 @@ public class APIOperations {
             accountBank.setCreateDate(new Timestamp(new Date().getTime()));
             entityManager.persist(accountBank);
             return new AccountBankResponse(ResponseCode.SUCCESS, "", accountBank);
-        
-        }catch (Exception e) {
+
+        } catch (Exception e) {
             e.printStackTrace();
             return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "Error");
         }
     }
-    
-    public ProductResponse getProductPrepaidCardByUser(Long userId){
+
+    public ProductResponse getProductPrepaidCardByUser(Long userId) {
         Product product = new Product();
-        try{
+        try {
             //Se buscan los productos asociados al usuario
             ProductListResponse productsResponse = getProductsByUserId(userId);
-            
-            if(productsResponse == null){
+
+            if (productsResponse == null) {
                 return new ProductResponse(ResponseCode.USER_NOT_HAS_PRODUCT, "They are not products asociated");
             }
-           
+
             //Se verificar que el producto del usuario tiene activado el indicador isUsePrepaidCard 
             List<Product> productsList = productsResponse.products;
-            for(Product pr : productsList){
-                if(pr.getIsUsePrepaidCard() == true){
-                   product = entityManager.find(Product.class, pr.getId());
+            for (Product pr : productsList) {
+                if (pr.getIsUsePrepaidCard() == true) {
+                    product = entityManager.find(Product.class, pr.getId());
                 }
             }
-            
+
             //Si el usuario no tiene ningun producto con el indicador isUsePrepaidCard se envia un mensaje
-            if(product.getId() == null){
+            if (product.getId() == null) {
                 return new ProductResponse(ResponseCode.INTERNAL_ERROR, "The user does not have a product for the prepaid card");
             }
 
