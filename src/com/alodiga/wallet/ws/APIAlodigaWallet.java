@@ -14,6 +14,7 @@ import com.alodiga.wallet.bean.APIRechargeOperations;
 import com.alodiga.wallet.common.model.Address;
 import com.alodiga.wallet.common.model.Country;
 import com.alodiga.wallet.common.model.StatusTransactionApproveRequest;
+import com.alodiga.wallet.responses.AccountBankListResponse;
 import com.alodiga.wallet.responses.AccountBankResponse;
 import com.alodiga.wallet.responses.ActivateCardResponses;
 import com.alodiga.wallet.responses.AffiliationRequestResponse;
@@ -56,6 +57,7 @@ import com.alodiga.wallet.responses.TransactionResponse;
 import com.alodiga.wallet.responses.TransferCardToCardResponses;
 import com.alodiga.wallet.responses.UserHasProductResponse;
 import com.alodiga.wallet.responses.AccountTypeBankListResponse;
+import com.alodiga.wallet.responses.StatusRequestResponse;
 
 @WebService
 public class APIAlodigaWallet {
@@ -772,9 +774,9 @@ public class APIAlodigaWallet {
     @WebMethod
     public DispertionTransferResponses dispertionTransfer(
             @WebParam(name = "email") String email,
-            @WebParam(name = "balance") Float balance,
+            @WebParam(name = "amountRecharge") Float amountRecharge,
             @WebParam(name = "productId") Long productId){
-        return operations.dispertionTransfer(email,balance,productId);
+        return operations.dispertionTransfer(email,amountRecharge,productId);
     }
     
     @WebMethod
@@ -799,9 +801,9 @@ public class APIAlodigaWallet {
     @WebMethod
     public LimitAdvanceResponses limitAdvance(
             @WebParam(name = "email") String email,
-            @WebParam(name = "balance") Float balance,
+            @WebParam(name = "amountWithdrawal") Float amountWithdrawal,
             @WebParam(name = "productId") Long productId){
-        return operations.limitAdvance(email,balance,productId);
+        return operations.limitAdvance(email,amountWithdrawal,productId);
     }
     
     @WebMethod
@@ -814,12 +816,23 @@ public class APIAlodigaWallet {
             @WebParam(name = "imgDocumentIdetification") byte[] imgDocumentIdetification,
             @WebParam(name = "imgProfile") byte[] imgProfile){
         return operations.saveAffiliationRequestUserWallet(userId,countryId,zipCode,addressLine1,addressLine2,imgDocumentIdetification,imgProfile);
-    }
-    
-     
+    }  
     
     @WebMethod
     public AccountTypeBankListResponse getAccountTypeBank() {
         return operations.getAccountTypeBank();
+    }
+    
+    @WebMethod
+    public AccountBankListResponse getAccountBankByUser(
+        @WebParam(name = "userId") Long userId) {
+        return operations.getAccountBankByUser(userId);
+    }
+    
+    @WebMethod
+    public StatusRequestResponse getStatusAffiliationRequestByUser(
+            @WebParam(name = "userId") Long userId,
+            @WebParam(name = "requestTypeId") Long requestTypeId) {
+        return operations.getStatusAffiliationRequestByUser(userId, requestTypeId);
     }
 }

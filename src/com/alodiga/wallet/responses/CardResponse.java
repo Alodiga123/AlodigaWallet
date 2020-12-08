@@ -39,7 +39,7 @@ public class CardResponse extends Response {
         this.aliasCard = aliasCard;
     }
     
-    public CardResponse(ResponseCode code, String mensaje, String numberCard, String name, String email, String aliasCard) {
+    public CardResponse(ResponseCode code, String mensaje, String aliasCard, String name, String email, String numberPhone) {
         super(new Date(), code.getCode(), mensaje);
         this.aliasCard = aliasCard;
         this.name = name;
