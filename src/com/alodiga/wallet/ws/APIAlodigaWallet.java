@@ -340,28 +340,27 @@ public class APIAlodigaWallet {
 
     @WebMethod
     public ActivateCardResponses activateCard(
-            @WebParam(name = "userId") Long userId,
-            @WebParam(name = "card") String card,
+            @WebParam(name = "email") String email,
             @WebParam(name = "timeZone") String timeZone,
             @WebParam(name = "status") String status) {
-        return operations.activateCard(userId, card, timeZone, status);
+        return operations.activateCard(email, timeZone, status);
     }
 
+    
     @WebMethod
     public DesactivateCardResponses desactivateCard(
-            @WebParam(name = "userId") Long userId,
-            @WebParam(name = "card") String card,
+            @WebParam(name = "email") String email,
             @WebParam(name = "timeZone") String timeZone,
             @WebParam(name = "status") String status) {
-        return operations.desactivateCard(userId, card, timeZone, status);
+        return operations.desactivateCard(email, timeZone, status);
     }
 
+    
     @WebMethod
     public CheckStatusCardResponses checkStatusCard(
-            @WebParam(name = "userId") Long userId,
-            @WebParam(name = "card") String card,
+            @WebParam(name = "email") String email,
             @WebParam(name = "timeZone") String timeZone) {
-        return operations.checkStatusCard(userId, card, timeZone);
+        return operations.checkStatusCard(email, timeZone);
     }
 
     @WebMethod
