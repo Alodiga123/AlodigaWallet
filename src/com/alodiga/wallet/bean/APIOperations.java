@@ -152,6 +152,7 @@ import com.alodiga.wallet.responses.TransactionResponse;
 import com.alodiga.wallet.responses.TransferCardToCardCredential;
 import com.alodiga.wallet.responses.TransferCardToCardResponses;
 import com.alodiga.wallet.responses.UserHasProductResponse;
+import com.alodiga.wallet.responses.StatusRequestResponse;
 import com.alodiga.wallet.topup.TopUpInfo;
 import com.alodiga.ws.remittance.services.WSOFACMethodProxy;
 import com.alodiga.ws.remittance.services.WsExcludeListResponse;
@@ -176,7 +177,6 @@ import com.alodiga.cms.commons.ejb.CardEJB;
 import com.alodiga.cms.commons.ejb.PersonEJB;
 import com.alodiga.wallet.common.ejb.BusinessPortalEJB;
 import com.alodiga.wallet.common.ejb.UtilsEJB;
-import com.alodiga.wallet.common.ejb.UtilsEJBLocal;
 import com.alodiga.wallet.common.enumeraciones.DocumentTypeE;
 import com.alodiga.wallet.common.enumeraciones.RequestTypeE;
 import com.alodiga.wallet.common.enumeraciones.StatusApplicantE;
@@ -199,6 +199,7 @@ import com.alodiga.wallet.common.model.PhoneType;
 import com.alodiga.wallet.common.model.RequestHasCollectionRequest;
 import com.alodiga.wallet.common.model.RequestType;
 import com.alodiga.wallet.common.model.StatusApplicant;
+import com.alodiga.wallet.common.model.StatusRequest;
 import com.alodiga.wallet.responses.AffiliationRequestResponse;
 import com.alodiga.wallet.responses.BalanceInquiryWithMovementsCredential;
 import com.alodiga.wallet.responses.BalanceInquiryWithMovementsResponses;
@@ -247,6 +248,7 @@ public class APIOperations {
     private EntityManager entityManager;
     private PersonEJB personEJB = null;
     private CardEJB cardEJB = null;
+    private UtilsEJB utilsEJB = null;
 
     public ProductResponse saveProduct(Long enterpriseId, Long categoryId, Long productIntegrationTypeId, String name, boolean taxInclude, boolean status, String referenceCode, String rateUrl, String accesNumberURL, boolean isFree, boolean isAlocashProduct, String symbol) {
         try {
@@ -269,7 +271,7 @@ public class APIOperations {
         }
         return new ProductResponse(ResponseCode.SUCCESS);
     }
-
+    
     public UserHasProductResponse saveUserHasProduct(Long userId, Long productId) {
         try {
             UserHasProduct userHasProduct = new UserHasProduct();
@@ -7309,5 +7311,43 @@ public class APIOperations {
         return new AffiliationRequestResponse(ResponseCode.SUCCESS);
 
     }
+    
+    public StatusRequestResponse getStatusAffiliationRequestByUser(Long userId, Long requestTypeId) {
+         List<RequestType> requestType = new ArrayList<RequestType>();
+         List<AffiliationRequest> affiliation = new ArrayList<AffiliationRequest>();
+         StatusRequest statusRequest = null;
+         
+         try {
+             utilsEJB = (com.alodiga.wallet.common.ejb.UtilsEJB) EJBServiceLocator.getInstance().get(com.alodiga.wallet.common.utils.EjbConstants.UTILS_EJB);
+             if(requestTypeId != null){
+                 if(requestTypeId == RequestTypeE.SOAFNE.getId()){
+                    Map params = new HashMap();
+                    com.alodiga.wallet.common.genericEJB.EJBRequest request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
+                    params.put(QueryConstants.PARAM_REQUEST_TYPE, RequestTypeE.SOAFNE.getId());
+                    params.put(QueryConstants.PARAM_USER_REGISTER_ID, RequestTypeE.SOAFNE.getId());
+                    request1.setParams(params);
+                    affiliation = utilsEJB.getAffiliationRequestByUserByType(request1);
+                       for(AffiliationRequest arr : affiliation ){
+                           statusRequest = entityManager.find(StatusRequest.class, arr.getStatusRequestId().getId());
+                       }
+                   } else if(requestTypeId == RequestTypeE.SORUBI.getId()){
+                     Map params = new HashMap();
+                     com.alodiga.wallet.common.genericEJB.EJBRequest request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
+                     params.put(QueryConstants.PARAM_REQUEST_TYPE, RequestTypeE.SORUBI.getId());
+                     params.put(QueryConstants.PARAM_BUSINESS_PERSON_ID, RequestTypeE.SORUBI.getId());
+                     request1.setParams(params);
+                     affiliation = utilsEJB.getAffiliationRequestByUserByType(request1);
+                           for(AffiliationRequest arr : affiliation ){
+                               statusRequest = entityManager.find(StatusRequest.class, arr.getStatusRequestId().getId());
+                           }
+                 }
+             }
 
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new StatusRequestResponse (ResponseCode.INTERNAL_ERROR, "Error loading status request");
+        }
+
+        return new StatusRequestResponse(ResponseCode.SUCCESS, "", statusRequest);
+    }
 }

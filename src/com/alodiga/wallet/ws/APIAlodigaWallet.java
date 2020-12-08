@@ -57,6 +57,7 @@ import com.alodiga.wallet.responses.TransactionResponse;
 import com.alodiga.wallet.responses.TransferCardToCardResponses;
 import com.alodiga.wallet.responses.UserHasProductResponse;
 import com.alodiga.wallet.responses.AccountTypeBankListResponse;
+import com.alodiga.wallet.responses.StatusRequestResponse;
 
 @WebService
 public class APIAlodigaWallet {
@@ -827,5 +828,12 @@ public class APIAlodigaWallet {
     public AccountBankListResponse getAccountBankByUser(
         @WebParam(name = "userId") Long userId) {
         return operations.getAccountBankByUser(userId);
+    }
+    
+    @WebMethod
+    public StatusRequestResponse getStatusAffiliationRequestByUser(
+            @WebParam(name = "userId") Long userId,
+            @WebParam(name = "requestTypeId") Long requestTypeId) {
+        return operations.getStatusAffiliationRequestByUser(userId, requestTypeId);
     }
 }
