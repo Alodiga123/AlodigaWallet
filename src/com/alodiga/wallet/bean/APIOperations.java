@@ -518,12 +518,12 @@ public class APIOperations {
                         break;
                 }
             }
-            
+
             //Se genera la secuencia de la transacción
             Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Long.valueOf(paymentShopType), Long.valueOf(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID));
             String Numbersequence = generateNumberSequence(sequences);
             String sequence = transactionTypeE + yearSequence + sequences.getCurrentValue();
-            
+
             paymentShop.setId(null);
             paymentShop.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             paymentShop.setUserDestinationId(BigInteger.valueOf(addSellTransaction.getIdBusiness()));
@@ -834,11 +834,11 @@ public class APIOperations {
                         break;
                 }
             }
-            
+
             //Se genera la secuencia de la transacción
             Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Long.valueOf(transferBetweenAccountType), Long.valueOf(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID));
             String numberSequence = generateNumberSequence(sequences);
-            String sequence = transactionTypeE + yearSequence + sequences.getCurrentValue();        
+            String sequence = transactionTypeE + yearSequence + sequences.getCurrentValue();
 
             transfer.setId(null);
             transfer.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
@@ -862,7 +862,7 @@ public class APIOperations {
             transfer.setTopUpDescription(null);
             transfer.setBillPaymentDescription(null);
             transfer.setExternalId(null);
-            transfer.setTransactionNumber(numberSequence );
+            transfer.setTransactionNumber(numberSequence);
             transfer.setTransactionSequence(sequence);
             entityManager.flush();
             entityManager.persist(transfer);
@@ -1169,12 +1169,12 @@ public class APIOperations {
                         break;
                 }
             }
-    
+
             //Se genera la secuencia de la transacción
             Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Long.valueOf(exchangeProductType), Long.valueOf(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID));
             String Numbersequence = generateNumberSequence(sequences);
             String sequence = transactionTypeE + yearSequence + sequences.getCurrentValue();
-            
+
             exchange.setId(null);
             exchange.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             exchange.setUserDestinationId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
@@ -1631,7 +1631,7 @@ public class APIOperations {
         return new TransactionListResponse(ResponseCode.SUCCESS, "", transactions);
     }
 
-    public TransactionResponse manualWithdrawals(Long bankId, String emailUser, Float amountWithdrawal, 
+    public TransactionResponse manualWithdrawals(Long bankId, String emailUser, Float amountWithdrawal,
             Long productId, String conceptTransaction, Long documentTypeId, Long originApplicationId) {
 
         Long idTransaction = 0L;
@@ -1657,7 +1657,7 @@ public class APIOperations {
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         SimpleDateFormat year = new SimpleDateFormat("yyyy");
         String yearSequence = year.format(timestamp);
-        
+
         try {
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS", "passwordWS", emailUser);
@@ -1768,12 +1768,12 @@ public class APIOperations {
                         break;
                 }
             }
-            
+
             //Se genera la secuencia de la transacción
             Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Long.valueOf(manualWithdrawalsType), Long.valueOf(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID));
             String Numbersequence = generateNumberSequence(sequences);
             String sequence = transactionTypeE + yearSequence + sequences.getCurrentValue();
-            
+
             withdrawal.setId(null);
             withdrawal.setTransactionNumber(Numbersequence);
             withdrawal.setTransactionSequence(sequence);
@@ -1828,7 +1828,7 @@ public class APIOperations {
                 e.printStackTrace();
                 return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
             }
-            
+
             BankOperation manualWithdrawal = new BankOperation();
             manualWithdrawal.setId(null);
             manualWithdrawal.setUserSourceId(BigInteger.valueOf(userId));
@@ -2047,12 +2047,12 @@ public class APIOperations {
                         break;
                 }
             }
-            
+
             //Se genera la secuencia de la transacción
             Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Long.valueOf(manualRechargeType), Long.valueOf(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID));
             String Numbersequence = generateNumberSequence(sequences);
             String sequence = transactionTypeE + yearSequence + sequences.getCurrentValue();
-            
+
             recharge.setId(null);
             recharge.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             recharge.setUserDestinationId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
@@ -2079,7 +2079,7 @@ public class APIOperations {
             recharge.setTransactionSequence(sequence);
             entityManager.flush();
             entityManager.persist(recharge);
-            
+
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransationTypeManualRecharge).getResultList();
                 if (commissions.size() < 1) {
@@ -2858,40 +2858,31 @@ public class APIOperations {
 
     }
 
-    public ActivateCardResponses activateCard(Long userId, String card, String timeZone, String status) {
+    public ActivateCardResponses activateCard(String email, String timeZone, String status) {
         APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
         RespuestaUsuario responseUser = null;
         CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
         AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
         ArrayList<Product> products = new ArrayList<Product>();
+        CardResponse cardResponse = new CardResponse();
+        Long userId = 0L;
         try {
-            responseUser = proxy.getUsuarioporId(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, String.valueOf(userId));
+            responseUser = proxy.getUsuarioporemail(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, email);
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
-            String Card = S3cur1ty3Cryt3r.aloEncrpter(card, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
-            if (isCardUnique(Card)) {
-                return new ActivateCardResponses(
-                        ResponseCode.CARD_NUMBER_EXISTS, "CARD NUMBER EXISTS");
-            }
+            cardResponse = getCardByEmail(email);
+            String alias = cardResponse.getaliasCard();
             ignoreSSL();
-            String encryptedString = Base64.encodeBase64String(EncriptedRsa.encrypt(Card, Constants.PUBLIC_KEY));
+            String encryptedString = Base64.encodeBase64String(EncriptedRsa.encrypt(alias, Constants.PUBLIC_KEY));
             ChangeStatusCardResponse response = cardCredentialServiceClient.changeStatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, encryptedString, status);
             if (response.getCodigoRespuesta().equals("00") || response.getCodigoRespuesta().equals("-024")) {
-                if (!hasPrepayCardAsociated(userId)) {
-                    //Si no lo tiene se debe afiliar 
-                    UserHasProduct userHasProduct2 = new UserHasProduct();
-                    userHasProduct2.setProductId(Product.PREPAID_CARD);
-                    userHasProduct2.setUserSourceId(userId);
-                    userHasProduct2.setBeginningDate(new Timestamp(new Date().getTime()));
-                    entityManager.persist(userHasProduct2);
-                }
+
                 try {
                     products = getProductsListByUserId(userId);
                     for (Product p : products) {
                         Float amount_1 = 0F;
                         try {
                             if (p.getId().equals(Product.PREPAID_CARD)) {
-                                CardResponse cardResponse = getCardByUserId(userId);
-                                String cardEncripter = Base64.encodeBase64String(EncriptedRsa.encrypt(cardResponse.getaliasCard(), Constants.PUBLIC_KEY));
+                                String cardEncripter = Base64.encodeBase64String(EncriptedRsa.encrypt(alias, Constants.PUBLIC_KEY));
                                 StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
                                 if (statusCardResponse.getCodigo().equals("00")) {
                                     StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
@@ -2923,9 +2914,7 @@ public class APIOperations {
                 ChangeStatusCredentialCard changeStatusCredentialcardResponse = new ChangeStatusCredentialCard(response.getInicio(), response.getFin(), response.getTiempo(), response.getCodigoRespuesta(), response.getDescripcion(), response.getTicketWS());
                 ActivateCardResponses activateCardResponses = new ActivateCardResponses(changeStatusCredentialcardResponse, ResponseCode.SUCCESS, "", products);
                 activateCardResponses.setProducts(products);
-
-                CardResponse respuestaTarjeta = getCardByUserId(userId);
-                activateCardResponses.setNumberCard(respuestaTarjeta.getaliasCard());
+                activateCardResponses.setNumberCard(alias);
                 return activateCardResponses;
             } else if (response.getCodigoRespuesta().equals("-024")) {
                 return new ActivateCardResponses(ResponseCode.NOT_ALLOWED_TO_CHANGE_STATE, "NOT ALLOWED TO CHANGE STATE");
@@ -2955,16 +2944,19 @@ public class APIOperations {
         }
     }
 
-    public DesactivateCardResponses desactivateCard(Long userId, String card, String timeZone, String status) {
+    public DesactivateCardResponses desactivateCard(String email, String timeZone, String status) {
         APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
         RespuestaUsuario responseUser = null;
         CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+        Long userId = 0L;
+        CardResponse cardResponse = new CardResponse();
         try {
-            responseUser = proxy.getUsuarioporId(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, String.valueOf(userId));
+            responseUser = proxy.getUsuarioporemail(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, email);
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+            cardResponse = getCardByEmail(email);
+            String alias = cardResponse.getaliasCard();
             ignoreSSL();
-            //card = S3cur1ty3Cryt3r.aloEncrpter(card, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
-            String encryptedString = Base64.encodeBase64String(EncriptedRsa.encrypt(card, Constants.PUBLIC_KEY));
+            String encryptedString = Base64.encodeBase64String(EncriptedRsa.encrypt(alias, Constants.PUBLIC_KEY));
             ChangeStatusCardResponse response = cardCredentialServiceClient.changeStatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, encryptedString, status);
             System.out.println(response.getCodigoRespuesta());
             response.setCodigoRespuesta("00");
@@ -2998,15 +2990,18 @@ public class APIOperations {
         }
     }
 
-    public CheckStatusCardResponses checkStatusCard(Long userId, String card, String timeZone) {
+    public CheckStatusCardResponses checkStatusCard(String email, String timeZone) {
         APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
         RespuestaUsuario responseUser = null;
         CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+        Long userId = 0L;
+        CardResponse cardResponse = new CardResponse();
         try {
-            responseUser = proxy.getUsuarioporId(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, String.valueOf(userId));
+            responseUser = proxy.getUsuarioporemail(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, email);
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
-            card = S3cur1ty3Cryt3r.aloEncrpter(card, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
-            String encryptedString = Base64.encodeBase64String(EncriptedRsa.encrypt(card, Constants.PUBLIC_KEY));
+            cardResponse = getCardByEmail(email);
+            String alias = cardResponse.getaliasCard();            
+            String encryptedString = Base64.encodeBase64String(EncriptedRsa.encrypt(alias, Constants.PUBLIC_KEY));
             System.out.println("encryptedString " + encryptedString);
             StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, encryptedString);
             if (statusCardResponse.getCodigo().equals("00")) {
@@ -5795,8 +5790,7 @@ public class APIOperations {
             return answer;
         } catch (BusinessPortalWSException ex) {
             return new BusinessShopResponse(ResponseCode.INTERNAL_ERROR, ex.getErrorMessage().getErrorMessageValue());
-        } 
-        catch (RemoteException ex) {
+        } catch (RemoteException ex) {
             return new BusinessShopResponse(ResponseCode.INTERNAL_ERROR, "Error processing businessInfo");
         }
     }
@@ -5932,17 +5926,17 @@ public class APIOperations {
         List<UserHasBank> userHasBank = new ArrayList<UserHasBank>();
         List<Bank> banks = new ArrayList<Bank>();
         try {
-            userHasBank = (List<UserHasBank>) entityManager.createNamedQuery("UserHasBank.findByUserSourceIdAllBank", UserHasBank.class).setParameter("userSourceId", userId).getResultList();   
+            userHasBank = (List<UserHasBank>) entityManager.createNamedQuery("UserHasBank.findByUserSourceIdAllBank", UserHasBank.class).setParameter("userSourceId", userId).getResultList();
             if (userHasBank.size() <= 0) {
                 return new BankListResponse(ResponseCode.USER_NOT_HAS_BANK, "They are not banks asociated");
             }
-            
+
             for (UserHasBank uhb : userHasBank) {
                 Bank bank = new Bank();
                 bank = entityManager.find(Bank.class, uhb.getBankId().getId());
                 banks.add(bank);
             }
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             return new BankListResponse(ResponseCode.INTERNAL_ERROR, "Error loading banks");
@@ -7075,7 +7069,7 @@ public class APIOperations {
             return new LimitAdvanceResponses(ResponseCode.INTERNAL_ERROR, "");
         }
     }
-    
+
     public AccountTypeBankListResponse getAccountTypeBank() {
         List<AccountTypeBank> accounTypes = null;
         try {
@@ -7086,8 +7080,7 @@ public class APIOperations {
         }
         return new AccountTypeBankListResponse(ResponseCode.SUCCESS, "", accounTypes);
     }
-    
-    
+
     public AffiliationRequestResponse saveAffiliationRequestUserWallet(String userId, Long countryId, String zipCode, String addressLine1, String addressLine2, byte[] imgDocumentIdetification, byte[] imgProfile) {
 
         APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
