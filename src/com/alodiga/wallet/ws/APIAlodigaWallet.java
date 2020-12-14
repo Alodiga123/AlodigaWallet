@@ -11,6 +11,7 @@ import org.apache.log4j.Logger;
 import com.alodiga.wallet.bean.APICardOperations;
 import com.alodiga.wallet.bean.APIOperations;
 import com.alodiga.wallet.bean.APIRechargeOperations;
+import com.alodiga.wallet.common.exception.EmptyListException;
 import com.alodiga.wallet.common.model.Address;
 import com.alodiga.wallet.common.model.Country;
 import com.alodiga.wallet.common.model.StatusTransactionApproveRequest;
@@ -57,6 +58,7 @@ import com.alodiga.wallet.responses.TransactionResponse;
 import com.alodiga.wallet.responses.TransferCardToCardResponses;
 import com.alodiga.wallet.responses.UserHasProductResponse;
 import com.alodiga.wallet.responses.AccountTypeBankListResponse;
+import com.alodiga.wallet.responses.PersonResponse;
 import com.alodiga.wallet.responses.StatusRequestResponse;
 
 @WebService
@@ -809,13 +811,12 @@ public class APIAlodigaWallet {
     @WebMethod
     public AffiliationRequestResponse saveAffiliationRequestUserWallet(
             @WebParam(name = "userId") String userId,
-            @WebParam(name = "countryId") Long countryId,
             @WebParam(name = "zipCode") String zipCode,
             @WebParam(name = "addressLine1") String addressLine1,
             @WebParam(name = "addressLine2") String addressLine2,
             @WebParam(name = "imgDocumentIdetification") byte[] imgDocumentIdetification,
             @WebParam(name = "imgProfile") byte[] imgProfile){
-        return operations.saveAffiliationRequestUserWallet(userId,countryId,zipCode,addressLine1,addressLine2,imgDocumentIdetification,imgProfile);
+        return operations.saveAffiliationRequestUserWallet(userId,zipCode,addressLine1,addressLine2,imgDocumentIdetification,imgProfile);
     }  
     
     @WebMethod
@@ -832,7 +833,15 @@ public class APIAlodigaWallet {
     @WebMethod
     public StatusRequestResponse getStatusAffiliationRequestByUser(
             @WebParam(name = "userId") Long userId,
-            @WebParam(name = "requestTypeId") Long requestTypeId) {
+            @WebParam(name = "requestTypeId") Long requestTypeId) throws EmptyListException {
         return operations.getStatusAffiliationRequestByUser(userId, requestTypeId);
     }
+    
+    @WebMethod
+    public PersonResponse getPersonByEmail(
+            @WebParam(name = "email") String email) {
+        return operations.getPersonByEmail(email);
+    }
+    
+    
 }
