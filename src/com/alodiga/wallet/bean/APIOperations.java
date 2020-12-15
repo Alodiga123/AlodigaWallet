@@ -7085,7 +7085,7 @@ public class APIOperations {
         return new AccountTypeBankListResponse(ResponseCode.SUCCESS, "", accounTypes);
     }
 
-    public AffiliationRequestResponse saveAffiliationRequestUserWallet(String userId, String zipCode, String addressLine1, String addressLine2, byte[] imgDocumentIdetification, byte[] imgProfile) {
+    public AffiliationRequestResponse saveAffiliationRequestUserWallet(String userId, Long countryId, String zipCode, String addressLine1, String addressLine2, byte[] imgDocumentIdetification, byte[] imgProfile) {
 
         APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
         RespuestaUsuario responseUser;
@@ -7107,12 +7107,13 @@ public class APIOperations {
         AffiliationRequest affiliationRequest = new AffiliationRequest();
         Integer personTypeId = 0;
         try {
-
             //Se busca el Id del usuario en registro unificado
             responseUser = proxy.getUsuarioporId("usuarioWS", "passwordWS", userId);
             String email = responseUser.getDatosRespuesta().getEmail();
-            Long countryId= Long.valueOf(responseUser.getDatosRespuesta().getDireccion().getPaisId());
-            
+            if (countryId == null) {
+                countryId = Long.valueOf(responseUser.getDatosRespuesta().getDireccion().getPaisId());
+            }
+
             //Objeto Person
             Person person = new Person();
             person.setEmail(email);
@@ -7244,7 +7245,7 @@ public class APIOperations {
                 Graphics2D g2 = bufferedImage.createGraphics();
                 g2.drawImage(image, null, null);
 
-                File imageFile = new File("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "DocumentoIdentidad.jpg");
+                File imageFile = new File("/home/ltoro/Imágenes/" + userId + "_" + "DocumentoIdentidad.jpg");
                 ImageIO.write(bufferedImage, "jpg", imageFile);
             }
             //Se valida la imagen de la persona con su documento de identidad y se guarda en la ruta del servidor
@@ -7269,7 +7270,7 @@ public class APIOperations {
                 Graphics2D g2 = bufferedImage.createGraphics();
                 g2.drawImage(image, null, null);
 
-                File imageFile = new File("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "FotoSelfieDocumento.png");
+                File imageFile = new File("/home/ltoro/Imágenes/" + userId + "_" + "FotoSelfieDocumento.jpg");
                 ImageIO.write(bufferedImage, "jpg", imageFile);
             }
 
@@ -7277,35 +7278,34 @@ public class APIOperations {
             List<CollectionType> collectionType = new ArrayList<CollectionType>();
             List<CollectionsRequest> collectionsRequests = businessPortalEJB.getCollectionRequestsByPersonTypeId(Long.valueOf(personTypeId));
             for (CollectionsRequest collectionsRequest : collectionsRequests) {
-              
+
                 params = new HashMap();
                 request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
                 params.put(QueryConstants.PARAM_COUNTRY_ID, countryId);
                 params.put(QueryConstants.PERSON_TYPE_ID, personTypeId);
-                
+
                 request1.setParams(params);
                 collectionType = utilsEJB.getCollectionTypeByCountryByPersonType(request1);
                 for (CollectionType ct : collectionType) {
-                 RequestHasCollectionRequest requestHasCollectionRequest = null;
-                  
+                    RequestHasCollectionRequest requestHasCollectionRequest = null;
+
                     if ((ct.getDescription().equals("DOCUMENTO DE IDENTIFICACION APP")) && (ct.getOrden().equals("1"))) {
                         requestHasCollectionRequest = new RequestHasCollectionRequest();
                         requestHasCollectionRequest.setImageFileUrl("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "DocumentoIdentidad.png");
-                    }else if ((ct.getDescription().equals("FOTO CON DOCUMENTO DE IDENTIDAD")) && (ct.getOrden().equals("2"))) {
+                    } else if ((ct.getDescription().equals("FOTO CON DOCUMENTO DE IDENTIDAD")) && (ct.getOrden().equals("2"))) {
                         requestHasCollectionRequest = new RequestHasCollectionRequest();
                         requestHasCollectionRequest.setImageFileUrl("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "FotoSelfieDocumento.png");
-                    }else{
+                    } else {
                         // Se coloca el continue para que no de nullPointeException
                         continue;
                     }
-                     requestHasCollectionRequest.setCreateDate(new Timestamp(new Date().getTime()));
-                     requestHasCollectionRequest.setCollectionsRequestId(collectionsRequest);
-                     requestHasCollectionRequest.setAffiliationRequestId(affiliationRequest);
-                     //Se guarda los recaudos 
-                     requestHasCollectionRequest = businessPortalEJB.saveRequestHasCollectionsRequest(requestHasCollectionRequest);
+                    requestHasCollectionRequest.setCreateDate(new Timestamp(new Date().getTime()));
+                    requestHasCollectionRequest.setCollectionsRequestId(collectionsRequest);
+                    requestHasCollectionRequest.setAffiliationRequestId(affiliationRequest);
+                    //Se guarda los recaudos 
+                    requestHasCollectionRequest = businessPortalEJB.saveRequestHasCollectionsRequest(requestHasCollectionRequest);
                 }
-                
-                
+
             }
 
         } catch (RemoteException ex) {
@@ -7375,6 +7375,8 @@ public class APIOperations {
             ex.printStackTrace();
             return new StatusRequestResponse(ResponseCode.NOT_VALIDATE, "User Not Validate");
         }
+        
+        
 
         return new StatusRequestResponse(ResponseCode.SUCCESS, "", statusRequest);
     }
