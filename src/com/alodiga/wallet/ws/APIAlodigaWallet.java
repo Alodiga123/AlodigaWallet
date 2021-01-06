@@ -58,6 +58,7 @@ import com.alodiga.wallet.responses.TransactionResponse;
 import com.alodiga.wallet.responses.TransferCardToCardResponses;
 import com.alodiga.wallet.responses.UserHasProductResponse;
 import com.alodiga.wallet.responses.AccountTypeBankListResponse;
+import com.alodiga.wallet.responses.DocumentPersonTypeListResponse;
 import com.alodiga.wallet.responses.PersonResponse;
 import com.alodiga.wallet.responses.StatusRequestResponse;
 
@@ -843,6 +844,11 @@ public class APIAlodigaWallet {
             @WebParam(name = "email") String email) {
         return operations.getPersonByEmail(email);
     }
-    
+    @WebMethod
+    public DocumentPersonTypeListResponse getDocumentPersonTypeByCountry(
+            @WebParam(name = "countryId") Long countryId,
+            @WebParam(name = "originAplicationId") Integer originAplicationId) {
+        return operations.getDocumentPersonTypeByCountry(countryId,originAplicationId);
+    }
     
 }

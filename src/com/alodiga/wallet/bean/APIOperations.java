@@ -214,6 +214,7 @@ import com.alodiga.wallet.responses.DispertionTransferResponses;
 import com.alodiga.wallet.responses.LimitAdvanceCredential;
 import com.alodiga.wallet.responses.LimitAdvanceResponses;
 import com.alodiga.wallet.responses.AccountTypeBankListResponse;
+import com.alodiga.wallet.responses.DocumentPersonTypeListResponse;
 import com.alodiga.wallet.responses.PersonResponse;
 import com.cms.commons.genericEJB.EJBRequest;
 import com.cms.commons.models.PhonePerson;
@@ -6725,10 +6726,10 @@ public class APIOperations {
             balanceInquiryWithoutMovements = balanceInquiryWithoutMovements(email);
             if (balanceInquiryWithoutMovements.getBalanceInquiryWithoutMovementsCredential().getCodeError().equals("-1")) {
                 availableBalance = Float.valueOf(balanceInquiryWithoutMovements.getBalanceInquiryWithoutMovementsCredential().getAvailableConsumption());
-            }else{
+            } else {
                 return new LimitAdvanceResponses(ResponseCode.USER_HAS_NOT_BALANCE, "The user has no balance available to complete the transaction");
             }
-            
+
             try {
                 //Se calcula la comisión de la operación 
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransactionTypePR).getResultList();
@@ -7232,6 +7233,9 @@ public class APIOperations {
             address.setZipCode(zipCode);
             address.setAddressLine1(addressLine1);
             address.setAddressLine2(addressLine2);
+            AddressType addressType = entityManager.find(AddressType.class, AddressTypeE.HABITA.getId());
+            address.setAddressTypeId(addressType);
+            address.setIndMainAddress(true);
 
             //Se guarda la solicitud de afiliacion de la persona natural
             affiliationRequest = businessPortalEJB.saveNaturalPersonAffiliationRequest(person, naturalPerson, requestType, phonePerson, address);
@@ -7392,6 +7396,28 @@ public class APIOperations {
             return new PersonResponse(ResponseCode.INTERNAL_ERROR, "");
         }
         return new PersonResponse(ResponseCode.SUCCESS, "", new PersonGeneric(person.getId(), person.getEmail(), person.getWebSite(), person.getCreateDate(), person.getUpdateDate(), person.getCountryId(), person.getPersonTypeId()));
+    }
+
+    public DocumentPersonTypeListResponse getDocumentPersonTypeByCountry(Long countryId, Integer originApplicationId) {
+        com.alodiga.wallet.common.ejb.PersonEJB personEJB = null;
+        personEJB = (com.alodiga.wallet.common.ejb.PersonEJB) com.alodiga.wallet.common.utils.EJBServiceLocator.getInstance().get(com.alodiga.wallet.common.utils.EjbConstants.PERSON_EJB);
+        List<DocumentsPersonType> documentsPersonType = new ArrayList<DocumentsPersonType>();
+        Map params = new HashMap();
+        try {
+            com.alodiga.wallet.common.genericEJB.EJBRequest request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
+            params = new HashMap();
+            params.put(QueryConstants.PARAM_COUNTRY_ID, countryId);
+            params.put(QueryConstants.PARAM_IND_NATURAL_PERSON, Constants.IND_NATURAL_PERSON);
+            params.put(QueryConstants.PARAM_ORIGIN_APPLICATION_ID, originApplicationId);
+            request1.setParams(params);
+            documentsPersonType = personEJB.getDocumentsPersonByCountry(request1);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new DocumentPersonTypeListResponse(ResponseCode.INTERNAL_ERROR, "");
+        }
+
+        return new DocumentPersonTypeListResponse(ResponseCode.SUCCESS, "", documentsPersonType);
+
     }
 
 }
