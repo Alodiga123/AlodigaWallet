@@ -1,10 +1,6 @@
 package com.alodiga.wallet.bean;
 
-import cardcredentialserviceclient.CardCredentialServiceClient;
-import com.alodiga.account.client.AccountCredentialServiceClient;
-import com.alodiga.account.credential.response.StatusAccountResponse;
 import com.alodiga.autorization.credential.response.DispertionResponse;
-import com.alodiga.card.credential.response.StatusCardResponse;
 import com.alodiga.wallet.common.enumeraciones.DocumentTypeE;
 import com.alodiga.wallet.common.model.BalanceHistory;
 import com.alodiga.wallet.common.model.Commission;
@@ -16,14 +12,10 @@ import com.alodiga.wallet.common.model.TransactionSource;
 import com.alodiga.wallet.common.model.TransactionStatus;
 import com.alodiga.wallet.common.model.TransactionType;
 import com.alodiga.wallet.common.utils.Constante;
-import com.alodiga.wallet.common.utils.Constants;
-import com.alodiga.wallet.common.utils.EncriptedRsa;
 import com.alodiga.wallet.common.utils.SendMailTherad;
 import com.alodiga.wallet.common.utils.SendSmsThread;
 import com.alodiga.wallet.dao.TransactionDAO;
 import com.alodiga.wallet.responses.CardResponse;
-import com.alodiga.wallet.responses.DispertionTransferCredential;
-import com.alodiga.wallet.responses.DispertionTransferResponses;
 import com.alodiga.wallet.responses.RechargeValidationResponse;
 import com.alodiga.wallet.responses.ResponseCode;
 import com.alodiga.wallet.responses.TransactionResponse;
@@ -32,22 +24,16 @@ import com.ericsson.alodiga.ws.APIRegistroUnificadoProxy;
 import com.ericsson.alodiga.ws.RespuestaUsuario;
 import credentialautorizationclient.CredentialAutorizationClient;
 import java.math.BigInteger;
-import java.net.SocketTimeoutException;
-import java.rmi.ConnectException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import javax.ejb.EJB;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-import org.apache.commons.codec.binary.Base64;
 
 /**
  *
@@ -182,7 +168,7 @@ public class APIRechargeOperations {
         try {
             Date date = new Date();
             Product product = entityManager.find(Product.class, 3L); //Producto de Tarjeta
-            TransactionType transactionType = entityManager.find(TransactionType.class, DocumentTypeE.PROREC.getId());
+            TransactionType transactionType = entityManager.find(TransactionType.class, 1L);
 
             Commission commission = TransactionDAO.getCommision(product, transactionType, entityManager);
             if (commission == null) {
@@ -195,7 +181,7 @@ public class APIRechargeOperations {
             String alias = cardResponse.getaliasCard();
 
             //Se genera la secuencia de la transacción
-            Sequences sequences = operations.getSequencesByDocumentTypeByOriginApplication(transactionType.getId(), 3L);
+            Sequences sequences = operations.getSequencesByDocumentTypeByOriginApplication(new Long(DocumentTypeE.PROREC.getId()), 3L);
             String Numbersequence = operations.generateNumberSequence(sequences);
             String sequence = TransactionHelper.generateNextRechargeSequence(TransactionHelper.OriginApplicationType.BUSINESS_PORTAL);
 
@@ -222,7 +208,6 @@ public class APIRechargeOperations {
                     transaction.setUserSourceId(BigInteger.valueOf(businessId));
                     transaction.setUserDestinationId(BigInteger.valueOf(userId));
                     transaction.setProductId(product);
-                    transactionType = entityManager.find(TransactionType.class, DocumentTypeE.PROREC.getId());
                     transaction.setTransactionTypeId(transactionType);
                     TransactionSource transactionSource = entityManager.find(TransactionSource.class, transactionType.getId());
                     transaction.setTransactionSourceId(transactionSource);

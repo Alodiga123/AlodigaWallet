@@ -1,5 +1,6 @@
 package com.alodiga.wallet.ws;
 
+import com.alodiga.wallet.bean.APIBusinessWalletOperations;
 import javax.ejb.EJB;
 import javax.jws.WebMethod;
 import javax.jws.WebParam;
@@ -59,6 +60,7 @@ import com.alodiga.wallet.responses.UserHasProductResponse;
 import com.alodiga.wallet.responses.AccountTypeBankListResponse;
 import com.alodiga.wallet.responses.PersonResponse;
 import com.alodiga.wallet.responses.StatusRequestResponse;
+import com.alodiga.wallet.responses.TransactionValidationResponse;
 
 @WebService
 public class APIAlodigaWallet {
@@ -74,6 +76,9 @@ public class APIAlodigaWallet {
 
     @EJB
     private APICardOperations cardOperations;
+
+    @EJB
+    private APIBusinessWalletOperations businessWalletOperations;
 
     @WebMethod
     public ProductResponse saveProduct(
@@ -223,7 +228,7 @@ public class APIAlodigaWallet {
             @WebParam(name = "conceptTransaction") String conceptTransaction,
             @WebParam(name = "documentTypeId") Long documentTypeId,
             @WebParam(name = "originApplicationId") Long originApplicationId) {
-        return operations.manualWithdrawals(bankId, emailUser, amountWithdrawal, productId, conceptTransaction,documentTypeId,originApplicationId);
+        return operations.manualWithdrawals(bankId, emailUser, amountWithdrawal, productId, conceptTransaction, documentTypeId, originApplicationId);
     }
 
     @WebMethod
@@ -359,7 +364,6 @@ public class APIAlodigaWallet {
         return operations.activateCard(email, timeZone, status);
     }
 
-    
     @WebMethod
     public DesactivateCardResponses desactivateCard(
             @WebParam(name = "email") String email,
@@ -368,7 +372,6 @@ public class APIAlodigaWallet {
         return operations.desactivateCard(email, timeZone, status);
     }
 
-    
     @WebMethod
     public CheckStatusCardResponses checkStatusCard(
             @WebParam(name = "email") String email,
@@ -509,33 +512,33 @@ public class APIAlodigaWallet {
     @WebMethod(operationName = "rechargeCard")
     public TransactionResponse rechargeCard(
             @WebParam(name = "businessId") Long businessId,
-            @WebParam(name = "eCardNumber") String eCardNumber,
+            @WebParam(name = "userEmail") String userEmail,
             @WebParam(name = "rechargeAmount") Double rechargeAmount,
             @WebParam(name = "includeFee") boolean includeFee) {
-        return rechargeOperations.rechargeCard(businessId, eCardNumber, rechargeAmount, includeFee);
+        return rechargeOperations.rechargeCard(businessId, userEmail, rechargeAmount, includeFee);
     }
 
     @WebMethod(operationName = "activateCardbyBusiness")
     public ActivateCardResponses activateCardbyBusiness(
             @WebParam(name = "businessId") Long businessId,
-            @WebParam(name = "card") String card,
+            @WebParam(name = "userEmail") String userEmail,
             @WebParam(name = "timeZone") String timeZone) {
-        return cardOperations.activateCardByBusiness(businessId, card, timeZone);
+        return cardOperations.activateCardByBusiness(businessId, userEmail, timeZone);
     }
 
     @WebMethod(operationName = "desactivateCardByBusiness")
     public DesactivateCardResponses desactivateCardByBusiness(
             @WebParam(name = "businessId") Long businessId,
-            @WebParam(name = "card") String card,
+            @WebParam(name = "userEmail") String userEmail,
             @WebParam(name = "timeZone") String timeZone) {
-        return cardOperations.deactivateCardByBusiness(businessId, card, timeZone);
+        return cardOperations.deactivateCardByBusiness(businessId, userEmail, timeZone);
     }
 
     @WebMethod(operationName = "checkStatusCardByBusiness")
     public CheckStatusCardResponses checkStatusCardbyBusiness(
-            @WebParam(name = "card") String card,
+            @WebParam(name = "userEmail") String userEmail,
             @WebParam(name = "timeZone") String timeZone) {
-        return cardOperations.checkStatusCard(card, timeZone);
+        return cardOperations.checkStatusCard(userEmail, timeZone);
     }
 
     @WebMethod
@@ -674,7 +677,7 @@ public class APIAlodigaWallet {
         return operations.saveAccountBankUser(bankId, unifiedRegistryId, accountNumber, accountTypeBankId);
 
     }
-        
+
     @WebMethod
     public TransactionApproveRequestResponse saveTransactionApproveRequest(
             @WebParam(name = "unifiedRegistryId") Long unifiedRegistryId,
@@ -785,8 +788,8 @@ public class APIAlodigaWallet {
     public DispertionTransferResponses dispertionTransfer(
             @WebParam(name = "email") String email,
             @WebParam(name = "amountRecharge") Float amountRecharge,
-            @WebParam(name = "productId") Long productId){
-        return operations.dispertionTransfer(email,amountRecharge,productId);
+            @WebParam(name = "productId") Long productId) {
+        return operations.dispertionTransfer(email, amountRecharge, productId);
     }
 
     @WebMethod
@@ -794,28 +797,27 @@ public class APIAlodigaWallet {
             @WebParam(name = "userId") Long userId) {
         return operations.getProductsUsePrepaidCardByUserId(userId);
     }
-    
-    
+
     @WebMethod
     public BalanceInquiryWithoutMovementsResponses balanceInquiryWithoutMovements(
-            @WebParam(name = "email") String email){
+            @WebParam(name = "email") String email) {
         return operations.balanceInquiryWithoutMovements(email);
     }
-    
+
     @WebMethod
     public BalanceInquiryWithMovementsResponses balanceInquiryWithMovements(
-            @WebParam(name = "email") String email){
+            @WebParam(name = "email") String email) {
         return operations.balanceInquiryWithMovements(email);
     }
-    
+
     @WebMethod
     public LimitAdvanceResponses limitAdvance(
             @WebParam(name = "email") String email,
             @WebParam(name = "amountWithdrawal") Float amountWithdrawal,
-            @WebParam(name = "productId") Long productId){
-        return operations.limitAdvance(email,amountWithdrawal,productId);
+            @WebParam(name = "productId") Long productId) {
+        return operations.limitAdvance(email, amountWithdrawal, productId);
     }
-    
+
     @WebMethod
     public AffiliationRequestResponse saveAffiliationRequestUserWallet(
             @WebParam(name = "userId") String userId,
@@ -824,33 +826,47 @@ public class APIAlodigaWallet {
             @WebParam(name = "addressLine1") String addressLine1,
             @WebParam(name = "addressLine2") String addressLine2,
             @WebParam(name = "imgDocumentIdetification") byte[] imgDocumentIdetification,
-            @WebParam(name = "imgProfile") byte[] imgProfile){
-        return operations.saveAffiliationRequestUserWallet(userId,countryId,zipCode,addressLine1,addressLine2,imgDocumentIdetification,imgProfile);
-    }  
-    
+            @WebParam(name = "imgProfile") byte[] imgProfile) {
+        return operations.saveAffiliationRequestUserWallet(userId, countryId, zipCode, addressLine1, addressLine2, imgDocumentIdetification, imgProfile);
+    }
+
     @WebMethod
     public AccountTypeBankListResponse getAccountTypeBank() {
         return operations.getAccountTypeBank();
     }
-    
+
     @WebMethod
     public AccountBankListResponse getAccountBankByUser(
-        @WebParam(name = "userId") Long userId) {
+            @WebParam(name = "userId") Long userId) {
         return operations.getAccountBankByUser(userId);
     }
-    
+
     @WebMethod
     public StatusRequestResponse getStatusAffiliationRequestByUser(
             @WebParam(name = "userId") Long userId,
             @WebParam(name = "requestTypeId") Long requestTypeId) throws EmptyListException {
         return operations.getStatusAffiliationRequestByUser(userId, requestTypeId);
     }
-    
+
     @WebMethod
     public PersonResponse getPersonByEmail(
             @WebParam(name = "email") String email) {
         return operations.getPersonByEmail(email);
     }
+
+    @WebMethod
+    public TransactionValidationResponse validateBusinessManualWithdrawal(
+            @WebParam(name = "withdrawalAmount") Float amount,
+            @WebParam(name = "productId") Long productId,
+            @WebParam(name = "includeFee") boolean includeFee) {
+        return businessWalletOperations.getWithdrawalValidation(amount, productId, includeFee);
+    }
     
-    
+    @WebMethod
+    public TransactionValidationResponse validateBusinessTransferToUser(
+            @WebParam(name = "withdrawalAmount") Float amount,
+            @WebParam(name = "productId") Long productId,
+            @WebParam(name = "includeFee") boolean includeFee) {
+        return businessWalletOperations.getTransferUserValidation(amount, productId, includeFee);
+    }
 }

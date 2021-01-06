@@ -18,6 +18,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 
 /**
  *
@@ -41,9 +43,9 @@ public abstract class TransactionHelper {
             props.setProperty("org.omg.CORBA.ORBInitialHost", "localhost");
             props.setProperty("org.omg.CORBA.ORBInitialPort", "3700");
             InitialContext intialContext = new InitialContext(props);
-            
+
             UtilsEJB utilsEJB = (UtilsEJB) intialContext.lookup(EjbConstants.UTILS_EJB);
-            
+
             StringBuilder sequence = new StringBuilder();
             int originAplicationId = -1;
             switch (originApplicationType) {
@@ -89,6 +91,34 @@ public abstract class TransactionHelper {
             Logger.getLogger(TransactionHelper.class.getName()).log(Level.SEVERE, null, ex);
         }
         return "1";
+    }
+
+    public static Sequences getSequencesByDocumentTypeByOriginApplication(Long documentTypeId, Long originApplicationId, EntityManager entityManager) {
+
+        try {
+            Sequences sequences = (Sequences) entityManager.createNamedQuery("Sequences.findBydocumentType_idByoriginApplicationId", Sequences.class).setParameter("documentTypeId", documentTypeId).setParameter("originApplicationId", originApplicationId).getSingleResult();
+            return sequences;
+        } catch (NoResultException e) {
+            return null;
+        }
+
+    }
+
+    public static String generateNumberSequence(Sequences s, EntityManager entityManager) {
+        String secuence = "";
+        try {
+            Integer numberSequence = s.getCurrentValue() > 1 ? s.getCurrentValue() : s.getInitialValue();
+            s.setCurrentValue(s.getCurrentValue() + 1);
+            Calendar cal = Calendar.getInstance();
+            int year = cal.get(Calendar.YEAR);
+            secuence = s.getOriginApplicationId().getCode().concat("-").concat(s.getDocumentTypeId().getAcronym()).concat("-")
+                    .concat(String.valueOf(year)).concat("-")
+                    .concat(numberSequence.toString());
+            entityManager.persist(s);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return secuence;
     }
 
 }

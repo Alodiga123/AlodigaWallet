@@ -174,7 +174,6 @@ import com.alodiga.businessportal.ws.BpBusinessInfoResponse;
 import com.alodiga.businessportal.ws.BusinessPortalWSException;
 import com.alodiga.cms.commons.ejb.CardEJB;
 import com.alodiga.cms.commons.ejb.PersonEJB;
-import com.alodiga.wallet.common.ejb.BusinessPortalEJB;
 import com.alodiga.wallet.common.ejb.UtilsEJB;
 import com.alodiga.wallet.common.enumeraciones.DocumentTypeE;
 import com.alodiga.wallet.common.enumeraciones.RequestTypeE;
@@ -222,24 +221,17 @@ import plaidclientintegration.PlaidClientIntegration;
 import credentialautorizationclient.CredentialAutorizationClient;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Point;
-import java.awt.Transparency;
 import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
-import java.awt.image.ComponentColorModel;
-import java.awt.image.DataBuffer;
-import java.awt.image.DataBufferByte;
-import java.awt.image.Raster;
-import java.awt.image.WritableRaster;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReadParam;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
 @Stateless(name = "FsProcessorWallet", mappedName = "ejb/FsProcessorWallet")
 @TransactionManagement(TransactionManagementType.CONTAINER)
@@ -410,7 +402,7 @@ public class APIOperations {
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS", "passwordWS", emailUser);
             //se buscar el businessId para identificar la billetera del negocio    
-            addSellTransaction = aPIBusinessPortalWSProxy.addSellTransaction(cryptogramShop, paymentShop.getId(), "AloWallet", amountPayment,productId);
+            addSellTransaction = aPIBusinessPortalWSProxy.addSellTransaction(cryptogramShop, paymentShop.getId(), "AloWallet", amountPayment, productId);
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
 
             BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
@@ -4838,8 +4830,10 @@ public class APIOperations {
             s.setCurrentValue(s.getCurrentValue() + 1);
             Calendar cal = Calendar.getInstance();
             int year = cal.get(Calendar.YEAR);
-            secuence = ((s.getOriginApplicationId().getId().equals(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID)) ? "APP-" : (s.getOriginApplicationId().getId().equals(Constants.ORIGIN_APPLICATION_ADMIN_WALLET_ID)) ? "ADM-" : "PBW-")
-                    .concat(s.getDocumentTypeId().getAcronym()).concat("-")
+            //secuence = ((s.getOriginApplicationId().getId().equals(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID)) ? "APP-" : (s.getOriginApplicationId().getId().equals(Constants.ORIGIN_APPLICATION_ADMIN_WALLET_ID)) ? "ADM-" : "PBW-")            
+            //String code = ((OriginApplication) entityManager.createNamedQuery("OriginApplication.findById", OriginApplication.class).setParameter("id", s.getOriginApplicationId().getId()).getSingleResult()).getCode();
+            //secuence = code.concat(s.getDocumentTypeId().getAcronym()).concat("-")
+            secuence = s.getOriginApplicationId().getCode().concat("-").concat(s.getDocumentTypeId().getAcronym()).concat("-")
                     .concat(String.valueOf(year)).concat("-")
                     .concat(numberSequence.toString());
             entityManager.persist(s);
@@ -5075,17 +5069,17 @@ public class APIOperations {
         int totalTransactionsByBusinessDaily = 0;
         int totalTransactionsByBusinessMonthly = 0;
         int totalTransactionsByBusinessYearly = 0;
-        Double totalAmountByBusinessDaily = 0.00D;
-        Double totalAmountByBusinessMonthly = 0.00D;
-        Double totalAmountByBusinessYearly = 0.00D;
-        List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
-        List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
-        List<Commission> commissions = new ArrayList<Commission>();
+        Double totalAmountByBusinessDaily;
+        Double totalAmountByBusinessMonthly;
+        Double totalAmountByBusinessYearly;
+        List<PreferenceField> preferencesField;
+        List<PreferenceValue> preferencesValue;
+        List<Commission> commissions;
         Float amountCommission = 0.00F;
         short isPercentCommission = 0;
         Commission commissionWithdrawal = new Commission();
         Transaction withdrawal = new Transaction();
-        ArrayList<Product> products = new ArrayList<Product>();
+        ArrayList<Product> products;
 
         try {
             totalTransactionsByBusinessDaily = TransactionsByBusinessCurrentDate(businessId, EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
@@ -5274,8 +5268,7 @@ public class APIOperations {
             entityManager.merge(withdrawal);
 
             try {
-                System.out.println("" + withdrawal.getId());
-                saveTransactionApproveRequest(0L, product.getId(), withdrawal.getId(), manualWithdrawal.getId(), Constante.sDocumentTypeBusinessManualWithdrawal, Constante.sOriginApplicationPortalBusiness, businessId);
+                saveTransactionApproveRequest(0L, product.getId(), withdrawal.getId(), manualWithdrawal.getId(), 2L, Constante.sOriginApplicationPortalBusiness, businessId);
             } catch (Exception e) {
                 e.printStackTrace();
                 return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error saving transaction Aprrove Request");
@@ -5502,7 +5495,9 @@ public class APIOperations {
             transfer.setTopUpDescription(null);
             transfer.setBillPaymentDescription(null);
             transfer.setExternalId(null);
-            transfer.setTransactionNumber("1");
+            Sequences sequences = getSequencesByDocumentTypeByOriginApplication(6L, Constante.sOriginApplicationPortalBusiness);
+            String generateNumberSequence = generateNumberSequence(sequences);
+            transfer.setTransactionNumber(generateNumberSequence);
             entityManager.flush();
             entityManager.persist(transfer);
 
@@ -5581,7 +5576,8 @@ public class APIOperations {
         }
 
         TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.SUCCESS, "EXITO", products);
-        transactionResponse.setIdTransaction(transfer.getId().toString());
+        //transactionResponse.setIdTransaction(transfer.getId().toString());
+        transactionResponse.setIdTransaction(transfer.getTransactionNumber());
         transactionResponse.setProducts(products);
         return transactionResponse;
     }
@@ -6895,10 +6891,10 @@ public class APIOperations {
             balanceInquiryWithoutMovements = balanceInquiryWithoutMovements(email);
             if (balanceInquiryWithoutMovements.getBalanceInquiryWithoutMovementsCredential().getCodeError().equals("-1")) {
                 availableBalance = Float.valueOf(balanceInquiryWithoutMovements.getBalanceInquiryWithoutMovementsCredential().getAvailableConsumption());
-            }else{
+            } else {
                 return new LimitAdvanceResponses(ResponseCode.USER_HAS_NOT_BALANCE, "The user has no balance available to complete the transaction");
             }
-            
+
             try {
                 //Se calcula la comisión de la operación 
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransactionTypePR).getResultList();
