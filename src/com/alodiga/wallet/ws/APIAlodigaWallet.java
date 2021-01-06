@@ -58,6 +58,7 @@ import com.alodiga.wallet.responses.TransactionResponse;
 import com.alodiga.wallet.responses.TransferCardToCardResponses;
 import com.alodiga.wallet.responses.UserHasProductResponse;
 import com.alodiga.wallet.responses.AccountTypeBankListResponse;
+import com.alodiga.wallet.responses.DocumentPersonTypeListResponse;
 import com.alodiga.wallet.responses.PersonResponse;
 import com.alodiga.wallet.responses.StatusRequestResponse;
 import com.alodiga.wallet.responses.TransactionValidationResponse;
@@ -860,6 +861,12 @@ public class APIAlodigaWallet {
             @WebParam(name = "productId") Long productId,
             @WebParam(name = "includeFee") boolean includeFee) {
         return businessWalletOperations.getWithdrawalValidation(amount, productId, includeFee);
+    }
+    @WebMethod
+    public DocumentPersonTypeListResponse getDocumentPersonTypeByCountry(
+            @WebParam(name = "countryId") Long countryId,
+            @WebParam(name = "originAplicationId") Integer originAplicationId) {
+        return operations.getDocumentPersonTypeByCountry(countryId,originAplicationId);
     }
     
     @WebMethod
