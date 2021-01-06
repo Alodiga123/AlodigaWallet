@@ -7401,7 +7401,7 @@ public class APIOperations {
             address.setZipCode(zipCode);
             address.setAddressLine1(addressLine1);
             address.setAddressLine2(addressLine2);
-            AddressType addressType = entityManager.find(AddressType.class, AddressTypeE.HABITA.getId());
+            addressType = entityManager.find(AddressType.class, AddressTypeE.HABITA.getId());
             address.setAddressTypeId(addressType);
             address.setIndMainAddress(true);
 
