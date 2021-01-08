@@ -19,6 +19,7 @@ public class CardResponse extends Response {
         private String name;
         private String email;
         private String numberPhone;
+        private String cardHolder;
         
 	public CardResponse() {
 		super();
@@ -39,12 +40,13 @@ public class CardResponse extends Response {
         this.aliasCard = aliasCard;
     }
     
-    public CardResponse(ResponseCode code, String mensaje, String aliasCard, String name, String email, String numberPhone) {
+    public CardResponse(ResponseCode code, String mensaje, String aliasCard, String name, String email, String numberPhone,String cardHolder) {
         super(new Date(), code.getCode(), mensaje);
         this.aliasCard = aliasCard;
         this.name = name;
         this.email = email;
         this.numberPhone = numberPhone;
+        this.cardHolder = cardHolder;
     }
 
     public Card getCard() {
@@ -85,6 +87,15 @@ public class CardResponse extends Response {
 
     public void setNumberPhone(String numberPhone) {
         this.numberPhone = numberPhone;
+    }
+
+
+    public String getCardHolder() {
+        return cardHolder;
+    }
+
+    public void setCardHolder(String cardHolder) {
+        this.cardHolder = cardHolder;
     }
     
     
