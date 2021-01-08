@@ -7107,11 +7107,9 @@ public class APIOperations {
         com.alodiga.wallet.common.ejb.PersonEJB personEJB = null;
         personEJB = (com.alodiga.wallet.common.ejb.PersonEJB) com.alodiga.wallet.common.utils.EJBServiceLocator.getInstance().get(com.alodiga.wallet.common.utils.EjbConstants.PERSON_EJB);
         com.alodiga.wallet.common.ejb.BusinessPortalEJB businessPortalEJB = null;
-        businessPortalEJB = (com.alodiga.wallet.common.ejb.BusinessPortalEJB) com.alodiga.wallet.common.utils.EJBServiceLocator.getInstance().get(com.alodiga.wallet.common.utils.EjbConstants.BUSINESS_PORTAL_EJB);
-        List<PersonType> personType = new ArrayList<PersonType>();
+        businessPortalEJB = (com.alodiga.wallet.common.ejb.BusinessPortalEJB) com.alodiga.wallet.common.utils.EJBServiceLocator.getInstance().get(com.alodiga.wallet.common.utils.EjbConstants.BUSINESS_PORTAL_EJB);       
         OriginApplication originApplication = new OriginApplication();
         Country country = new Country();
-        List<DocumentsPersonType> documentsPersonType = new ArrayList<DocumentsPersonType>();
         StatusApplicant statusApplicant;
         String numberPhone = null;
         PhoneType phoneType = new PhoneType();
@@ -7119,6 +7117,11 @@ public class APIOperations {
         County county = new County();
         AffiliationRequest affiliationRequest = new AffiliationRequest();
         Integer personTypeId = 0;
+        RequestHasCollectionRequest requestHasCollectionRequest = null;
+        List<DocumentsPersonType> documentsPersonType = new ArrayList<DocumentsPersonType>();
+        List<PersonType> personType = new ArrayList<PersonType>();
+        List<CollectionType> collectionType = new ArrayList<CollectionType>();
+        
         try {
             //Se busca el Id del usuario en registro unificado
             responseUser = proxy.getUsuarioporId("usuarioWS", "passwordWS", userId);
@@ -7127,7 +7130,7 @@ public class APIOperations {
                 countryId = Long.valueOf(responseUser.getDatosRespuesta().getDireccion().getPaisId());
             }
 
-            //Objeto Person
+            //Se crea el objeto Person
             Person person = new Person();
             person.setEmail(email);
             Map params = new HashMap();
@@ -7153,7 +7156,7 @@ public class APIOperations {
             person.setCountryId(country);
             person.setCreateDate(new Timestamp(new Date().getTime()));
 
-            //Objeto Natural Person
+            //Se crea el objeto NaturalPerson
             NaturalPerson naturalPerson = new NaturalPerson();
             naturalPerson.setPersonId(person);
             request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
@@ -7183,11 +7186,11 @@ public class APIOperations {
             naturalPerson.setStatusApplicantId(statusApplicant);
             naturalPerson.setCreateDate(new Timestamp(new Date().getTime()));
 
-            //Objeto Phone Person
+            //Se crea el objeto PhonePerson
             com.alodiga.wallet.common.model.PhonePerson phonePerson = new com.alodiga.wallet.common.model.PhonePerson();
             phonePerson.setCountryId(country);
             phonePerson.setCountryCode(country.getCode());
-            //Se valida si tiene un numero de celular si no tiene se busca el numero residencial
+            //Se valida si tiene un numero de celular, y si no tiene se busca el numero residencial
             if (responseUser.getDatosRespuesta().getMovil() != null) {
                 numberPhone = responseUser.getDatosRespuesta().getMovil();
                 request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
@@ -7208,14 +7211,14 @@ public class APIOperations {
 
             }
 
-            //Objeto RequesType
+            //Se crea el objeto RequestType
             params = new HashMap();
             request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
             params.put(QueryConstants.PARAM_CODE, "SORUBI");
             request1.setParams(params);
             RequestType requestType = utilsEJB.loadRequestTypeByCode(request1);
 
-            //Objeto Address
+            //Se crea el objeto Address
             Address address = new Address();
             address.setCountryId(country);
             Long cityId = Long.valueOf(responseUser.getDatosRespuesta().getDireccion().getCiudadId());
@@ -7229,6 +7232,10 @@ public class APIOperations {
             county = utilsEJB.loadCounty(request1);
             address.setCountyId(county);
             zipCode = responseUser.getDatosRespuesta().getDireccion().getCodigoPostal();
+            request1.setParam(AddressTypeE.DOMFIS.getId());
+            AddressType addressType = personEJB.loadAddressType(request1);
+            address.setAddressTypeId(addressType);
+            address.setIndMainAddress(true);
             address.setZipCode(zipCode);
             address.setAddressLine1(addressLine1);
             address.setAddressLine2(addressLine2);
@@ -7261,7 +7268,7 @@ public class APIOperations {
                 Graphics2D g2 = bufferedImage.createGraphics();
                 g2.drawImage(image, null, null);
 
-                File imageFile = new File("/home/ltoro/Imágenes/" + userId + "_" + "DocumentoIdentidad.jpg");
+                File imageFile = new File("/opt/proyecto/maw/imagenes/" + userId + "_" + "DocumentoIdentidad.jpg");
                 ImageIO.write(bufferedImage, "jpg", imageFile);
             }
             //Se valida la imagen de la persona con su documento de identidad y se guarda en la ruta del servidor
@@ -7286,42 +7293,25 @@ public class APIOperations {
                 Graphics2D g2 = bufferedImage.createGraphics();
                 g2.drawImage(image, null, null);
 
-                File imageFile = new File("/home/ltoro/Imágenes/" + userId + "_" + "FotoSelfieDocumento.jpg");
+                File imageFile = new File("/opt/proyecto/maw/imagenes/" + userId + "_" + "FotoSelfieDocumento.jpg");
                 ImageIO.write(bufferedImage, "jpg", imageFile);
             }
 
-            //OBJETO RequestHasCollectionRequest
-            List<CollectionType> collectionType = new ArrayList<CollectionType>();
+            //Se obtienen los recaudos asociados a la solicitud
             List<CollectionsRequest> collectionsRequests = businessPortalEJB.getCollectionRequestsByPersonTypeId(Long.valueOf(personTypeId));
             for (CollectionsRequest collectionsRequest : collectionsRequests) {
-
-                params = new HashMap();
-                request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
-                params.put(QueryConstants.PARAM_COUNTRY_ID, countryId);
-                params.put(QueryConstants.PERSON_TYPE_ID, personTypeId);
-
-                request1.setParams(params);
-                collectionType = utilsEJB.getCollectionTypeByCountryByPersonType(request1);
-                for (CollectionType ct : collectionType) {
-                    RequestHasCollectionRequest requestHasCollectionRequest = null;
-
-                    if ((ct.getDescription().equals("DOCUMENTO DE IDENTIFICACION APP")) && (ct.getOrden().equals("1"))) {
-                        requestHasCollectionRequest = new RequestHasCollectionRequest();
-                        requestHasCollectionRequest.setImageFileUrl("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "DocumentoIdentidad.png");
-                    } else if ((ct.getDescription().equals("FOTO CON DOCUMENTO DE IDENTIDAD")) && (ct.getOrden().equals("2"))) {
-                        requestHasCollectionRequest = new RequestHasCollectionRequest();
-                        requestHasCollectionRequest.setImageFileUrl("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "FotoSelfieDocumento.png");
-                    } else {
-                        // Se coloca el continue para que no de nullPointeException
-                        continue;
-                    }
-                    requestHasCollectionRequest.setCreateDate(new Timestamp(new Date().getTime()));
-                    requestHasCollectionRequest.setCollectionsRequestId(collectionsRequest);
-                    requestHasCollectionRequest.setAffiliationRequestId(affiliationRequest);
-                    //Se guarda los recaudos 
-                    requestHasCollectionRequest = businessPortalEJB.saveRequestHasCollectionsRequest(requestHasCollectionRequest);
+                if ((collectionsRequest.getCollectionTypeId().getDescription().equals("DOCUMENTO DE IDENTIFICACION APP")) && (collectionsRequest.getCollectionTypeId().getOrden().equals("1"))) {
+                    requestHasCollectionRequest = new RequestHasCollectionRequest();
+                    requestHasCollectionRequest.setImageFileUrl("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "DocumentoIdentidad.png");
+                } else if ((collectionsRequest.getCollectionTypeId().getDescription().equals("FOTO CON DOCUMENTO DE IDENTIDAD")) && (collectionsRequest.getCollectionTypeId().getOrden().equals("2"))) {
+                    requestHasCollectionRequest = new RequestHasCollectionRequest();
+                    requestHasCollectionRequest.setImageFileUrl("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "FotoSelfieDocumento.png");
                 }
-
+                requestHasCollectionRequest.setCreateDate(new Timestamp(new Date().getTime()));
+                requestHasCollectionRequest.setCollectionsRequestId(collectionsRequest);
+                requestHasCollectionRequest.setAffiliationRequestId(affiliationRequest);
+                //Se guarda el recaudo en la BD
+                requestHasCollectionRequest = businessPortalEJB.saveRequestHasCollectionsRequest(requestHasCollectionRequest);
             }
 
         } catch (RemoteException ex) {
