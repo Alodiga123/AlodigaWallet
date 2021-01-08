@@ -5813,6 +5813,7 @@ public class APIOperations {
         String name = "";
         String emailPerson = "";
         String numberPhone = "";
+        String cardHolder = "";
         try {
             cards = cardEJB.getCardByIdentificationNumber(numberIdentification);
             for (Card card : cards) {
@@ -5830,6 +5831,7 @@ public class APIOperations {
                 }
 
                 alias = card.getAlias();
+                cardHolder = card.getCardHolder();
                 emailPerson = card.getPersonCustomerId().getEmail();
                 name = card.getPersonCustomerId().getNaturalCustomer().getFirstNames() + " " + card.getPersonCustomerId().getNaturalCustomer().getLastNames();
             }
@@ -5840,7 +5842,7 @@ public class APIOperations {
             e.printStackTrace();
             return new CardResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
         }
-        return new CardResponse(ResponseCode.SUCCESS, "", alias, name, emailPerson, numberPhone);
+        return new CardResponse(ResponseCode.SUCCESS, "", alias, name, emailPerson, numberPhone,cardHolder);
     }
 
     public CardResponse getCardByEmail(String email) {
@@ -5850,6 +5852,7 @@ public class APIOperations {
         List<PhonePerson> phonePersonList = null;
         String alias = "";
         String name = "";
+        String cardHolder = "";
         String emailPerson = "";
         String numberPhone = "";
         try {
@@ -5874,6 +5877,7 @@ public class APIOperations {
                     numberPhone = "cliente sin número de teléfono registrado en BD";
                 }
                 alias = card.getAlias();
+                cardHolder = card.getCardHolder();
                 if (card.getPersonCustomerId().getEmail() != null) {
                     emailPerson = card.getPersonCustomerId().getEmail();
                 }
@@ -5886,7 +5890,7 @@ public class APIOperations {
             e.printStackTrace();
             return new CardResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
         }
-        return new CardResponse(ResponseCode.SUCCESS, "Card registered in BD", alias, name, emailPerson, numberPhone);
+        return new CardResponse(ResponseCode.SUCCESS, "Card registered in BD", alias, name, emailPerson, numberPhone,cardHolder);
     }
 
     public CardResponse getCardByPhone(String phone) {
@@ -5898,6 +5902,7 @@ public class APIOperations {
         String name = "";
         String emailPerson = "";
         String numberPhone = "";
+        String cardHolder = "";
         try {
             cards = cardEJB.getCardByPhone(phone);
             for (Card card : cards) {
@@ -5916,6 +5921,7 @@ public class APIOperations {
                 }
 
                 alias = card.getAlias();
+                cardHolder = card.getCardHolder();
                 emailPerson = card.getPersonCustomerId().getEmail();
                 name = card.getPersonCustomerId().getNaturalCustomer().getFirstNames() + " " + card.getPersonCustomerId().getNaturalCustomer().getLastNames();
             }
@@ -5926,7 +5932,7 @@ public class APIOperations {
             e.printStackTrace();
             return new CardResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
         }
-        return new CardResponse(ResponseCode.SUCCESS, "", alias, name, emailPerson, numberPhone);
+        return new CardResponse(ResponseCode.SUCCESS, "", alias, name, emailPerson, numberPhone,cardHolder);
     }
 
     public BankListResponse getBankByUser(Long userId) {
