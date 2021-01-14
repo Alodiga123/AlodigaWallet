@@ -7233,9 +7233,6 @@ public class APIOperations {
             address.setZipCode(zipCode);
             address.setAddressLine1(addressLine1);
             address.setAddressLine2(addressLine2);
-            AddressType addressType = entityManager.find(AddressType.class, AddressTypeE.HABITA.getId());
-            address.setAddressTypeId(addressType);
-            address.setIndMainAddress(true);
 
             //Se guarda la solicitud de afiliacion de la persona natural
             affiliationRequest = businessPortalEJB.saveNaturalPersonAffiliationRequest(person, naturalPerson, requestType, phonePerson, address);
@@ -7262,7 +7259,7 @@ public class APIOperations {
                 Graphics2D g2 = bufferedImage.createGraphics();
                 g2.drawImage(image, null, null);
 
-                File imageFile = new File("/opt/proyecto/maw/imagenes/" + userId + "_" + "DocumentoIdentidad.jpg");
+                File imageFile = new File("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "DocumentoIdentidad.jpg");
                 ImageIO.write(bufferedImage, "jpg", imageFile);
             }
             //Se valida la imagen de la persona con su documento de identidad y se guarda en la ruta del servidor
@@ -7287,7 +7284,7 @@ public class APIOperations {
                 Graphics2D g2 = bufferedImage.createGraphics();
                 g2.drawImage(image, null, null);
 
-                File imageFile = new File("/opt/proyecto/maw/imagenes/" + userId + "_" + "FotoSelfieDocumento.jpg");
+                File imageFile = new File("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "FotoSelfieDocumento.jpg");
                 ImageIO.write(bufferedImage, "jpg", imageFile);
             }
 
