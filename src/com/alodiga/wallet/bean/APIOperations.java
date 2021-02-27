@@ -6354,11 +6354,11 @@ public class APIOperations {
     public ProductListResponse getProductsUsePrepaidCardByUserId(Long userId) {
         List<Product> products = new ArrayList<Product>();
         List<Product> productFinals = new ArrayList<Product>();
+        Float amount = 0F;
         try {
             products = getProductsListByUserId(userId);
             for (Product p : products) {
                 if (p.getIsUsePrepaidCard()) {
-                    Float amount = 0F;
                     try {
                         amount = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
                     } catch (NoResultException e) {
@@ -7340,18 +7340,18 @@ public class APIOperations {
         List<AffiliationRequest> affiliation = new ArrayList<AffiliationRequest>();
         StatusRequest statusRequest = null;
         com.alodiga.wallet.common.ejb.UtilsEJB utilsEJBWallet = null;
+        Long haveAffiliationRequestByUser = 0L;
         try {
             utilsEJBWallet = (com.alodiga.wallet.common.ejb.UtilsEJB) com.alodiga.wallet.common.utils.EJBServiceLocator.getInstance().get(com.alodiga.wallet.common.utils.EjbConstants.UTILS_EJB);
-            if (requestTypeId != null) {
+            haveAffiliationRequestByUser = utilsEJBWallet.haveAffiliationRequestByUser(userId);
+            if (haveAffiliationRequestByUser > 0 && requestTypeId != null) {
                 if (requestTypeId == RequestTypeE.SOAFNE.getId()) {
                     Map params = new HashMap();
                     com.alodiga.wallet.common.genericEJB.EJBRequest request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
                     params.put(QueryConstants.PARAM_REQUEST_TYPE, RequestTypeE.SOAFNE.getId());
                     params.put(QueryConstants.PARAM_BUSINESS_PERSON_ID, userId);
                     request1.setParams(params);
-
                     affiliation = utilsEJBWallet.getAffiliationRequestByUserByType(request1);
-
                     for (AffiliationRequest arr : affiliation) {
                         statusRequest = entityManager.find(StatusRequest.class, arr.getStatusRequestId().getId());
                     }
@@ -7366,8 +7366,9 @@ public class APIOperations {
                         statusRequest = entityManager.find(StatusRequest.class, arr.getStatusRequestId().getId());
                     }
                 }
-            }
-
+            } else {
+                return new StatusRequestResponse(ResponseCode.INTERNAL_ERROR, "The client does not have any user registration request");
+            }         
         } catch (GeneralException ex) {
             ex.printStackTrace();
             return new StatusRequestResponse(ResponseCode.INTERNAL_ERROR, "");
@@ -7418,9 +7419,7 @@ public class APIOperations {
             e.printStackTrace();
             return new DocumentPersonTypeListResponse(ResponseCode.INTERNAL_ERROR, "");
         }
-
         return new DocumentPersonTypeListResponse(ResponseCode.SUCCESS, "", documentsPersonType);
-
     }
 
 }
