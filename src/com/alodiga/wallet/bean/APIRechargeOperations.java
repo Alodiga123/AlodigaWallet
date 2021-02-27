@@ -86,6 +86,9 @@ public class APIRechargeOperations {
             }
             AmountFee amountFee = new AmountFee(commission, amountToRecharge, includeFee);
 
+            Sequences sequences = operations.getSequencesByDocumentTypeByOriginApplication(new Long(DocumentTypeE.PROREC.getId()), 3L);
+            String Numbersequence = operations.generateNumberSequence(sequences);
+
             //TODO validaciones de preferencias
             Transaction recharge = new Transaction();
             recharge.setUserSourceId(BigInteger.valueOf(businessId));
@@ -99,7 +102,8 @@ public class APIRechargeOperations {
             recharge.setAmount((float) amountFee.amountAfter);
             recharge.setTransactionStatus(TransactionStatus.CREATED.name());
             recharge.setTotalAmount((float) amountFee.totalAmount);
-            recharge.setTransactionNumber(TransactionHelper.generateNextRechargeSequence(TransactionHelper.OriginApplicationType.BUSINESS_PORTAL));
+            //recharge.setTransactionNumber(TransactionHelper.generateNextRechargeSequence(TransactionHelper.OriginApplicationType.BUSINESS_PORTAL));
+            recharge.setTransactionNumber(Numbersequence);
 
             recharge.setIndClosed(false);
 
