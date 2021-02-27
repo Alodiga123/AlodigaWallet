@@ -68,9 +68,7 @@ public class TransactionResponse extends Response implements Serializable {
         this.exchangeRateProductDestination = exchangeRateProductDestination;
         this.exchangeRateProductSource = exchangeRateProductSource;
         this.isPercentCommision = isPercentCommision;
-
     }
-
     
 
     public List<Product> getProducts() {
