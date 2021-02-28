@@ -7098,7 +7098,7 @@ public class APIOperations {
         return new AccountTypeBankListResponse(ResponseCode.SUCCESS, "", accounTypes);
     }
 
-    public AffiliationRequestResponse saveAffiliationRequestUserWallet(String userId, Long countryId, String zipCode, String addressLine1, String addressLine2, byte[] imgDocumentIdetification, byte[] imgProfile) {
+    public AffiliationRequestResponse saveAffiliationRequestUserWallet(String userId, Long countryId, String zipCode, String addressLine1, String addressLine2, byte[] imgDocumentIdetification, byte[] imgProfile, Integer documentsPersonTypeId) {
 
         APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
         RespuestaUsuario responseUser;
@@ -7118,7 +7118,7 @@ public class APIOperations {
         AffiliationRequest affiliationRequest = new AffiliationRequest();
         Integer personTypeId = 0;
         RequestHasCollectionRequest requestHasCollectionRequest = null;
-        List<DocumentsPersonType> documentsPersonType = new ArrayList<DocumentsPersonType>();
+        DocumentsPersonType documentsPersonType = null;
         List<PersonType> personType = new ArrayList<PersonType>();
         List<CollectionType> collectionType = new ArrayList<CollectionType>();
         
@@ -7160,15 +7160,9 @@ public class APIOperations {
             NaturalPerson naturalPerson = new NaturalPerson();
             naturalPerson.setPersonId(person);
             request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
-            params = new HashMap();
-            params.put(QueryConstants.PARAM_COUNTRY_ID, countryId);
-            params.put(QueryConstants.PARAM_IND_NATURAL_PERSON, Constants.IND_NATURAL_PERSON);
-            params.put(QueryConstants.PARAM_ORIGIN_APPLICATION_ID, originApplication.getId());
-            request1.setParams(params);
-            documentsPersonType = personEJB.getDocumentsPersonByCountry(request1);
-            for (DocumentsPersonType dpt : documentsPersonType) {
-                naturalPerson.setDocumentsPersonTypeId(dpt);
-            }
+            request1.setParam(documentsPersonTypeId);
+            documentsPersonType = personEJB.loadDocumentsPersonType(request1);
+            naturalPerson.setDocumentsPersonTypeId(documentsPersonType);
             String identificationNumber = responseUser.getDatosRespuesta().getNumeroDocumento();
             naturalPerson.setIdentificationNumber(identificationNumber);
             String firstName = responseUser.getDatosRespuesta().getNombre();
@@ -7299,10 +7293,10 @@ public class APIOperations {
             for (CollectionsRequest collectionsRequest : collectionsRequests) {
                 if ((collectionsRequest.getCollectionTypeId().getDescription().equals("DOCUMENTO DE IDENTIFICACION APP")) && (collectionsRequest.getCollectionTypeId().getOrden().equals("1"))) {
                     requestHasCollectionRequest = new RequestHasCollectionRequest();
-                    requestHasCollectionRequest.setImageFileUrl("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "DocumentoIdentidad.png");
+                    requestHasCollectionRequest.setImageFileUrl("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "DocumentoIdentidad.jpg");
                 } else if ((collectionsRequest.getCollectionTypeId().getDescription().equals("FOTO CON DOCUMENTO DE IDENTIDAD")) && (collectionsRequest.getCollectionTypeId().getOrden().equals("2"))) {
                     requestHasCollectionRequest = new RequestHasCollectionRequest();
-                    requestHasCollectionRequest.setImageFileUrl("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "FotoSelfieDocumento.png");
+                    requestHasCollectionRequest.setImageFileUrl("/opt/alodiga/proyecto/maw/imagenes/" + userId + "_" + "FotoSelfieDocumento.jpg");
                 }
                 requestHasCollectionRequest.setCreateDate(new Timestamp(new Date().getTime()));
                 requestHasCollectionRequest.setCollectionsRequestId(collectionsRequest);
