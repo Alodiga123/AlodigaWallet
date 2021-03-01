@@ -2257,7 +2257,7 @@ public class APIOperations {
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeManualRecharge);
             recharge.setTransactionTypeId(transactionType);
 
-            int transactionSourceId = TransactionSourceE.APPBIL.getId();
+            long transactionSourceId = TransactionSourceE.APPBIL.getId();
             if (originApplicationId == OriginAplicationE.PORNEG.getId()) {
                 transactionSourceId = TransactionSourceE.PORNEG.getId();
             }
