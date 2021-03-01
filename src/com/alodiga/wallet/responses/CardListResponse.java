@@ -1,7 +1,6 @@
 package com.alodiga.wallet.responses;
 
 import com.cms.commons.models.Card;
-
 import java.util.Date;
 import java.util.List;
 

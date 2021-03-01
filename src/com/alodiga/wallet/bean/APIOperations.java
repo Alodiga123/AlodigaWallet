@@ -65,7 +65,6 @@ import com.alodiga.wallet.common.model.BankOperation;
 import com.alodiga.wallet.common.model.BankOperationMode;
 import com.alodiga.wallet.common.model.BankOperationType;
 import com.alodiga.wallet.common.model.BusinessHasProduct;
-import com.cms.commons.models.Card;
 import com.alodiga.wallet.common.model.Category;
 import com.alodiga.wallet.common.model.Commission;
 import com.alodiga.wallet.common.model.CommissionItem;
@@ -111,7 +110,6 @@ import com.alodiga.wallet.common.utils.SendMailTherad;
 import com.alodiga.wallet.common.utils.SendSmsThread;
 import com.alodiga.wallet.common.utils.Utils;
 import com.alodiga.wallet.common.utils.XTrustProvider;
-import com.alodiga.wallet.response.generic.BankGeneric;
 import com.alodiga.wallet.responses.AccountBankListResponse;
 import com.alodiga.wallet.responses.AccountBankResponse;
 import com.alodiga.wallet.responses.ActivateCardResponses;
@@ -175,10 +173,10 @@ import com.alodiga.businessportal.ws.BpBusinessInfoResponse;
 import com.alodiga.businessportal.ws.BusinessPortalWSException;
 import com.alodiga.cms.commons.ejb.CardEJB;
 import com.alodiga.cms.commons.ejb.PersonEJB;
-import com.alodiga.wallet.common.ejb.BusinessPortalEJB;
 import com.alodiga.wallet.common.ejb.UtilsEJB;
 import com.alodiga.wallet.common.enumeraciones.AddressTypeE;
 import com.alodiga.wallet.common.enumeraciones.DocumentTypeE;
+import com.alodiga.wallet.common.enumeraciones.OriginAplicationE;
 import com.alodiga.wallet.common.enumeraciones.RequestTypeE;
 import com.alodiga.wallet.common.enumeraciones.StatusApplicantE;
 import com.alodiga.wallet.common.enumeraciones.TransactionTypeE;
@@ -217,6 +215,7 @@ import com.alodiga.wallet.responses.AccountTypeBankListResponse;
 import com.alodiga.wallet.responses.DocumentPersonTypeListResponse;
 import com.alodiga.wallet.responses.PersonResponse;
 import com.cms.commons.genericEJB.EJBRequest;
+import com.cms.commons.models.Card;
 import com.cms.commons.models.PhonePerson;
 import com.cms.commons.util.EJBServiceLocator;
 import com.cms.commons.util.EjbConstants;
@@ -226,24 +225,17 @@ import plaidclientintegration.PlaidClientIntegration;
 import credentialautorizationclient.CredentialAutorizationClient;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Point;
-import java.awt.Transparency;
 import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
-import java.awt.image.ComponentColorModel;
-import java.awt.image.DataBuffer;
-import java.awt.image.DataBufferByte;
-import java.awt.image.Raster;
-import java.awt.image.WritableRaster;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReadParam;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
 @Stateless(name = "FsProcessorWallet", mappedName = "ejb/FsProcessorWallet")
 @TransactionManagement(TransactionManagementType.CONTAINER)
@@ -284,6 +276,22 @@ public class APIOperations {
             userHasProduct.setUserSourceId(userId);
             userHasProduct.setBeginningDate(new Timestamp(new Date().getTime()));
             entityManager.persist(userHasProduct);
+
+            Product product = entityManager.find(Product.class, productId);
+
+            BalanceHistory balanceHistory = new BalanceHistory();
+            balanceHistory.setId(null);
+            balanceHistory.setUserId(userId);
+            balanceHistory.setOldAmount(0);
+            balanceHistory.setCurrentAmount(0);
+            balanceHistory.setProductId(product);
+            balanceHistory.setTransactionId(null);
+            Date balanceDate = new Date();
+            Timestamp balanceHistoryDate = new Timestamp(balanceDate.getTime());
+            balanceHistory.setDate(balanceHistoryDate);
+            balanceHistory.setVersion(0);
+            entityManager.persist(balanceHistory);
+
         } catch (Exception e) {
             e.printStackTrace();
             return new UserHasProductResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving product_has_response");
@@ -305,6 +313,19 @@ public class APIOperations {
                         userHasProduct.setUserSourceId(userId);
                         userHasProduct.setBeginningDate(new Timestamp(new Date().getTime()));
                         entityManager.persist(userHasProduct);
+
+                        BalanceHistory balanceHistory = new BalanceHistory();
+                        balanceHistory.setId(null);
+                        balanceHistory.setUserId(userId);
+                        balanceHistory.setOldAmount(0);
+                        balanceHistory.setCurrentAmount(0);
+                        balanceHistory.setProductId(pr);
+                        balanceHistory.setTransactionId(null);
+                        Date balanceDate = new Date();
+                        Timestamp balanceHistoryDate = new Timestamp(balanceDate.getTime());
+                        balanceHistory.setDate(balanceHistoryDate);
+                        balanceHistory.setVersion(0);
+                        entityManager.persist(balanceHistory);
                     }
                 }
             } else {
@@ -414,7 +435,7 @@ public class APIOperations {
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS", "passwordWS", emailUser);
             //se buscar el businessId para identificar la billetera del negocio    
-            addSellTransaction = aPIBusinessPortalWSProxy.addSellTransaction(cryptogramShop, paymentShop.getId(), "AloWallet", amountPayment);
+            addSellTransaction = aPIBusinessPortalWSProxy.addSellTransaction(cryptogramShop, paymentShop.getId(), "AloWallet", amountPayment, productId);
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
 
             BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
@@ -1338,6 +1359,171 @@ public class APIOperations {
 
             SendSmsThread sendSmsThread = new SendSmsThread(responseUser.getDatosRespuesta().getMovil(), productSource.getName(), productDestination.getName(), amountExchange, Integer.valueOf("29"), userId, entityManager);
             sendSmsThread.run();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
+        }
+        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.SUCCESS, "EXITO", products);
+        transactionResponse.setIdTransaction(exchange.getId().toString());
+        transactionResponse.setProducts(products);
+        return transactionResponse;
+    }
+
+    public TransactionResponse exchangeBusinessProduct(Long businessId, Long productSourceId, Long productDestinationId,
+            Float amountExchange, String conceptTransaction, boolean includeFee, String businessEmail) {
+
+        Long idTransaction = 0L;
+        Float totalDebit;
+        Integer exchangeProductType = DocumentTypeE.PROEXC.getId();
+        Integer transactionTypeE = TransactionTypeE.PROEXC.getId();
+        List<Commission> commissions;
+        Float amountCommission = 0.00F;
+        boolean isPercentCommission = false;
+        ArrayList<Product> products;
+        Transaction exchange = new Transaction();
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        SimpleDateFormat year = new SimpleDateFormat("yyyy");
+        String yearSequence = year.format(timestamp);
+        try {
+
+            //Se genera la secuencia de la transacción
+            Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Long.valueOf(exchangeProductType), Long.valueOf(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID));
+            String Numbersequence = generateNumberSequence(sequences);
+            String sequence = transactionTypeE + yearSequence + sequences.getCurrentValue();
+
+            exchange.setId(null);
+            exchange.setBusinessId(BigInteger.valueOf(businessId));
+            Product productSource = entityManager.find(Product.class, productSourceId);
+            exchange.setProductId(productSource);
+            TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeEP);
+            exchange.setTransactionTypeId(transactionType);
+            TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
+            exchange.setTransactionSourceId(transactionSource);
+            Date date = new Date();
+            Timestamp creationDate = new Timestamp(date.getTime());
+            exchange.setCreationDate(creationDate);
+            exchange.setConcept(conceptTransaction);
+            exchange.setAmount(amountExchange);
+            exchange.setTransactionStatus(TransactionStatus.CREATED.name());
+            exchange.setTotalAmount(amountExchange);
+            exchange.setTotalTax(null);
+            exchange.setPromotionAmount(null);
+            exchange.setTotalAlopointsUsed(null);
+            exchange.setTopUpDescription(null);
+            exchange.setBillPaymentDescription(null);
+            exchange.setExternalId(null);
+            exchange.setTransactionNumber(Numbersequence);
+            exchange.setTransactionSequence(sequence);
+            entityManager.flush();
+            entityManager.persist(exchange);
+
+            try {
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productSourceId).setParameter("transactionTypeId", Constante.sTransationTypeEP).getResultList();
+                if (commissions.size() < 1) {
+                    throw new NoResultException(Constante.sProductNotCommission + " in productId:" + productSourceId + " and businessId : " + businessId);
+                }
+                for (Commission c : commissions) {
+                    amountCommission = c.getValue();
+                    isPercentCommission = c.getIsPercentCommision() == 1;
+                    if (isPercentCommission && amountCommission > 0) {
+                        amountCommission = (amountExchange * amountCommission) / 100;
+                    }
+                    amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
+                    CommissionItem commissionItem = new CommissionItem();
+                    commissionItem.setCommissionId(c);
+                    commissionItem.setAmount(amountCommission);
+                    Date commissionDate = new Date();
+                    Timestamp processedDate = new Timestamp(commissionDate.getTime());
+                    commissionItem.setProcessedDate(processedDate);
+                    commissionItem.setTransactionId(exchange);
+                    entityManager.persist(commissionItem);
+                }
+            } catch (NoResultException e) {
+                e.printStackTrace();
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error in process saving transaction");
+            }
+
+            ExchangeRate RateByProductSource = (ExchangeRate) entityManager.createNamedQuery("ExchangeRate.findByProduct", ExchangeRate.class).setParameter("productId", productSourceId).getSingleResult();
+            ExchangeRate RateByProductDestination = (ExchangeRate) entityManager.createNamedQuery("ExchangeRate.findByProduct", ExchangeRate.class).setParameter("productId", productDestinationId).getSingleResult();
+            if (!includeFee) {
+                totalDebit = amountExchange + amountCommission;
+            } else {
+                totalDebit = amountExchange;
+                amountExchange = amountExchange - amountCommission;
+            }
+            Float amountConversion = (amountExchange * RateByProductSource.getValue()) / RateByProductDestination.getValue();
+
+            exchange.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
+            entityManager.merge(exchange);
+
+            ExchangeDetail detailProductDestination = new ExchangeDetail();
+            detailProductDestination.setId(null);
+            detailProductDestination.setExchangeRateId(RateByProductDestination);
+            Product productDestination = entityManager.find(Product.class, productDestinationId);
+            detailProductDestination.setProductId(productDestination);
+            detailProductDestination.setTransactionId(exchange);
+            entityManager.persist(detailProductDestination);
+
+            BalanceHistory balanceProductSource = loadLastBalanceHistoryByBusiness_(businessId, productSourceId);
+            BalanceHistory balanceHistory = new BalanceHistory();
+            balanceHistory.setId(null);
+            balanceHistory.setBusinessId(businessId);
+            balanceHistory.setOldAmount(balanceProductSource.getCurrentAmount());
+            Float currentAmountProductSource = balanceProductSource.getCurrentAmount() - totalDebit;
+            balanceHistory.setCurrentAmount(currentAmountProductSource);
+            balanceHistory.setProductId(productSource);
+            balanceHistory.setTransactionId(exchange);
+            Date balanceDate = new Date();
+            Timestamp balanceHistoryDate = new Timestamp(balanceDate.getTime());
+            balanceHistory.setDate(balanceHistoryDate);
+            balanceHistory.setVersion(balanceProductSource.getId());
+            entityManager.persist(balanceHistory);
+
+            BalanceHistory balanceProductDestination = loadLastBalanceHistoryByBusiness_(businessId, productDestinationId);
+            balanceHistory = new BalanceHistory();
+            balanceHistory.setId(null);
+            balanceHistory.setBusinessId(businessId);
+            if (balanceProductDestination == null) {
+                balanceHistory.setOldAmount(Constante.sOldAmountUserDestination);
+                balanceHistory.setCurrentAmount(amountConversion);
+            } else {
+                balanceHistory.setOldAmount(balanceProductDestination.getCurrentAmount());
+                Float currentAmountUserDestination = balanceProductDestination.getCurrentAmount() + amountConversion;
+                balanceHistory.setCurrentAmount(currentAmountUserDestination);
+                balanceHistory.setVersion(balanceProductDestination.getId());
+            }
+            balanceHistory.setProductId(productDestination);
+            balanceHistory.setTransactionId(exchange);
+            balanceDate = new Date();
+            balanceHistoryDate = new Timestamp(balanceDate.getTime());
+            balanceHistory.setDate(balanceHistoryDate);
+            entityManager.persist(balanceHistory);
+
+            exchange.setTransactionStatus(TransactionStatus.COMPLETED.name());
+            entityManager.merge(exchange);
+
+            try {
+                products = getProductsListByBusinessId(businessId);
+                for (Product p : products) {
+                    Float amount_1 = 0F;
+                    try {
+                        if (!p.getId().equals(Product.PREPAID_CARD)) {
+                            amount_1 = loadLastBalanceHistoryByBusiness_(businessId, p.getId()).getCurrentAmount();
+                        }
+
+                    } catch (NoResultException e) {
+                        amount_1 = 0F;
+                    }
+                    p.setCurrentBalance(amount_1);
+                    entityManager.persist(p);
+                }
+            } catch (Exception ex) {
+
+                return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error loading products");
+            }
+            SendMailTherad sendMailTherad = new SendMailTherad("ES", productSource.getName(), productDestination.getName(), amountExchange, businessEmail, conceptTransaction, businessEmail, Integer.valueOf("10"));
+            sendMailTherad.start();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -4670,15 +4856,17 @@ public class APIOperations {
 
     }
 
-    private String generateNumberSequence(Sequences s) {
+    public String generateNumberSequence(Sequences s) {
         String secuence = "";
         try {
             Integer numberSequence = s.getCurrentValue() > 1 ? s.getCurrentValue() : s.getInitialValue();
             s.setCurrentValue(s.getCurrentValue() + 1);
             Calendar cal = Calendar.getInstance();
             int year = cal.get(Calendar.YEAR);
-            secuence = ((s.getOriginApplicationId().getId().equals(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID)) ? "APP-" : (s.getOriginApplicationId().getId().equals(Constants.ORIGIN_APPLICATION_ADMIN_WALLET_ID)) ? "ADM-" : "PBW-")
-                    .concat(s.getDocumentTypeId().getAcronym()).concat("-")
+            //secuence = ((s.getOriginApplicationId().getId().equals(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID)) ? "APP-" : (s.getOriginApplicationId().getId().equals(Constants.ORIGIN_APPLICATION_ADMIN_WALLET_ID)) ? "ADM-" : "PBW-")            
+            //String code = ((OriginApplication) entityManager.createNamedQuery("OriginApplication.findById", OriginApplication.class).setParameter("id", s.getOriginApplicationId().getId()).getSingleResult()).getCode();
+            //secuence = code.concat(s.getDocumentTypeId().getAcronym()).concat("-")
+            secuence = s.getOriginApplicationId().getCode().concat("-").concat(s.getDocumentTypeId().getAcronym()).concat("-")
                     .concat(String.valueOf(year)).concat("-")
                     .concat(numberSequence.toString());
             entityManager.persist(s);
@@ -4723,7 +4911,7 @@ public class APIOperations {
             transactionApproveRequest.setBusinessId(BigInteger.valueOf(businessId));
             transactionApproveRequest.setCreateDate(new Timestamp(new Date().getTime()));
             transactionApproveRequest.setUpdateDate(null);
-            Sequences sequences = getSequencesByDocumentTypeByOriginApplication(documentTypeId, originApplicationId);
+            Sequences sequences = getSequencesByDocumentTypeByOriginApplication((long) DocumentTypeE.MRAR.getId(), (long) OriginAplicationE.AWAAPP.getId());
             String generateNumberSequence = generateNumberSequence(sequences);
             transactionApproveRequest.setRequestNumber(generateNumberSequence);
             String DateToStr = format.format(curDate);
@@ -4851,7 +5039,15 @@ public class APIOperations {
         List<BusinessHasProduct> businessHasProducts = new ArrayList<BusinessHasProduct>();
         List<Product> products = new ArrayList<Product>();
         try {
-            businessHasProducts = (List<BusinessHasProduct>) entityManager.createNamedQuery("BusinessHasProduct.findByBusinessIdAllProduct", BusinessHasProduct.class).setParameter("businessId", businessId).getResultList();
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<BusinessHasProduct> cq = cb.createQuery(BusinessHasProduct.class);
+            Root<BusinessHasProduct> from = cq.from(BusinessHasProduct.class);
+            cq.select(from);
+            cq.where(cb.equal(from.get("businessId"), businessId));
+            Query query = entityManager.createQuery(cq);
+
+            businessHasProducts = query.getResultList();
+            //businessHasProducts = (List<BusinessHasProduct>) entityManager.createNamedQuery("BusinessHasProduct.findByBusinessIdAllProduct", BusinessHasProduct.class).setParameter("businessId", businessId).getResultList();
 
             if (businessHasProducts.size() <= 0) {
                 return new ProductListResponse(ResponseCode.BUSINESS_NOT_HAS_PRODUCT, "They are not products asociated");
@@ -4906,17 +5102,17 @@ public class APIOperations {
         int totalTransactionsByBusinessDaily = 0;
         int totalTransactionsByBusinessMonthly = 0;
         int totalTransactionsByBusinessYearly = 0;
-        Double totalAmountByBusinessDaily = 0.00D;
-        Double totalAmountByBusinessMonthly = 0.00D;
-        Double totalAmountByBusinessYearly = 0.00D;
-        List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
-        List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
-        List<Commission> commissions = new ArrayList<Commission>();
+        Double totalAmountByBusinessDaily;
+        Double totalAmountByBusinessMonthly;
+        Double totalAmountByBusinessYearly;
+        List<PreferenceField> preferencesField;
+        List<PreferenceValue> preferencesValue;
+        List<Commission> commissions;
         Float amountCommission = 0.00F;
         short isPercentCommission = 0;
         Commission commissionWithdrawal = new Commission();
         Transaction withdrawal = new Transaction();
-        ArrayList<Product> products = new ArrayList<Product>();
+        ArrayList<Product> products;
 
         try {
             totalTransactionsByBusinessDaily = TransactionsByBusinessCurrentDate(businessId, EjbUtils.getBeginningDate(new Date()), EjbUtils.getEndingDate(new Date()));
@@ -5105,8 +5301,7 @@ public class APIOperations {
             entityManager.merge(withdrawal);
 
             try {
-                System.out.println("" + withdrawal.getId());
-                saveTransactionApproveRequest(0L, product.getId(), withdrawal.getId(), manualWithdrawal.getId(), Constante.sDocumentTypeBusinessManualWithdrawal, Constante.sOriginApplicationPortalBusiness, businessId);
+                saveTransactionApproveRequest(0L, product.getId(), withdrawal.getId(), manualWithdrawal.getId(), 2L, Constante.sOriginApplicationPortalBusiness, businessId);
             } catch (Exception e) {
                 e.printStackTrace();
                 return new TransactionResponse(ResponseCode.INTERNAL_ERROR, "Error saving transaction Aprrove Request");
@@ -5333,7 +5528,9 @@ public class APIOperations {
             transfer.setTopUpDescription(null);
             transfer.setBillPaymentDescription(null);
             transfer.setExternalId(null);
-            transfer.setTransactionNumber("1");
+            Sequences sequences = getSequencesByDocumentTypeByOriginApplication(6L, Constante.sOriginApplicationPortalBusiness);
+            String generateNumberSequence = generateNumberSequence(sequences);
+            transfer.setTransactionNumber(generateNumberSequence);
             entityManager.flush();
             entityManager.persist(transfer);
 
@@ -5412,7 +5609,8 @@ public class APIOperations {
         }
 
         TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.SUCCESS, "EXITO", products);
-        transactionResponse.setIdTransaction(transfer.getId().toString());
+        //transactionResponse.setIdTransaction(transfer.getId().toString());
+        transactionResponse.setIdTransaction(transfer.getTransactionNumber());
         transactionResponse.setProducts(products);
         return transactionResponse;
     }
@@ -5842,7 +6040,7 @@ public class APIOperations {
             e.printStackTrace();
             return new CardResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
         }
-        return new CardResponse(ResponseCode.SUCCESS, "", alias, name, emailPerson, numberPhone,cardHolder);
+        return new CardResponse(ResponseCode.SUCCESS, "", alias, name, emailPerson, numberPhone, cardHolder);
     }
 
     public CardResponse getCardByEmail(String email) {
@@ -5890,7 +6088,7 @@ public class APIOperations {
             e.printStackTrace();
             return new CardResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
         }
-        return new CardResponse(ResponseCode.SUCCESS, "Card registered in BD", alias, name, emailPerson, numberPhone,cardHolder);
+        return new CardResponse(ResponseCode.SUCCESS, "Card registered in BD", alias, name, emailPerson, numberPhone, cardHolder);
     }
 
     public CardResponse getCardByPhone(String phone) {
@@ -5932,7 +6130,7 @@ public class APIOperations {
             e.printStackTrace();
             return new CardResponse(ResponseCode.INTERNAL_ERROR, "Error loading cards");
         }
-        return new CardResponse(ResponseCode.SUCCESS, "", alias, name, emailPerson, numberPhone,cardHolder);
+        return new CardResponse(ResponseCode.SUCCESS, "", alias, name, emailPerson, numberPhone, cardHolder);
     }
 
     public BankListResponse getBankByUser(Long userId) {
@@ -7098,7 +7296,7 @@ public class APIOperations {
         return new AccountTypeBankListResponse(ResponseCode.SUCCESS, "", accounTypes);
     }
 
-    public AffiliationRequestResponse saveAffiliationRequestUserWallet(String userId, Long countryId, String zipCode, String addressLine1, String addressLine2, byte[] imgDocumentIdetification, byte[] imgProfile, Integer documentsPersonTypeId) {
+    public AffiliationRequestResponse saveAffiliationRequestUserWallet(String userId, Long countryId, String zipCode, String addressLine1, String addressLine2, byte[] imgDocumentIdetification, byte[] imgProfile) {
 
         APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
         RespuestaUsuario responseUser;
@@ -7107,7 +7305,7 @@ public class APIOperations {
         com.alodiga.wallet.common.ejb.PersonEJB personEJB = null;
         personEJB = (com.alodiga.wallet.common.ejb.PersonEJB) com.alodiga.wallet.common.utils.EJBServiceLocator.getInstance().get(com.alodiga.wallet.common.utils.EjbConstants.PERSON_EJB);
         com.alodiga.wallet.common.ejb.BusinessPortalEJB businessPortalEJB = null;
-        businessPortalEJB = (com.alodiga.wallet.common.ejb.BusinessPortalEJB) com.alodiga.wallet.common.utils.EJBServiceLocator.getInstance().get(com.alodiga.wallet.common.utils.EjbConstants.BUSINESS_PORTAL_EJB);       
+        businessPortalEJB = (com.alodiga.wallet.common.ejb.BusinessPortalEJB) com.alodiga.wallet.common.utils.EJBServiceLocator.getInstance().get(com.alodiga.wallet.common.utils.EjbConstants.BUSINESS_PORTAL_EJB);
         OriginApplication originApplication = new OriginApplication();
         Country country = new Country();
         StatusApplicant statusApplicant;
@@ -7121,7 +7319,7 @@ public class APIOperations {
         DocumentsPersonType documentsPersonType = null;
         List<PersonType> personType = new ArrayList<PersonType>();
         List<CollectionType> collectionType = new ArrayList<CollectionType>();
-        
+
         try {
             //Se busca el Id del usuario en registro unificado
             responseUser = proxy.getUsuarioporId("usuarioWS", "passwordWS", userId);
@@ -7160,7 +7358,7 @@ public class APIOperations {
             NaturalPerson naturalPerson = new NaturalPerson();
             naturalPerson.setPersonId(person);
             request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
-            request1.setParam(documentsPersonTypeId);
+            request1.setParam(responseUser.getDatosRespuesta().getTipoDocumento().getTipoDocumentoId());
             documentsPersonType = personEJB.loadDocumentsPersonType(request1);
             naturalPerson.setDocumentsPersonTypeId(documentsPersonType);
             String identificationNumber = responseUser.getDatosRespuesta().getNumeroDocumento();
@@ -7336,33 +7534,41 @@ public class APIOperations {
         com.alodiga.wallet.common.ejb.UtilsEJB utilsEJBWallet = null;
         Long haveAffiliationRequestByUser = 0L;
         try {
-            utilsEJBWallet = (com.alodiga.wallet.common.ejb.UtilsEJB) com.alodiga.wallet.common.utils.EJBServiceLocator.getInstance().get(com.alodiga.wallet.common.utils.EjbConstants.UTILS_EJB);
-            haveAffiliationRequestByUser = utilsEJBWallet.haveAffiliationRequestByUser(userId);
-            if (haveAffiliationRequestByUser > 0 && requestTypeId != null) {
-                if (requestTypeId == RequestTypeE.SOAFNE.getId()) {
-                    Map params = new HashMap();
-                    com.alodiga.wallet.common.genericEJB.EJBRequest request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
-                    params.put(QueryConstants.PARAM_REQUEST_TYPE, RequestTypeE.SOAFNE.getId());
-                    params.put(QueryConstants.PARAM_BUSINESS_PERSON_ID, userId);
-                    request1.setParams(params);
-                    affiliation = utilsEJBWallet.getAffiliationRequestByUserByType(request1);
-                    for (AffiliationRequest arr : affiliation) {
-                        statusRequest = entityManager.find(StatusRequest.class, arr.getStatusRequestId().getId());
-                    }
-                } else if (requestTypeId == RequestTypeE.SORUBI.getId()) {
-                    Map params = new HashMap();
-                    com.alodiga.wallet.common.genericEJB.EJBRequest request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
-                    params.put(QueryConstants.PARAM_REQUEST_TYPE, RequestTypeE.SORUBI.getId());
-                    params.put(QueryConstants.PARAM_USER_REGISTER_ID, userId);
-                    request1.setParams(params);
-                    affiliation = utilsEJBWallet.getAffiliationRequestByUserByType(request1);
-                    for (AffiliationRequest arr : affiliation) {
-                        statusRequest = entityManager.find(StatusRequest.class, arr.getStatusRequestId().getId());
-                    }
-                }
+            String email = (new APIRegistroUnificadoProxy()).getUsuarioporId("usuarioWS", "passwordWS", Long.toString(userId)).getDatosRespuesta().getEmail();
+            com.alodiga.wallet.common.ejb.PersonEJB personEJBWallet = (com.alodiga.wallet.common.ejb.PersonEJB) com.alodiga.wallet.common.utils.EJBServiceLocator.getInstance().get(com.alodiga.wallet.common.utils.EjbConstants.PERSON_EJB);
+            Person person = new Person();
+            person = personEJBWallet.getPersonByEmail(email);
+            if (person.getAffiliationRequest() != null) {
+                statusRequest = entityManager.find(StatusRequest.class, person.getAffiliationRequest().getStatusRequestId().getId());
             } else {
-                return new StatusRequestResponse(ResponseCode.INTERNAL_ERROR, "The client does not have any user registration request");
-            }         
+                utilsEJBWallet = (com.alodiga.wallet.common.ejb.UtilsEJB) com.alodiga.wallet.common.utils.EJBServiceLocator.getInstance().get(com.alodiga.wallet.common.utils.EjbConstants.UTILS_EJB);
+                haveAffiliationRequestByUser = utilsEJBWallet.haveAffiliationRequestByUser(person.getId());
+                if (haveAffiliationRequestByUser > 0 && requestTypeId != null) {
+                    if (requestTypeId == RequestTypeE.SOAFNE.getId()) {
+                        Map params = new HashMap();
+                        com.alodiga.wallet.common.genericEJB.EJBRequest request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
+                        params.put(QueryConstants.PARAM_REQUEST_TYPE, RequestTypeE.SOAFNE.getId());
+                        params.put(QueryConstants.PARAM_BUSINESS_PERSON_ID, person.getId());
+                        request1.setParams(params);
+                        affiliation = utilsEJBWallet.getAffiliationRequestByUserByType(request1);
+                        for (AffiliationRequest arr : affiliation) {
+                            statusRequest = entityManager.find(StatusRequest.class, arr.getStatusRequestId().getId());
+                        }
+                    } else if (requestTypeId == RequestTypeE.SORUBI.getId()) {
+                        Map params = new HashMap();
+                        com.alodiga.wallet.common.genericEJB.EJBRequest request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
+                        params.put(QueryConstants.PARAM_REQUEST_TYPE, RequestTypeE.SORUBI.getId());
+                        params.put(QueryConstants.PARAM_USER_REGISTER_ID, person.getId());
+                        request1.setParams(params);
+                        affiliation = utilsEJBWallet.getAffiliationRequestByUserByType(request1);
+                        for (AffiliationRequest arr : affiliation) {
+                            statusRequest = entityManager.find(StatusRequest.class, arr.getStatusRequestId().getId());
+                        }
+                    }
+                } else {
+                    return new StatusRequestResponse(ResponseCode.INTERNAL_ERROR, "The client does not have any user registration request");
+                }
+            }
         } catch (GeneralException ex) {
             ex.printStackTrace();
             return new StatusRequestResponse(ResponseCode.INTERNAL_ERROR, "");
@@ -7372,6 +7578,9 @@ public class APIOperations {
         } catch (EmptyListException ex) {
             ex.printStackTrace();
             return new StatusRequestResponse(ResponseCode.NOT_VALIDATE, "User Not Validate");
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+            return new StatusRequestResponse(ResponseCode.INTERNAL_ERROR, "");
         }
 
         return new StatusRequestResponse(ResponseCode.SUCCESS, "", statusRequest);
