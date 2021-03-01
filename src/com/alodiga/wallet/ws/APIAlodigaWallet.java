@@ -828,9 +828,9 @@ public class APIAlodigaWallet {
             @WebParam(name = "addressLine2") String addressLine2,
             @WebParam(name = "imgDocumentIdetification") byte[] imgDocumentIdetification,
             @WebParam(name = "imgProfile") byte[] imgProfile) {
-        return operations.saveAffiliationRequestUserWallet(userId, countryId, zipCode, addressLine1, addressLine2, imgDocumentIdetification, imgProfile);
-    }
-
+        return operations.saveAffiliationRequestUserWallet(userId,countryId,zipCode,addressLine1,addressLine2,imgDocumentIdetification,imgProfile);
+    }  
+    
     @WebMethod
     public AccountTypeBankListResponse getAccountTypeBank() {
         return operations.getAccountTypeBank();
