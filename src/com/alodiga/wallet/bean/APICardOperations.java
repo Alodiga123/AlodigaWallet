@@ -1,17 +1,18 @@
 package com.alodiga.wallet.bean;
 
 import cardcredentialserviceclient.CardCredentialServiceClient;
-import com.alodiga.account.client.AccountCredentialServiceClient;
 import com.alodiga.card.credential.response.ChangeStatusCardResponse;
 import com.alodiga.card.credential.response.StatusCardResponse;
 import com.alodiga.wallet.dao.TransactionDAO;
 import com.alodiga.wallet.common.model.Commission;
 import com.alodiga.wallet.common.model.CommissionItem;
 import com.alodiga.wallet.common.model.Product;
+import com.alodiga.wallet.common.model.Sequences;
 import com.alodiga.wallet.common.model.Transaction;
 import com.alodiga.wallet.common.model.TransactionSource;
 import com.alodiga.wallet.common.model.TransactionStatus;
 import com.alodiga.wallet.common.model.TransactionType;
+import com.alodiga.wallet.common.utils.Constante;
 import com.alodiga.wallet.responses.ActivateCardResponses;
 import com.alodiga.wallet.responses.ChangeStatusCredentialCard;
 import com.alodiga.wallet.responses.CheckStatusCardResponses;
@@ -19,13 +20,15 @@ import com.alodiga.wallet.responses.CheckStatusCredentialCard;
 import com.alodiga.wallet.responses.DesactivateCardResponses;
 import com.alodiga.wallet.responses.ResponseCode;
 import com.alodiga.wallet.common.utils.Constants;
-import static com.alodiga.wallet.common.utils.EncriptedRsa.encrypt;
-import com.alodiga.wallet.common.utils.S3cur1ty3Cryt3r;
+import com.alodiga.wallet.common.utils.EncriptedRsa;
+import com.alodiga.wallet.responses.CardResponse;
 import com.alodiga.wallet.utils.TransactionHelper;
+import com.ericsson.alodiga.ws.APIRegistroUnificadoProxy;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.rmi.RemoteException;
 import java.sql.Timestamp;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
@@ -34,18 +37,21 @@ import javax.persistence.PersistenceContext;
 import org.apache.commons.codec.binary.Base64;
 
 @Stateless(name = "FsProcessorCardWallet",
-mappedName = "ejb/FsProcessorCardWallet")
+        mappedName = "ejb/FsProcessorCardWallet")
 @TransactionManagement(TransactionManagementType.CONTAINER)
 public class APICardOperations {
 
     private static final String CARD_ACTIVE_STATUS = "01";
     private static final String CARD_DEACTIVE_STATUS = "24";
-    
+
     @PersistenceContext(unitName = "AlodigaWalletPU")
     private EntityManager entityManager;
     private int credentialsRetries = 0;
 
-    private void saveCardFromBusinessTransaction(Long businessId, TransactionType type) {
+    @EJB
+    private APIOperations operations;
+
+    private void saveCardFromBusinessTransaction(Long businessId, TransactionType type, boolean isActivated) {
 
         Product product = entityManager.find(Product.class, Product.PREPAID_CARD);
 
@@ -67,51 +73,54 @@ public class APICardOperations {
         transaction.setTransactionStatus(TransactionStatus.COMPLETED.name());
         transaction.setTotalAmount(0F);
         transaction.setTransactionNumber(TransactionHelper.generateNextRechargeSequence(TransactionHelper.OriginApplicationType.BUSINESS_PORTAL));
-                entityManager.persist(transaction);
+        Sequences sequences = TransactionHelper.getSequencesByDocumentTypeByOriginApplication(isActivated ? 16L : 17L, Constante.sOriginApplicationPortalBusiness, entityManager);
+        String generateNumberSequence = TransactionHelper.generateNumberSequence(sequences, entityManager);
+        transaction.setTransactionNumber(generateNumberSequence);
+        entityManager.persist(transaction);
 
         CommissionItem commissionItem = new CommissionItem(commission.getValue(),
                 new Timestamp(System.currentTimeMillis()), transaction, commission);
         entityManager.persist(commissionItem);
     }
 
-    public ActivateCardResponses activateCardByBusiness(Long businessId, String eCardNumber, String timeZone) {
-
+    public ActivateCardResponses activateCardByBusiness(Long businessId, String userEmail, String timeZone) {
+        APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
         CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
-        AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
         try {
-            String Card = S3cur1ty3Cryt3r.aloEncrpter(eCardNumber, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
-            String encryptedString = Base64.encodeBase64String(encrypt(Card, Constants.PUBLIC_KEY));
+
+            CardResponse cardResponse = operations.getCardByEmail(userEmail);
+            String alias = cardResponse.getaliasCard();
+            String encryptedString = Base64.encodeBase64String(EncriptedRsa.encrypt(alias, Constants.PUBLIC_KEY));
             ChangeStatusCardResponse response = cardCredentialServiceClient.changeStatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, encryptedString, CARD_ACTIVE_STATUS);
+            if (response.getCodigoRespuesta().equals("00") || response.getCodigoRespuesta().equals("-024")) {
 
-            switch (response.getCodigoRespuesta()) {
-                case "00":
-                    ChangeStatusCredentialCard changeStatusCredentialcardResponse = new ChangeStatusCredentialCard(response.getInicio(), response.getFin(), response.getTiempo(), response.getCodigoRespuesta(), response.getDescripcion(), response.getTicketWS());
-                    ActivateCardResponses activateCardResponses = new ActivateCardResponses(changeStatusCredentialcardResponse);
-                    activateCardResponses.setNumberCard(eCardNumber);
+                ChangeStatusCredentialCard changeStatusCredentialcardResponse = new ChangeStatusCredentialCard(response.getInicio(), response.getFin(), response.getTiempo(), response.getCodigoRespuesta(), response.getDescripcion(), response.getTicketWS());
+                ActivateCardResponses activateCardResponses = new ActivateCardResponses(changeStatusCredentialcardResponse);
+                activateCardResponses.setNumberCard(alias);
 
-                    TransactionType type = entityManager.find(TransactionType.class, 1L);//TODO transaction type
-                    saveCardFromBusinessTransaction(businessId, type);
+                TransactionType type = entityManager.find(TransactionType.class, 14L);//TODO transaction type
+                saveCardFromBusinessTransaction(businessId, type, true);
 
-                    return activateCardResponses;
-                case "-024":
-                    return new ActivateCardResponses(ResponseCode.NOT_ALLOWED_TO_CHANGE_STATE, "NOT ALLOWED TO CHANGE STATE");
-                case "-011":
-                    return new ActivateCardResponses(ResponseCode.AUTHENTICATE_IMPOSSIBLE, "Authenticate Impossible");
-                case "-13":
-                    return new ActivateCardResponses(ResponseCode.SERVICE_NOT_ALLOWED, "Service Not Allowed");
-                case "-14":
-                    return new ActivateCardResponses(ResponseCode.OPERATION_NOT_ALLOWED_FOR_THIS_SERVICE, "Operation Not Allowed For This Service");
-                case "-060":
-                    return new ActivateCardResponses(ResponseCode.UNABLE_TO_ACCESS_DATA, "Unable to Access Data");
-                case "-120":
-                    return new ActivateCardResponses(ResponseCode.THERE_ARE_NO_RECORDS_FOR_THE_REQUESTED_SEARCH, "There are no Records for the Requested Search");
-                case "-140":
-                    return new ActivateCardResponses(ResponseCode.THE_REQUESTED_PRODUCT_DOES_NOT_EXIST, "The Requested Product does not Exist");
-                case "-160":
-                    return new ActivateCardResponses(ResponseCode.THE_NUMBER_OF_ORDERS_ALLOWED_IS_EXCEEDED, "The Number of Orders Allowed is Exceeded");
-                default:
-                    return new ActivateCardResponses(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
+                return activateCardResponses;
+            } else if (response.getCodigoRespuesta().equals("-024")) {
+                return new ActivateCardResponses(ResponseCode.NOT_ALLOWED_TO_CHANGE_STATE, "NOT ALLOWED TO CHANGE STATE");
+            } else if (response.getCodigoRespuesta().equals("-011")) {
+                return new ActivateCardResponses(ResponseCode.AUTHENTICATE_IMPOSSIBLE, "Authenticate Impossible");
+            } else if (response.getCodigoRespuesta().equals("-13")) {
+                return new ActivateCardResponses(ResponseCode.SERVICE_NOT_ALLOWED, "Service Not Allowed");
+            } else if (response.getCodigoRespuesta().equals("-14")) {
+                return new ActivateCardResponses(ResponseCode.OPERATION_NOT_ALLOWED_FOR_THIS_SERVICE, "Operation Not Allowed For This Service");
+            } else if (response.getCodigoRespuesta().equals("-060")) {
+                return new ActivateCardResponses(ResponseCode.UNABLE_TO_ACCESS_DATA, "Unable to Access Data");
+            } else if (response.getCodigoRespuesta().equals("-120")) {
+                return new ActivateCardResponses(ResponseCode.THERE_ARE_NO_RECORDS_FOR_THE_REQUESTED_SEARCH, "There are no Records for the Requested Search");
+            } else if (response.getCodigoRespuesta().equals("-140")) {
+                return new ActivateCardResponses(ResponseCode.THE_REQUESTED_PRODUCT_DOES_NOT_EXIST, "The Requested Product does not Exist");
+            } else if (response.getCodigoRespuesta().equals("-160")) {
+                return new ActivateCardResponses(ResponseCode.THE_NUMBER_OF_ORDERS_ALLOWED_IS_EXCEEDED, "The Number of Orders Allowed is Exceeded");
             }
+            return new ActivateCardResponses(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
+
         } catch (RemoteException ex) {
             ex.printStackTrace();
             return new ActivateCardResponses(ResponseCode.INTERNAL_ERROR, "");
@@ -121,21 +130,22 @@ public class APICardOperations {
         }
     }
 
-    public DesactivateCardResponses deactivateCardByBusiness(Long businessId, String eCardNumber, String timeZone) {
+    public DesactivateCardResponses deactivateCardByBusiness(Long businessId, String userEmail, String timeZone) {
+        APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
         CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
-        AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
         try {
-            String Card = S3cur1ty3Cryt3r.aloEncrpter(eCardNumber, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
-            String encryptedString = Base64.encodeBase64String(encrypt(Card, Constants.PUBLIC_KEY));
-            ChangeStatusCardResponse response = cardCredentialServiceClient.changeStatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, encryptedString, CARD_DEACTIVE_STATUS);
 
+            CardResponse cardResponse = operations.getCardByEmail(userEmail);
+            String alias = cardResponse.getaliasCard();
+            String encryptedString = Base64.encodeBase64String(EncriptedRsa.encrypt(alias, Constants.PUBLIC_KEY));
+            ChangeStatusCardResponse response = cardCredentialServiceClient.changeStatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, encryptedString, CARD_ACTIVE_STATUS);
             switch (response.getCodigoRespuesta()) {
                 case "00":
                     ChangeStatusCredentialCard changeStatusCredentialcardResponse = new ChangeStatusCredentialCard(response.getInicio(), response.getFin(), response.getTiempo(), response.getCodigoRespuesta(), response.getDescripcion(), response.getTicketWS());
                     DesactivateCardResponses deactivateResponse = new DesactivateCardResponses(changeStatusCredentialcardResponse);
 
-                    TransactionType type = entityManager.find(TransactionType.class, 1L);//TODO transaction type
-                    saveCardFromBusinessTransaction(businessId, type);
+                    TransactionType type = entityManager.find(TransactionType.class, 14L);//TODO transaction type
+                    saveCardFromBusinessTransaction(businessId, type, false);
 
                     return deactivateResponse;
                 case "-024":
@@ -166,11 +176,14 @@ public class APICardOperations {
         }
     }
 
-    public CheckStatusCardResponses checkStatusCard(String encriptedCard, String timeZone) {
+    public CheckStatusCardResponses checkStatusCard(String userEmail, String timeZone) {
+        APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
         CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
         try {
-            String card = S3cur1ty3Cryt3r.aloEncrpter(encriptedCard, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
-            String encryptedString = Base64.encodeBase64String(encrypt(card, Constants.PUBLIC_KEY));
+
+            CardResponse cardResponse = operations.getCardByEmail(userEmail);
+            String alias = cardResponse.getaliasCard();
+            String encryptedString = Base64.encodeBase64String(EncriptedRsa.encrypt(alias, Constants.PUBLIC_KEY));
             long currentTime = System.currentTimeMillis();
             StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, encryptedString);
             System.out.println("Resposne statusCardResponse : " + statusCardResponse.getCodigo() + " tiempo " + Long.toString(System.currentTimeMillis() - currentTime) + " retries " + credentialsRetries);
@@ -206,7 +219,7 @@ public class APICardOperations {
                     }
                     ++credentialsRetries;
                     Thread.sleep(2000);
-                    return checkStatusCard(encriptedCard, timeZone);
+                    return checkStatusCard(userEmail, timeZone);
                 default:
                     return new CheckStatusCardResponses(ResponseCode.INTERNAL_ERROR, "ERROR INTERNO");
             }
