@@ -3247,7 +3247,7 @@ public class APIOperations {
             responseUser = proxy.getUsuarioporId(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, String.valueOf(userId));
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
             numberAccount = S3cur1ty3Cryt3r.aloEncrpter(numberAccount, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
-            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, numberAccount);
+            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER_TEST, timeZone, numberAccount);
             accountResponse.setCodigo("00");
             if (accountResponse.getCodigo().equals("00")) {
                 CheckStatusCredentialAccount checkStatusCredentialAccount = new CheckStatusCredentialAccount(accountResponse.getCodigo(), accountResponse.getDescripcion(), accountResponse.getNumero(), accountResponse.getCodigoEstado(), accountResponse.getDescripcionEstado(), accountResponse.getCodigoEntidad(), accountResponse.getDescripcionEntidad(), accountResponse.getSucursal(), accountResponse.getCodigoProducto(), accountResponse.getDescripcionProducto(), accountResponse.getCodigoPais(), accountResponse.getDescripcionPais(), accountResponse.getCodigoMoneda(), accountResponse.getDescripcionMoneda(), accountResponse.getVIP(), accountResponse.getHCC(), accountResponse.getULC(), accountResponse.getMCC(), accountResponse.getMomentoRenewal(), accountResponse.getMomentoUltimaActualizacion(), accountResponse.getMomentoUltimaOperacionAprobada(), accountResponse.getMomentoUltimaOperacionDenegada(), accountResponse.getMomentoUltimoBloqueo(), accountResponse.getMomentoUltimoDesbloqueo(), accountResponse.getComprasDisponibles(), accountResponse.getCuotasDisponibles(), accountResponse.getAdelantosDisponibles(), accountResponse.getPrestamosDisponibles(), accountResponse.getComprasLimites(), accountResponse.getCuotasLimites(), accountResponse.getAdelantosLimites(), accountResponse.getPrestamosLimites(), accountResponse.getFechaVencimiento(), accountResponse.getSaldo(), accountResponse.getPagoMinimo(), accountResponse.getSaldoDolar());
@@ -7340,7 +7340,7 @@ public class APIOperations {
             person.setEmail(email);
             Map params = new HashMap();
             com.alodiga.wallet.common.genericEJB.EJBRequest request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
-            params.put(QueryConstants.PARAM_CODE, "AWAAPP");
+            params.put(QueryConstants.PARAM_CODE, originAplicationCode);
             request1.setParams(params);
             originApplication = utilsEJB.loadOriginApplicationByCode(request1);
             request1 = new com.alodiga.wallet.common.genericEJB.EJBRequest();
@@ -7631,5 +7631,7 @@ public class APIOperations {
         }
         return new DocumentPersonTypeListResponse(ResponseCode.SUCCESS, "", documentsPersonType);
     }
+    
+    
 
 }
