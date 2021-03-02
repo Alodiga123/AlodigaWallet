@@ -435,8 +435,7 @@ public class APIOperations {
             //Se obtiene el usuario de la API de Registro Unificado
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS", "passwordWS", emailUser);
-            //se buscar el businessId para identificar la billetera del negocio    
-            addSellTransaction = aPIBusinessPortalWSProxy.addSellTransaction(cryptogramShop, paymentShop.getId(), "AloWallet", amountPayment, productId);
+
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
 
             BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
@@ -557,8 +556,7 @@ public class APIOperations {
 
             paymentShop.setId(null);
             paymentShop.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
-            paymentShop.setUserDestinationId(BigInteger.valueOf(addSellTransaction.getIdBusiness()));
-            paymentShop.setTransactionBusinessId(BigInteger.valueOf(addSellTransaction.getIdTransaction()));
+
             Product product = entityManager.find(Product.class, productId);
             paymentShop.setProductId(product);
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypePS);
@@ -580,8 +578,17 @@ public class APIOperations {
             paymentShop.setExternalId(null);
             paymentShop.setTransactionNumber(Numbersequence);
             paymentShop.setTransactionSequence(sequence);
-            entityManager.flush();
             entityManager.persist(paymentShop);
+            entityManager.flush();
+
+            System.out.println("paymentShop id " + paymentShop.getId() + " isnull : " + aPIBusinessPortalWSProxy == null);
+
+            //se buscar el businessId para identificar la billetera del negocio    
+            addSellTransaction = aPIBusinessPortalWSProxy.addSellTransaction(cryptogramShop, paymentShop.getId(), "AloWallet", amountPayment, productId);
+
+            paymentShop.setUserDestinationId(BigInteger.valueOf(addSellTransaction.getIdBusiness()));
+            paymentShop.setTransactionBusinessId(BigInteger.valueOf(addSellTransaction.getIdTransaction()));
+            entityManager.merge(paymentShop);
 
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransationTypePS).getResultList();
@@ -1975,7 +1982,7 @@ public class APIOperations {
             if (originApplicationId == OriginAplicationE.PORNEG.getId()) {
                 transactionSourceId = TransactionSourceE.PORNEG.getId();
             }
-            
+
             withdrawal.setId(null);
             withdrawal.setTransactionNumber(Numbersequence);
             withdrawal.setTransactionSequence(sequence);
@@ -2053,7 +2060,7 @@ public class APIOperations {
             entityManager.merge(withdrawal);
             Usuario usuario = new Usuario();
             usuario.setEmail(emailUser);
-            
+
             try {
                 System.out.println("" + withdrawal.getId());
                 TransactionApproveRequestResponse transactionApproveRequestResponse = saveTransactionApproveRequest(userId, product.getId(), withdrawal.getId(), bankId, documentTypeId, originApplicationId, 0L);
@@ -6008,6 +6015,8 @@ public class APIOperations {
             BpBusinessInfoResponse response = aPIBusinessPortalWSProxy.getBusinessInfoByCryptogram(cryptogram);
             BusinessShopResponse answer = new BusinessShopResponse(ResponseCode.SUCCESS, "", response.getCommercialDenomination(), response.getBusinessRif(), response.getStoreName());
             answer.setPosCode(response.getPosCode());
+            answer.setAddress(response.getAddress());
+            answer.setPhoneNumber(response.getPhoneNumber());
             return answer;
         } catch (BusinessPortalWSException ex) {
             return new BusinessShopResponse(ResponseCode.INTERNAL_ERROR, ex.getErrorMessage().getErrorMessageValue());
