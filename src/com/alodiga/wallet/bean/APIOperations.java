@@ -1853,6 +1853,7 @@ public class APIOperations {
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         SimpleDateFormat year = new SimpleDateFormat("yyyy");
         String yearSequence = year.format(timestamp);
+        long transactionSourceId = 0;
 
         try {
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
@@ -1970,6 +1971,11 @@ public class APIOperations {
             String Numbersequence = generateNumberSequence(sequences);
             String sequence = originApplicationId + transactionTypeE + yearSequence + sequences.getCurrentValue();
 
+            transactionSourceId = TransactionSourceE.APPBIL.getId();
+            if (originApplicationId == OriginAplicationE.PORNEG.getId()) {
+                transactionSourceId = TransactionSourceE.PORNEG.getId();
+            }
+            
             withdrawal.setId(null);
             withdrawal.setTransactionNumber(Numbersequence);
             withdrawal.setTransactionSequence(sequence);
@@ -1980,7 +1986,7 @@ public class APIOperations {
             withdrawal.setPaymentInfoId(null);
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeManualWithdrawal);
             withdrawal.setTransactionTypeId(transactionType);
-            TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
+            TransactionSource transactionSource = entityManager.find(TransactionSource.class, transactionSourceId);
             withdrawal.setTransactionSourceId(transactionSource);
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
@@ -2047,6 +2053,7 @@ public class APIOperations {
             entityManager.merge(withdrawal);
             Usuario usuario = new Usuario();
             usuario.setEmail(emailUser);
+            
             try {
                 System.out.println("" + withdrawal.getId());
                 TransactionApproveRequestResponse transactionApproveRequestResponse = saveTransactionApproveRequest(userId, product.getId(), withdrawal.getId(), bankId, documentTypeId, originApplicationId, 0L);
