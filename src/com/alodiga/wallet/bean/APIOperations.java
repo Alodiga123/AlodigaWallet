@@ -179,6 +179,7 @@ import com.alodiga.wallet.common.enumeraciones.DocumentTypeE;
 import com.alodiga.wallet.common.enumeraciones.OriginAplicationE;
 import com.alodiga.wallet.common.enumeraciones.RequestTypeE;
 import com.alodiga.wallet.common.enumeraciones.StatusApplicantE;
+import com.alodiga.wallet.common.enumeraciones.TransactionSourceE;
 import com.alodiga.wallet.common.enumeraciones.TransactionTypeE;
 import com.alodiga.wallet.common.exception.EmptyListException;
 import com.alodiga.wallet.common.exception.GeneralException;
@@ -2255,7 +2256,13 @@ public class APIOperations {
             recharge.setProductId(product);
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeManualRecharge);
             recharge.setTransactionTypeId(transactionType);
-            TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
+
+            long transactionSourceId = TransactionSourceE.APPBIL.getId();
+            if (originApplicationId == OriginAplicationE.PORNEG.getId()) {
+                transactionSourceId = TransactionSourceE.PORNEG.getId();
+            }
+
+            TransactionSource transactionSource = entityManager.find(TransactionSource.class, transactionSourceId);
             recharge.setTransactionSourceId(transactionSource);
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
