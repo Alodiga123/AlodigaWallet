@@ -147,7 +147,7 @@ public class APIAlodigaWallet {
 
     @WebMethod
     public TransactionResponse savePaymentShop(
-            @WebParam(name = "cryptogramaShop") String cryptogramShop,
+            @WebParam(name = "cryptogramShop") String cryptogramShop,
             @WebParam(name = "emailUser") String emailUser,
             @WebParam(name = "productId") Long productId,
             @WebParam(name = "amountPayment") Float amountPayment,
