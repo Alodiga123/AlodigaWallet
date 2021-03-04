@@ -885,7 +885,8 @@ public class APIOperations {
             transfer.setProductId(product);
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeTA);
             transfer.setTransactionTypeId(transactionType);
-            TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
+            long transactionSourceId = TransactionSourceE.APPBIL.getId();
+            TransactionSource transactionSource = entityManager.find(TransactionSource.class, transactionSourceId);
             transfer.setTransactionSourceId(transactionSource);
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
@@ -1220,7 +1221,8 @@ public class APIOperations {
             exchange.setProductId(productSource);
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeEP);
             exchange.setTransactionTypeId(transactionType);
-            TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
+            long transactionSourceId = TransactionSourceE.APPBIL.getId();
+            TransactionSource transactionSource = entityManager.find(TransactionSource.class, transactionSourceId);
             exchange.setTransactionSourceId(transactionSource);
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
@@ -6603,38 +6605,44 @@ public class APIOperations {
 
     public AccountBankResponse saveAccountBankUser(Long bankId, Long unifiedRegistryId, String accountNumber, Integer accountTypeBankId) {
         String statusAccountBankCode = StatusAccountBankE.ACTIVA.getStatusAccountCode();
+        Long validateAccountBankExists = 0L;
+        AccountBank accountBank = new AccountBank();
         try {
-
-            //Se consulta si el bank existe
+            
+            //Se consulta si el banco existe
             Bank bank = entityManager.find(Bank.class, bankId);
             if (bank == null) {
                 return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "The Bank is not registered in the BD");
             }
 
-            //Se consulta si el AccountTypeBank existe
+            //Se consulta si la cuenta bancaria existe
             AccountTypeBank accountTypeBank = entityManager.find(AccountTypeBank.class, accountTypeBankId);
             if (accountTypeBank == null) {
                 return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "The Account Type Bank is not registered in the BD");
             }
 
-            //Se busca el status Activo para la cuente bancaria
-            StatusAccountBank statusAccountBank = (StatusAccountBank) entityManager.createNamedQuery(QueryConstants.STATUS_ACCOUNT_BANK_BY_CODE, StatusAccountBank.class).setParameter("code", statusAccountBankCode).getSingleResult();
+            //Se valida si la cuenta ya fué registrada en la BD
+            validateAccountBankExists = validateAccountBankExistsBD(unifiedRegistryId, bankId, accountNumber);
+            if (validateAccountBankExists == 0) {
+                //Se busca el status Activo para la cuente bancaria
+                StatusAccountBank statusAccountBank = (StatusAccountBank) entityManager.createNamedQuery(QueryConstants.STATUS_ACCOUNT_BANK_BY_CODE, StatusAccountBank.class).setParameter("code", statusAccountBankCode).getSingleResult();
 
-            //Se guarda la cuenta bancaria del usuario en la BD
-            AccountBank accountBank = new AccountBank();
-            accountBank.setUnifiedRegistryId(unifiedRegistryId);
-            accountBank.setAccountNumber(accountNumber);
-            accountBank.setBankId(bank);
-            accountBank.setStatusAccountBankId(statusAccountBank);
-            accountBank.setAccountTypeBankId(accountTypeBank);
-            accountBank.setCreateDate(new Timestamp(new Date().getTime()));
-            entityManager.persist(accountBank);
-            return new AccountBankResponse(ResponseCode.SUCCESS, "", accountBank);
-
+                //Se guarda la cuenta bancaria del usuario en la BD
+                accountBank.setUnifiedRegistryId(unifiedRegistryId);
+                accountBank.setAccountNumber(accountNumber);
+                accountBank.setBankId(bank);
+                accountBank.setStatusAccountBankId(statusAccountBank);
+                accountBank.setAccountTypeBankId(accountTypeBank);
+                accountBank.setCreateDate(new Timestamp(new Date().getTime()));
+                entityManager.persist(accountBank);                
+            } else {
+                return new AccountBankResponse(ResponseCode.ACCOUNT_NUMBER_ALREADY_EXIST, "The account number you are registering already exists in the database");
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return new AccountBankResponse(ResponseCode.INTERNAL_ERROR, "Error");
         }
+        return new AccountBankResponse(ResponseCode.SUCCESS, "", accountBank);
     }
 
     public ProductResponse getProductPrepaidCardByUser(Long userId) {
@@ -7646,6 +7654,16 @@ public class APIOperations {
             return new DocumentPersonTypeListResponse(ResponseCode.INTERNAL_ERROR, "");
         }
         return new DocumentPersonTypeListResponse(ResponseCode.SUCCESS, "", documentsPersonType);
+    }
+    
+    public Long validateAccountBankExistsBD(Long userId, Long bankId, String accountNumber) throws GeneralException, NullParameterException {
+        StringBuilder sqlBuilder = new StringBuilder("SELECT COUNT(a.id) FROM account_bank a WHERE a.bankId = ?1 AND a.unifiedRegistryId = ?2 AND a.accountNumber = ?3");
+        Query query = entityManager.createNativeQuery(sqlBuilder.toString());
+        query.setParameter("1", bankId);
+        query.setParameter("2", userId);
+        query.setParameter("3", accountNumber);        
+        List result = (List) query.setHint("toplink.refresh", "true").getResultList();
+        return result.get(0) != null ? (Long) result.get(0) : 0l;
     }
 
 }
