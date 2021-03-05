@@ -1863,6 +1863,7 @@ public class APIOperations {
         SimpleDateFormat year = new SimpleDateFormat("yyyy");
         String yearSequence = year.format(timestamp);
         long transactionSourceId = 0;
+        documentTypeId = Long.valueOf(DocumentTypeE.MWAR.getId());
 
         try {
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
@@ -2152,6 +2153,8 @@ public class APIOperations {
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         SimpleDateFormat year = new SimpleDateFormat("yyyy");
         String yearSequence = year.format(timestamp);
+        documentTypeId = Long.valueOf(DocumentTypeE.MRAR.getId());
+        
         try {
             //Se obtiene el usuario de la API de Registro Unificado
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
@@ -4925,7 +4928,7 @@ public class APIOperations {
     public TransactionApproveRequestResponse saveTransactionApproveRequest(Long unifiedRegistryUserId, Long productId, Long transactionId, Long bankOperationId, Long documentTypeId, Long originApplicationId, Long businessId) {
         Date curDate = new Date();
         SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
-        try {
+        try {            
             String statusTransactionApproveRequestE = StatusTransactionApproveRequestE.PENDIEN.getStatusTransactionApproveRequestCode();
             TransactionApproveRequest transactionApproveRequest = new TransactionApproveRequest();
             transactionApproveRequest.setId(null);
@@ -4934,7 +4937,7 @@ public class APIOperations {
             transactionApproveRequest.setBusinessId(BigInteger.valueOf(businessId));
             transactionApproveRequest.setCreateDate(new Timestamp(new Date().getTime()));
             transactionApproveRequest.setUpdateDate(null);
-            Sequences sequences = getSequencesByDocumentTypeByOriginApplication((long) DocumentTypeE.MRAR.getId(), (long) OriginAplicationE.AWAAPP.getId());
+            Sequences sequences = getSequencesByDocumentTypeByOriginApplication(documentTypeId, (long) OriginAplicationE.AWAAPP.getId());
             String generateNumberSequence = generateNumberSequence(sequences);
             transactionApproveRequest.setRequestNumber(generateNumberSequence);
             String DateToStr = format.format(curDate);
