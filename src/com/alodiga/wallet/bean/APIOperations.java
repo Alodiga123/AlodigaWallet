@@ -668,15 +668,21 @@ public class APIOperations {
                         AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
                         CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
                         CardResponse cardResponse = getCardByUserId(userId);
-                        String cardEncripter = Base64.encodeBase64String(EncriptedRsa.encrypt(cardResponse.getaliasCard(), Constants.PUBLIC_KEY));
-                        StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-                        if (statusCardResponse.getCodigo().equals("00")) {
-                            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-                            amount = Float.valueOf(accountResponse.getComprasDisponibles());
-                        } else {
-                            amount = Float.valueOf(0);
-                        }
-
+                        String alias = cardResponse.getaliasCard();
+                        try {
+                            if (alias.length() > 0) {
+                                String cardEncripter = Base64.encodeBase64String(EncriptedRsa.encrypt(cardResponse.getaliasCard(), Constants.PUBLIC_KEY));
+                                StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                                if (statusCardResponse.getCodigo().equals("00")) {
+                                    StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                                    amount = Float.valueOf(accountResponse.getComprasDisponibles());
+                                } else {
+                                    amount = Float.valueOf(0);
+                                }
+                            }  
+                        } catch (NullPointerException e) {
+                            
+                        } 
                     } else {
 
                         amount = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
@@ -964,17 +970,22 @@ public class APIOperations {
                         AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
                         CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
                         CardResponse cardResponse = getCardByUserId(userId);
-                        String cardEncripter = Base64.encodeBase64String(EncriptedRsa.encrypt(cardResponse.getaliasCard(), Constants.PUBLIC_KEY));
-                        StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-                        if (statusCardResponse.getCodigo().equals("00")) {
-                            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-                            amount = Float.valueOf(accountResponse.getComprasDisponibles());
-                        } else {
-                            amount = Float.valueOf(0);
-                        }
-
+                        String alias = cardResponse.getaliasCard();
+                        try {
+                            if (alias.length() > 0) {
+                                String cardEncripter = Base64.encodeBase64String(EncriptedRsa.encrypt(cardResponse.getaliasCard(), Constants.PUBLIC_KEY));
+                                StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                                if (statusCardResponse.getCodigo().equals("00")) {
+                                    StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                                    amount = Float.valueOf(accountResponse.getComprasDisponibles());
+                                } else {
+                                    amount = Float.valueOf(0);
+                                }
+                            }  
+                        } catch (NullPointerException e) {
+                            
+                        }                                             
                     } else {
-
                         amount = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
                     }
                 } catch (NoResultException e) {
@@ -1336,19 +1347,24 @@ public class APIOperations {
                             AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
                             CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
                             CardResponse cardResponse = getCardByUserId(userId);
-                            String cardEncripter = Base64.encodeBase64String(EncriptedRsa.encrypt(cardResponse.getaliasCard(), Constants.PUBLIC_KEY));
-                            StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-                            if (statusCardResponse.getCodigo().equals("00")) {
-                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-                                amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
-                            } else {
-                                amount_1 = Float.valueOf(0);
-                            }
+                            String alias = cardResponse.getaliasCard();
+                            try {
+                                if (alias.length() > 0) {
+                                    String cardEncripter = Base64.encodeBase64String(EncriptedRsa.encrypt(cardResponse.getaliasCard(), Constants.PUBLIC_KEY));
+                                    StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                                    if (statusCardResponse.getCodigo().equals("00")) {
+                                        StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                                        amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                                    } else {
+                                        amount_1 = Float.valueOf(0);
+                                    }
+                                }  
+                            } catch (NullPointerException e) {
 
+                            } 
                         } else {
                             amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
                         }
-
                     } catch (NoResultException e) {
                         amount_1 = 0F;
                     } catch (ConnectException e) {
