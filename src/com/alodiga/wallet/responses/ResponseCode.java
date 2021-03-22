@@ -39,6 +39,7 @@ public enum ResponseCode {
     ERROR_CREDENTIALS("98"),
     INTERNAL_ERROR("99"),
     USER_NOT_HAS_BANK("197"),
+    ACCOUNT_NUMBER_ALREADY_EXIST("198"),
     
     //Mensajeria TopUp
     DENOMINATION_NOT_AVAILABLE("301"),
