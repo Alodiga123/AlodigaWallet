@@ -877,7 +877,6 @@ public class APIOperations {
             Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Long.valueOf(transferBetweenAccountType), Long.valueOf(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID));
             String numberSequence = generateNumberSequence(sequences);
             String sequence = transactionTypeE + yearSequence + sequences.getCurrentValue();
-
             transfer.setId(null);
             transfer.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             transfer.setUserDestinationId(BigInteger.valueOf(idUserDestination));
@@ -885,7 +884,10 @@ public class APIOperations {
             transfer.setProductId(product);
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeTA);
             transfer.setTransactionTypeId(transactionType);
-            TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
+
+            long transactionSourceId = TransactionSourceE.APPBIL.getId();
+
+            TransactionSource transactionSource = entityManager.find(TransactionSource.class, transactionSourceId);
             transfer.setTransactionSourceId(transactionSource);
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
@@ -1220,7 +1222,8 @@ public class APIOperations {
             exchange.setProductId(productSource);
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeEP);
             exchange.setTransactionTypeId(transactionType);
-            TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
+            long transactionSourceId = TransactionSourceE.APPBIL.getId();
+            TransactionSource transactionSource = entityManager.find(TransactionSource.class, transactionSourceId);
             exchange.setTransactionSourceId(transactionSource);
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
@@ -7647,7 +7650,5 @@ public class APIOperations {
         }
         return new DocumentPersonTypeListResponse(ResponseCode.SUCCESS, "", documentsPersonType);
     }
-    
-    
 
 }
