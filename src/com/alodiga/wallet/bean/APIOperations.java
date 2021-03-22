@@ -883,7 +883,6 @@ public class APIOperations {
             Sequences sequences = getSequencesByDocumentTypeByOriginApplication(Long.valueOf(transferBetweenAccountType), Long.valueOf(Constants.ORIGIN_APPLICATION_APP_ALODIGA_WALLET_ID));
             String numberSequence = generateNumberSequence(sequences);
             String sequence = transactionTypeE + yearSequence + sequences.getCurrentValue();
-
             transfer.setId(null);
             transfer.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             transfer.setUserDestinationId(BigInteger.valueOf(idUserDestination));
