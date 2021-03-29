@@ -412,9 +412,9 @@ public class APIAlodigaWallet {
             @WebParam(name = "numberCardOrigin") String numberCardOrigin,
             @WebParam(name = "numberCardDestinate") String numberCardDestinate,
             @WebParam(name = "balance") String balance,
-            @WebParam(name = "idUserDestination") Long idUserDestination,
+            @WebParam(name = "emailDestination") String emailDestination,
             @WebParam(name = "conceptTransaction") String conceptTransaction) {
-        return operations.transferCardToCardAutorization(userId, numberCardOrigin, numberCardDestinate, balance, idUserDestination, conceptTransaction);
+        return operations.transferCardToCardAutorization(userId, numberCardOrigin, numberCardDestinate, balance, emailDestination, conceptTransaction);
     }
 
     @WebMethod
@@ -848,6 +848,15 @@ public class APIAlodigaWallet {
             @WebParam(name = "requestTypeId") Long requestTypeId) throws EmptyListException {
         return operations.getStatusAffiliationRequestByUser(userId, requestTypeId);
     }
+    
+
+    
+    @WebMethod
+    public StatusRequestResponse getStatusAffiliationRequestByEmail(
+            @WebParam(name = "email") String email) {
+        return operations.getStatusAffiliationRequestByEmail(email);
+    }
+    
 
     @WebMethod
     public PersonResponse getPersonByEmail(
