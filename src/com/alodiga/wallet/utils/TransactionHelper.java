@@ -78,7 +78,7 @@ public abstract class TransactionHelper {
                         sequence.append(String.valueOf(s.getInitialValue()));
                     }
                     s.setCurrentValue(s.getCurrentValue() + 1);
-                    utilsEJB.saveSequences(s);
+                    //utilsEJB.saveSequences(s);
                     break;
                 }
             }
@@ -87,7 +87,7 @@ public abstract class TransactionHelper {
             Calendar cal = Calendar.getInstance();
             sequence.append(cal.getDisplayName(Calendar.YEAR, Calendar.LONG, Locale.getDefault()));
             return sequence.toString();
-        } catch (EmptyListException | GeneralException | NullParameterException | RegisterNotFoundException | NamingException ex) {
+        } catch (EmptyListException | GeneralException | NullParameterException |  NamingException ex) {
             Logger.getLogger(TransactionHelper.class.getName()).log(Level.SEVERE, null, ex);
         }
         return "1";
