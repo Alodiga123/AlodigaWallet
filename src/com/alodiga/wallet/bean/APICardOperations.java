@@ -138,7 +138,7 @@ public class APICardOperations {
             CardResponse cardResponse = operations.getCardByEmail(userEmail);
             String alias = cardResponse.getaliasCard();
             String encryptedString = Base64.encodeBase64String(EncriptedRsa.encrypt(alias, Constants.PUBLIC_KEY));
-            ChangeStatusCardResponse response = cardCredentialServiceClient.changeStatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, encryptedString, CARD_ACTIVE_STATUS);
+            ChangeStatusCardResponse response = cardCredentialServiceClient.changeStatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, encryptedString, CARD_DEACTIVE_STATUS);
             switch (response.getCodigoRespuesta()) {
                 case "00":
                     ChangeStatusCredentialCard changeStatusCredentialcardResponse = new ChangeStatusCredentialCard(response.getInicio(), response.getFin(), response.getTiempo(), response.getCodigoRespuesta(), response.getDescripcion(), response.getTicketWS());
